@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0B0C0E;
+  --color-panel: #151619;
+  --color-surface: #1C1D21;
+  --color-raised: #24262B;
+  --color-border: #2A2C31;
+  --color-border-strong: #3A3B40;
+  --color-text-primary: #EDEDEE;
+  --color-text-secondary: #9B9CA3;
+  --color-text-muted: #6B6C73;
+  --color-accent: #D4A94A;
+  --color-live: #E5484D;
+  --color-success: #6FCF97;
+}
+
+/* Base custom scrollbars for compact desktop presentation feel */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0B0C0E;
+}
+::-webkit-scrollbar-thumb {
+  background: #2A2C31;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3A3B40;
+}
