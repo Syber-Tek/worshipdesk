@@ -12,16 +12,19 @@ contextBridge.exposeInMainWorld('api', {
   },
   // Bible API Methods
   getBibles: () => ipcRenderer.invoke('get-bibles'),
+  getBibleStats: () => ipcRenderer.invoke('get-bible-stats'),
   getBooks: (bibleId) => ipcRenderer.invoke('get-books', bibleId),
   getVerses: (bookId, chapter) => ipcRenderer.invoke('get-verses', bookId, chapter),
   searchVerses: (query, bibleId) => ipcRenderer.invoke('search-verses', query, bibleId),
+  removeBible: (bibleId) => ipcRenderer.invoke('remove-bible', bibleId),
+  rescanBibles: () => ipcRenderer.invoke('rescan-bibles'),
   // Hymn API Methods
   getHymns: () => ipcRenderer.invoke('get-hymns'),
   searchHymns: (query) => ipcRenderer.invoke('search-hymns', query),
   // Import Dialogs
   importSongsDialog: () => ipcRenderer.invoke('import-songs-dialog'),
   importBibleSql: () => ipcRenderer.invoke('import-bible-sql-dialog'),
-  importTwiFolder: () => ipcRenderer.invoke('import-twi-folder-dialog'),
+  importBibleXml: () => ipcRenderer.invoke('import-bible-xml-dialog'),
   // STAGE 5: PRESENTATION OUTPUT MULTI-WINDOW IPC
   sendLiveSlide: (slideData) => ipcRenderer.send('send-live-slide', slideData),
   onPresentationUpdate: (callback) => {

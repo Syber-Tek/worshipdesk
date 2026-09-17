@@ -86,7 +86,10 @@ export const TWI_NT_BOOKS = CANONICAL_BIBLE
   .filter((b) => b.testament === 'NT')
   .map((b) => ({ name: b.tw, chaptersCount: b.chaptersCount }))
 
-export const isTwiCode = (code) => String(code || '').toUpperCase() === 'TWI'
+// Known Twi translation codes (canonical + bundled XML variants)
+const TWI_CODES = new Set(['TWI', 'ASNA', 'AKUA', 'TWIDC', 'TWIRV'])
+
+export const isTwiCode = (code) => TWI_CODES.has(String(code || '').toUpperCase())
 
 // Normalized comparison helper so 'Nnwom Mu Dwom' === 'Nnwom_mu_dwom',
 // '1 Samuel' === 'Samuel I'-style names via index mapping, etc.

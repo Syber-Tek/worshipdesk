@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaSliders,
   FaPalette,
@@ -28,7 +28,28 @@ export default function SettingsView({
   themeMode,
   effectiveTheme,
   setThemeMode,
+  biblesList,
+  refreshBibles,
 }) {
+  const [bibleStats, setBibleStats] = useState([]);
+  const [libraryNotice, setLibraryNotice] = useState("");
+
+  useEffect(() => {
+    if (settingsSection === "bible" && window.api && window.api.getBibleStats) {
+      window.api.getBibleStats().then((stats) => {
+        setBibleStats(Array.isArray(stats) ? stats : []);
+      });
+    }
+  }, [settingsSection]);
+
+  const refreshLibrary = async () => {
+    setLibraryNotice("");
+    if (window.api && window.api.getBibleStats) {
+      const stats = await window.api.getBibleStats();
+      setBibleStats(Array.isArray(stats) ? stats : []);
+    }
+    if (refreshBibles) refreshBibles();
+  };
   const settingsMenu = [
     { id: "general", label: "General", icon: FaSliders },
     { id: "appearance", label: "Appearance", icon: FaPalette },
@@ -628,10 +649,16 @@ export default function SettingsView({
                   onChange={(e) => setSelectedTranslation(e.target.value)}
                   className={`text-xs rounded px-2.5 py-1 outline-none border ${selectClass}`}
                 >
-                  <option value="NIV">New International Version (NIV)</option>
-                  <option value="NKJV">New King James Version (NKJV)</option>
-                  <option value="KJV">King James Version (KJV)</option>
-                  <option value="TWI">Twerɛ Kronkron (Twi Bible - BSG)</option>
+                  {(biblesList && biblesList.length > 0 ? biblesList : [
+                    { code: "NIV", name: "New International Version (NIV)" },
+                    { code: "NKJV", name: "New King James Version (NKJV)" },
+                    { code: "KJV", name: "King James Version (KJV)" },
+                    { code: "TWI", name: "Twerɛ Kronkron (Twi Bible - BSG)" },
+                  ]).map((b) => (
+                    <option key={b.code} value={b.code}>
+                      {b.name} ({b.code})
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -664,32 +691,40 @@ export default function SettingsView({
                 </button>
               </div>
 
-              {/* Import Twi Bible Text Folder */}
+              {/* Import Bible XML File */}
               <div
                 className={`flex items-center justify-between p-3.5 rounded border ${cardClass}`}
               >
                 <div>
                   <div className={`font-semibold text-xs ${textTitle}`}>
-                    Import Twi Bible Folder (66 .txt files)
+                    Import Bible XML File (.xml)
                   </div>
                   <div className={`text-[11px] ${textSub}`}>
-                    Select folder containing per-book Twi text files
+                    Add a Twi/structured Bible from a .xml file (Zefania/OSIS
+                    format supported)
                   </div>
                 </div>
                 <button
                   onClick={async () => {
-                    if (window.api && window.api.importTwiFolder) {
-                      const res = await window.api.importTwiFolder();
-                      if (res && res.success) {
-                        alert(`Successfully imported Twi Bible with ${res.count} verses from ${res.folderName}!`);
-                      } else if (res && res.message && res.message !== 'Cancelled') {
-                        alert(`Import error: ${res.message}`);
+                    if (window.api && window.api.importBibleXml) {
+                      const res = await window.api.importBibleXml();
+                      if (res && res.success && res.results) {
+                        const ok = res.results.filter((r) => r.success);
+                        const fail = res.results.filter((r) => !r.success && r.message && r.message !== "Cancelled");
+                        if (ok.length > 0) {
+                          setLibraryNotice(`${ok.length} file(s) imported successfully.`);
+                        } else if (fail.length > 0) {
+                          setLibraryNotice(`Import error: ${fail[0].message}`);
+                        }
+                        await refreshLibrary();
+                      } else if (res && res.message && res.message !== "Cancelled") {
+                        setLibraryNotice(`Import error: ${res.message}`);
                       }
                     }
                   }}
                   className="px-3 py-1.5 bg-[#D4A94A] hover:bg-[#D4A94A]/90 text-[#0B0C0E] font-bold rounded text-xs transition shadow cursor-pointer"
                 >
-                  Select Twi Folder
+                  Select XML File
                 </button>
               </div>
 
@@ -699,8 +734,105 @@ export default function SettingsView({
                   📁 Auto-Scan Bibles Folder Info
                 </div>
                 <p className={`text-[11px] leading-relaxed ${textSub}`}>
-                  You can also drop <code className="font-mono text-[#D4A94A] bg-black/20 px-1 py-0.5 rounded">NKJV.sql</code>, <code className="font-mono text-[#D4A94A] bg-black/20 px-1 py-0.5 rounded">NIV.sql</code>, or <code className="font-mono text-[#D4A94A] bg-black/20 px-1 py-0.5 rounded">KJV.sql</code> directly into the project's <code className="font-mono text-[#D4A94A] bg-black/20 px-1 py-0.5 rounded">bibles/</code> directory (or place a <code className="font-mono text-[#D4A94A] bg-black/20 px-1 py-0.5 rounded">Twi/</code> subfolder inside it containing your text files). The application auto-scans and imports them on startup!
+                  Drop <code className="font-mono text-[#D4A94A] bg-black/20 px-1 py-0.5 rounded">NKJV.sql</code>, <code className="font-mono text-[#D4A94A] bg-black/20 px-1 py-0.5 rounded">NIV.sql</code>, or <code className="font-mono text-[#D4A94A] bg-black/20 px-1 py-0.5 rounded">KJV.sql</code> into <code className="font-mono text-[#D4A94A] bg-black/20 px-1 py-0.5 rounded">bibles/</code>, or any Bible <code className="font-mono text-[#D4A94A] bg-black/20 px-1 py-0.5 rounded">.xml</code> file into <code className="font-mono text-[#D4A94A] bg-black/20 px-1 py-0.5 rounded">bibles/xml/</code>. The app auto-scans and imports them on startup — the bundled English (NIV/NKJV/KJV) and Twi (Twerɛ Kronkron) XML Bibles already live in <code className="font-mono text-[#D4A94A] bg-black/20 px-1 py-0.5 rounded">bibles/xml/</code>.
                 </p>
+              </div>
+
+              {/* Installed Bible Library */}
+              <div className={`p-4 rounded border space-y-3 ${cardClass}`}>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <div className="font-semibold text-xs text-[#D4A94A] flex items-center gap-1.5">
+                      <FaDatabase /> Installed Bible Library
+                    </div>
+                    <p className={`text-[11px] mt-0.5 ${textSub}`}>
+                      Translations available to the Navigator and search.
+                    </p>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      if (window.api && window.api.rescanBibles) {
+                        const res = await window.api.rescanBibles();
+                        setLibraryNotice(res && res.success ? "Re-scan complete." : `Re-scan error: ${res && res.error}`);
+                        await refreshLibrary();
+                      }
+                    }}
+                    className="px-2.5 py-1.5 rounded text-[11px] font-semibold border transition cursor-pointer bg-transparent hover:bg-[#D4A94A]/10 text-[#D4A94A] border-[#D4A94A]/40"
+                  >
+                    Re-scan Bibles Folder
+                  </button>
+                </div>
+
+                {libraryNotice && (
+                  <p className="text-[11px] text-[#6FCF97]">{libraryNotice}</p>
+                )}
+
+                <div className="space-y-2">
+                  {bibleStats.length === 0 && (
+                    <p className={`text-[11px] ${textSub}`}>
+                      No imported Bibles found yet.
+                    </p>
+                  )}
+                  {bibleStats.map((b) => {
+                    const isProtected =
+                      ["NIV", "NKJV", "KJV", "TWI"].indexOf(String(b.code || "").toUpperCase()) !== -1;
+                    const isActive = selectedTranslation === b.code;
+                    return (
+                      <div
+                        key={b.id}
+                        className={`flex items-center justify-between gap-3 p-3 rounded border ${isActive ? "border-[#D4A94A] bg-[#D4A94A]/5" : ""} ${cardClass}`}
+                      >
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className={`font-semibold text-xs truncate ${textTitle}`}>
+                              {b.name}
+                            </span>
+                            {isActive && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#D4A94A] text-[#0B0C0E] font-bold">
+                                ACTIVE
+                              </span>
+                            )}
+                          </div>
+                          <div className={`text-[11px] mt-0.5 ${textSub}`}>
+                            {b.code} · {b.language} · {b.bookCount} books · {b.verseCount.toLocaleString()} verses
+                            {b.sourceFile ? ` · ${b.sourceFile}` : ""}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {!isActive && (
+                            <button
+                              onClick={() => setSelectedTranslation(b.code)}
+                              className="px-2.5 py-1.5 rounded text-[11px] font-semibold border transition cursor-pointer bg-transparent hover:bg-[#D4A94A]/10 text-[#D4A94A] border-[#D4A94A]/40"
+                            >
+                              Set as Active
+                            </button>
+                          )}
+                          {!isProtected && (
+                            <button
+                              onClick={async () => {
+                                if (window.api && window.api.removeBible) {
+                                  const res = await window.api.removeBible(b.id);
+                                  if (res && res.success) {
+                                    setLibraryNotice(`${b.code} removed.`);
+                                    await refreshLibrary();
+                                    if (selectedTranslation === b.code && biblesList && biblesList.length > 0) {
+                                      setSelectedTranslation(biblesList[0].code);
+                                    }
+                                  } else {
+                                    setLibraryNotice(`Delete error: ${res && res.error}`);
+                                  }
+                                }
+                              }}
+                              className="px-2.5 py-1.5 rounded text-[11px] font-semibold border transition cursor-pointer bg-transparent hover:bg-[#E5484D] hover:text-white text-[#E5484D] border-[#E5484D]/40"
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
               <div

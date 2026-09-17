@@ -6,6 +6,7 @@ import {
   initDatabase,
   getStatusMessage,
   getBibles,
+  getBibleStats,
   getBooks,
   getVerses,
   searchVerses,
@@ -13,7 +14,9 @@ import {
   searchHymns,
   importHymnsBatch,
   importSqlFile,
-  importTwiTxtFolder,
+  importXmlBibleFile,
+  removeBible,
+  rescanBiblesFolder,
   importSngFile,
   importSngFolder
 } from './db.js';
@@ -130,24 +133,38 @@ ipcMain.handle('import-bible-sql-dialog', async () => {
   }
 });
 
-// Native Twi Bible Text Folder Import Handler
-ipcMain.handle('import-twi-folder-dialog', async () => {
+// Native Bible XML File Import Handler
+ipcMain.handle('import-bible-xml-dialog', async () => {
   const { canceled, filePaths } = await dialog.showOpenDialog({
-    title: 'Select Twi Bible Folder (66 .txt files)',
-    properties: ['openDirectory']
+    title: 'Import Bible XML File (.xml)',
+    properties: ['openFile', 'multiSelections'],
+    filters: [
+      { name: 'Bible XML Files', extensions: ['xml'] }
+    ]
   });
 
   if (canceled || filePaths.length === 0) {
     return { success: false, message: 'Cancelled' };
   }
 
-  const result = importTwiTxtFolder(filePaths[0]);
-  if (result.success) {
-    return { success: true, count: result.count, folderName: path.basename(filePaths[0]) };
-  } else {
-    return { success: false, message: result.error || result.message };
+  const results = [];
+  for (const filePath of filePaths) {
+    const result = importXmlBibleFile(filePath);
+    results.push({
+      success: result.success,
+      fileName: path.basename(filePath),
+      message: result.message || result.error || null
+    });
   }
+  return { success: true, results };
 });
+
+// Bible library management
+ipcMain.handle('get-bible-stats', () => getBibleStats());
+
+ipcMain.handle('remove-bible', (_e, bibleId) => removeBible(bibleId));
+
+ipcMain.handle('rescan-bibles', () => rescanBiblesFolder());
 
 // STAGE 5: PRESENTATION OUTPUT MULTI-WINDOW IPC FORWARDING
 ipcMain.on('send-live-slide', (_event, slideData) => {

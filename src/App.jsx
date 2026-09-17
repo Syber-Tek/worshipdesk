@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useCallback } from 'react'
 import PresentationOutputWindow from './components/PresentationOutputWindow'
 import IconRail from './components/IconRail'
 import Header from './components/Header'
@@ -165,6 +165,15 @@ export default function App() {
 
   // Fetch Bibles from SQLite on mount
   useEffect(() => {
+    if (window.api && window.api.getBibles) {
+      window.api.getBibles().then((list) => {
+        if (list && list.length > 0) setBiblesList(list)
+      })
+    }
+  }, [])
+
+  // Re-fetch the Bible list after imports/deletes in Settings
+  const refreshBibles = useCallback(() => {
     if (window.api && window.api.getBibles) {
       window.api.getBibles().then((list) => {
         if (list && list.length > 0) setBiblesList(list)
@@ -571,6 +580,8 @@ export default function App() {
               themeMode={themeMode}
               effectiveTheme={effectiveTheme}
               setThemeMode={setThemeMode}
+              biblesList={biblesList}
+              refreshBibles={refreshBibles}
             />
           )}
         </main>

@@ -2,7 +2,7 @@ import Database from 'better-sqlite3'
 import path from 'node:path'
 import fs from 'node:fs'
 import { app } from 'electron'
-import { CANONICAL_BIBLE, TWI_BOOKS_CANONICAL, normalizeBookName } from './bibleBooks.js'
+import { CANONICAL_BIBLE } from './bibleBooks.js'
 
 let db = null
 
@@ -19,6 +19,13 @@ export function initDatabase() {
   // Enable foreign key cascades (delete bible -> removes books & verses)
   db.pragma('foreign_keys = ON')
 
+  // Migration: older installs won't have source_file on bibles yet
+  try {
+    db.exec('ALTER TABLE bibles ADD COLUMN source_file TEXT')
+  } catch {
+    // Column already exists — nothing to do
+  }
+
   // Create system_status table
   db.exec(`
     CREATE TABLE IF NOT EXISTS system_status (
@@ -34,7 +41,8 @@ export function initDatabase() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       code TEXT UNIQUE NOT NULL,
       name TEXT NOT NULL,
-      language TEXT NOT NULL
+      language TEXT NOT NULL,
+      source_file TEXT
     );
 
     CREATE TABLE IF NOT EXISTS books (
@@ -142,10 +150,11 @@ function processImportedTables() {
     let bible = db.prepare('SELECT id FROM bibles WHERE code = ?').get(code)
     if (!bible) {
       const name = BIBLE_NAMES[code] || `${code} Bible`
-      const res = db.prepare('INSERT INTO bibles (code, name, language) VALUES (?, ?, ?)').run(
+      const res = db.prepare('INSERT INTO bibles (code, name, language, source_file) VALUES (?, ?, ?, ?)').run(
         code,
         name,
-        'English'
+        'English',
+        'NKJV.sql / NIV.sql / KJV.sql'
       )
       bible = { id: res.lastInsertRowid }
     } else {
@@ -192,140 +201,28 @@ function processImportedTables() {
   }
 }
 
-// Minimal Levenshtein distance for forgiving chapter-header matching
-// (e.g. the Twi "Yesia 60" header vs the book name "Yesaia").
-function editDistance(a, b) {
-  if (a === b) return 0
-  const m = a.length
-  const n = b.length
-  if (m === 0) return n
-  if (n === 0) return m
-  let prev = Array.from({ length: n + 1 }, (_, j) => j)
-  for (let i = 1; i <= m; i++) {
-    const curr = [i]
-    for (let j = 1; j <= n; j++) {
-      const cost = a[i - 1] === b[j - 1] ? 0 : 1
-      curr[j] = Math.min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + cost)
-    }
-    prev = curr
-  }
-  return prev[n]
+// Known bundled XML Bibles — stable codes + display names.
+// TWI = Twerɛ Kronkron (Bible Society of Ghana) so Genesis 1:1 etc. import cleanly.
+const XML_BIBLE_FILE_DEFS = {
+  'TwiKronkronBible.xml': { code: 'TWI', name: 'Twerɛ Kronkron (Asante-Twi Bible — Bible Society of Ghana, 2017)', twi: true },
+  'TwiAsanteBible.xml': { code: 'ASNA', name: 'Asante Twi — Nkwa Asɛm (Biblica, 1996/2020)', twi: true },
+  'TwiAkuapemBible.xml': { code: 'AKUA', name: 'Akuapem Twi — Nkwa Asɛm (2020)', twi: true },
+  'TwiDCBible.xml': { code: 'TWIDC', name: 'Twerɛ Kronkron DC — Asante-Twi with Deutero-Canons (BSG, 2017)', twi: true },
+  'TwiRevisedBible.xml': { code: 'TWIRV', name: 'New Revised Asante Twi Bible (2012)', twi: true },
+  'EnglishNIVBible.xml': { code: 'NIV', name: 'New International Version (NIV)', twi: false },
+  'EnglishNKJBible.xml': { code: 'NKJV', name: 'New King James Version (NKJV)', twi: false },
+  'EnglishKJBible.xml': { code: 'KJV', name: 'King James Version (KJV)', twi: false },
 }
 
-export function importTwiTxtFolder(folderPath) {
-  if (!db || !fs.existsSync(folderPath)) return { success: false, message: 'Folder not found' }
-  try {
-    const files = fs.readdirSync(folderPath).filter((f) => f.endsWith('.txt'))
-    if (files.length === 0) return { success: false, message: 'No .txt files found in folder' }
-
-    // Build basename -> absolute path lookup so we import in canonical 66-book order,
-    // not in filesystem (alphabetical) order.
-    const fileByBase = new Map()
-    for (const f of files) {
-      fileByBase.set(path.basename(f, '.txt').trim(), path.join(folderPath, f))
-    }
-
-    // Check if TWI Bible exists, or create it
-    let twiBible = db.prepare('SELECT id FROM bibles WHERE code = ?').get('TWI')
-    if (!twiBible) {
-      const res = db.prepare('INSERT INTO bibles (code, name, language) VALUES (?, ?, ?)').run(
-        'TWI',
-        'Twerɛ Kronkron (Twi Bible - Bible Society of Ghana)',
-        'Twi'
-      )
-      twiBible = { id: res.lastInsertRowid }
-    } else {
-      // Clear existing Twi verses if re-importing to update data
-      const existingBooks = db.prepare('SELECT id FROM books WHERE bible_id = ?').all(twiBible.id)
-      if (existingBooks.length > 0) {
-        const deleteVerses = db.prepare('DELETE FROM verses WHERE book_id = ?')
-        const deleteBook = db.prepare('DELETE FROM books WHERE id = ?')
-        db.transaction(() => {
-          for (const bk of existingBooks) {
-            deleteVerses.run(bk.id)
-            deleteBook.run(bk.id)
-          }
-        })()
-      }
-    }
-
-    const insertBook = db.prepare('INSERT INTO books (bible_id, book_number, name, testament) VALUES (?, ?, ?, ?)')
-    const insertVerse = db.prepare('INSERT INTO verses (book_id, chapter, verse, text) VALUES (?, ?, ?, ?)')
-
-    const importTransaction = db.transaction(() => {
-      let totalVerses = 0
-
-      for (const bookInfo of TWI_BOOKS_CANONICAL) {
-        const filePath = fileByBase.get(bookInfo.file)
-        if (!filePath) continue // Book file missing in folder — skip silently
-
-        const rawBuffer = fs.readFileSync(filePath)
-        let content = ''
-        if ((rawBuffer[0] === 0xFF && rawBuffer[1] === 0xFE) || rawBuffer.includes(0x00)) {
-          content = rawBuffer.toString('utf16le')
-        } else {
-          content = rawBuffer.toString('utf8')
-        }
-
-        content = content.replace(/^\uFEFF/, '')
-        const lines = content.split(/\r?\n/)
-
-        const cleanName = bookInfo.name
-        const bookRes = insertBook.run(
-          twiBible.id,
-          bookInfo.number,
-          cleanName,
-          bookInfo.number <= 39 ? 'OT' : 'NT'
-        )
-        const bookId = bookRes.lastInsertRowid
-
-        const bookPrefix = normalizeBookName(cleanName)
-        const headerFuzzy = (headerPart) => {
-          const h = normalizeBookName(headerPart)
-          const allow = bookPrefix.length >= 3 && h.length >= bookPrefix.length - 2 && h.length <= bookPrefix.length + 2
-          return allow && editDistance(h, bookPrefix) <= 2
-        }
-        let currentChapter = 1
-
-        for (let rawLine of lines) {
-          const line = rawLine.trim()
-          if (!line || line === 'X-X-X') continue
-
-          // Chapter Header match e.g. "Gyenesis 1", "Ahemfo I 1", "Nnwom 119"
-          // Only treat a line as a chapter header when it closely matches this book's name.
-          const chMatch = line.match(/^(.+?)\s+(\d{1,3})$/)
-          if (
-            chMatch &&
-            !line.match(/^\d+\s+/) &&
-            (normalizeBookName(chMatch[1].trim()).startsWith(bookPrefix) || headerFuzzy(chMatch[1].trim()))
-          ) {
-            currentChapter = parseInt(chMatch[2], 10)
-            continue
-          }
-
-          // Parse verses in line
-          const matches = [...line.matchAll(/(\d{1,3})\s*([^\d]+?)(?=(?:\d{1,3}\s+)|$)/g)]
-          if (matches.length > 0) {
-            for (const m of matches) {
-              const vNum = parseInt(m[1], 10)
-              const vText = m[2].trim()
-              if (vText.length > 0) {
-                insertVerse.run(bookId, currentChapter, vNum, vText)
-                totalVerses++
-              }
-            }
-          }
-        }
-      }
-      return totalVerses
-    })
-
-    const count = importTransaction()
-    return { success: true, count }
-  } catch (err) {
-    console.error('Twi folder import error:', err)
-    return { success: false, error: err.message }
-  }
+function decodeXmlEntities(text) {
+  return text
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&#(\d+);/g, (_, n) => { try { return String.fromCodePoint(parseInt(n, 10)) } catch { return '' } })
+    .replace(/&amp;/g, '&')
+    .trim()
 }
 
 export function importXmlBibleFile(filePath) {
@@ -341,20 +238,22 @@ export function importXmlBibleFile(filePath) {
     content = content.replace(/^\uFEFF/, '')
 
     const fileName = path.basename(filePath, path.extname(filePath))
-    const isTwi = fileName.toLowerCase().includes('twi') || content.toLowerCase().includes('twi')
-    
+    const xmlFileDef = XML_BIBLE_FILE_DEFS[path.basename(filePath)]
+    const isTwi = xmlFileDef ? xmlFileDef.twi : (fileName.toLowerCase().includes('twi') || content.toLowerCase().includes('twi'))
+
     const transMatch = content.match(/translation=["']([^"']+)["']/i) || content.match(/biblename=["']([^"']+)["']/i) || content.match(/<title>([^<]+)<\/title>/i)
     const xmlTitle = transMatch ? transMatch[1].trim() : fileName
 
-    const code = fileName.toUpperCase().replace(/[^A-Z0-9]/g, '_')
-    const name = xmlTitle.toLowerCase().includes('twi') ? xmlTitle : `${xmlTitle} (Twi)`
+    const code = xmlFileDef ? xmlFileDef.code : fileName.toUpperCase().replace(/[^A-Z0-9]/g, '_')
+    const name = xmlFileDef ? xmlFileDef.name : (isTwi ? `${xmlTitle} (Twi)` : xmlTitle)
     const language = isTwi ? 'Twi' : 'English'
 
     let bible = db.prepare('SELECT id FROM bibles WHERE code = ?').get(code)
     if (!bible) {
-      const res = db.prepare('INSERT INTO bibles (code, name, language) VALUES (?, ?, ?)').run(code, name, language)
+      const res = db.prepare('INSERT INTO bibles (code, name, language, source_file) VALUES (?, ?, ?, ?)').run(code, name, language, path.basename(filePath))
       bible = { id: res.lastInsertRowid }
     } else {
+      db.prepare('UPDATE bibles SET name = ?, language = ?, source_file = ? WHERE id = ?').run(name, language, path.basename(filePath), bible.id)
       const existingBooks = db.prepare('SELECT id FROM books WHERE bible_id = ?').all(bible.id)
       if (existingBooks.length > 0) {
         const deleteVerses = db.prepare('DELETE FROM verses WHERE book_id = ?')
@@ -417,7 +316,7 @@ export function importXmlBibleFile(filePath) {
               let vMatch
               while ((vMatch = verseRegex.exec(chXml)) !== null) {
                 const vNum = parseInt(vMatch[1], 10)
-                let vText = vMatch[2].replace(/<[^>]+>/g, '').trim()
+                let vText = decodeXmlEntities(vMatch[2].replace(/<[^>]+>/g, ''))
                 if (vText) {
                   insertVerse.run(bookId, chNum, vNum, vText)
                   totalVerses++
@@ -429,7 +328,7 @@ export function importXmlBibleFile(filePath) {
             let vMatch
             while ((vMatch = verseRegex.exec(bookXml)) !== null) {
               const vNum = parseInt(vMatch[1], 10)
-              let vText = vMatch[2].replace(/<[^>]+>/g, '').trim()
+              let vText = decodeXmlEntities(vMatch[2].replace(/<[^>]+>/g, ''))
               if (vText) {
                 insertVerse.run(bookId, 1, vNum, vText)
                 totalVerses++
@@ -454,21 +353,29 @@ export function autoScanBiblesFolder() {
     const biblesDir = path.join(process.cwd(), 'bibles')
     if (!fs.existsSync(biblesDir)) {
       fs.mkdirSync(biblesDir, { recursive: true })
+    }
+
+    // Ensure bibles/xml exists with an empty marker so users know where to drop files
+    const xmlDir = path.join(biblesDir, 'xml')
+    if (!fs.existsSync(xmlDir)) {
+      fs.mkdirSync(xmlDir, { recursive: true })
       const readmeText = `Church Presenter — Bible Data Importer Folder
 ==============================================
-Place your Bible files in this folder to auto-import them:
+Place your Bible files in these folders to import them on the next app start:
 
 1. SQL Files (.sql):
-   - Drop NKJV.sql, NIV.sql, or KJV.sql files directly here.
+   - Drop NKJV.sql, NIV.sql, or KJV.sql files directly into "bibles/".
 
 2. XML Files (.xml):
-   - Create a subfolder "xml" or place .xml Bible files in "bibles/xml/".
+   - Drop structured Bible XML files (Zefania/OSIS/USFX or
+     "<book number>...<chapter number>...<verse number>") into "bibles/xml/".
+   - Bundled NIV / NKJV / KJV (English) and Twerɛ Kronkron (Twi) XML Bibles
+     already live here and ship with the app.
 
-3. Twi Bible Folder (TXT files):
-   - Create a subfolder named "Twi" here and put your 66 book .txt files inside.
+3. Songs (.sng):
+   - Drop "PH01.sng" style files into "bibles/".
 `
-      fs.writeFileSync(path.join(biblesDir, 'README.txt'), readmeText, 'utf-8')
-      return
+      fs.writeFileSync(path.join(xmlDir, 'README.txt'), readmeText, 'utf-8')
     }
 
     // Auto-import any .sql files in bibles/
@@ -481,7 +388,6 @@ Place your Bible files in this folder to auto-import them:
     processImportedTables()
 
     // Auto-import XML files in bibles/ or bibles/xml/
-    const xmlDir = path.join(biblesDir, 'xml')
     if (fs.existsSync(xmlDir) && fs.statSync(xmlDir).isDirectory()) {
       const xmlFiles = fs.readdirSync(xmlDir).filter((f) => f.endsWith('.xml'))
       for (const file of xmlFiles) {
@@ -491,14 +397,6 @@ Place your Bible files in this folder to auto-import them:
     const rootXmlFiles = fs.readdirSync(biblesDir).filter((f) => f.endsWith('.xml'))
     for (const file of rootXmlFiles) {
       importXmlBibleFile(path.join(biblesDir, file))
-    }
-
-    // Auto-import Twi / TWI subfolder if exists
-    const twiSubfolder = fs.readdirSync(biblesDir).find(
-      (name) => name.toLowerCase() === 'twi' && fs.statSync(path.join(biblesDir, name)).isDirectory()
-    )
-    if (twiSubfolder) {
-      importTwiTxtFolder(path.join(biblesDir, twiSubfolder))
     }
   } catch (err) {
     console.warn('Auto scan bibles folder notice:', err.message)
@@ -684,6 +582,45 @@ export function getStatusMessage() {
 export function getBibles() {
   if (!db) return []
   return db.prepare('SELECT * FROM bibles ORDER BY id ASC').all()
+}
+
+export function getBibleStats() {
+  if (!db) return []
+  const bibles = getBibles()
+  const stats = bibles.map((bible) => {
+    const bookCount = db.prepare('SELECT COUNT(*) as count FROM books WHERE bible_id = ?').get(bible.id).count
+    const verseCount = db.prepare('SELECT COUNT(*) as count FROM verses v JOIN books b ON v.book_id = b.id WHERE b.bible_id = ?').get(bible.id).count
+    const sourceFile = db.prepare('SELECT source_file FROM bibles WHERE id = ?').get(bible.id)?.source_file || null
+    return { ...bible, bookCount, verseCount, sourceFile }
+  })
+  return stats
+}
+
+export function removeBible(bibleId) {
+  if (!db) return { success: false, error: 'DB not ready' }
+  const bible = db.prepare('SELECT id, code FROM bibles WHERE id = ?').get(bibleId)
+  if (!bible) return { success: false, error: 'Bible not found' }
+  if (bible.code.toUpperCase() === 'NIV' || bible.code.toUpperCase() === 'NKJV' || bible.code.toUpperCase() === 'KJV' || bible.code.toUpperCase() === 'TWI') {
+    return { success: false, error: 'This is a default bundled Bible and cannot be deleted' }
+  }
+  try {
+    db.transaction(() => {
+      db.prepare('DELETE FROM books WHERE bible_id = ?').run(bible.id)
+      db.prepare('DELETE FROM bibles WHERE id = ?').run(bible.id)
+    })()
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+}
+
+export function rescanBiblesFolder() {
+  try {
+    autoScanBiblesFolder()
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
 }
 
 export function getBooks(bibleId = 1) {
