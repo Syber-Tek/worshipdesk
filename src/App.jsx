@@ -210,54 +210,70 @@ export default function App() {
     }
   }, [selectedTranslation, biblesList])
 
-  // Fetch verses dynamically from SQLite
+// Fetch verses dynamically from SQLite
+  // (search is debounced so results keep up with fast typing instead of lagging behind)
   useEffect(() => {
     if (!window.api) return
 
     const activeBible = biblesList.find((b) => b.code === selectedTranslation) || biblesList[0]
     const bibleId = activeBible ? activeBible.id : 1
 
-    if (searchQuery.trim()) {
-      if (window.api.searchVerses) {
-        window.api.searchVerses(searchQuery, bibleId).then((results) => {
-          if (results && results.length > 0) {
-            setDbVerses(
-              results.map((r) => ({
-                id: r.id,
-                ref: `${r.book_name || 'Verse'} ${r.chapter}:${r.verse}`,
-                book: r.book_name || 'Verse',
-                chapter: r.chapter,
-                verse: r.verse,
-                text: r.text
-              }))
-            )
-          } else {
-            setDbVerses([])
+    let stale = false
+    const timer = setTimeout(
+      () => {
+        if (searchQuery.trim()) {
+          if (window.api.searchVerses) {
+            window.api.searchVerses(searchQuery.trim(), bibleId).then((results) => {
+              if (stale) return
+              if (results && results.length > 0) {
+                setDbVerses(
+                  results.map((r) => ({
+                    id: r.id,
+                    ref: `${r.book_name || 'Verse'} ${r.chapter}:${r.verse}`,
+                    book: r.book_name || 'Verse',
+                    chapter: r.chapter,
+                    verse: r.verse,
+                    text: r.text
+                  }))
+                )
+              } else {
+                setDbVerses([])
+              }
+            })
           }
-        })
-      }
-    } else {
-      if (window.api.getBooks) {
-        window.api.getBooks(bibleId).then((books) => {
-          if (!books || books.length === 0) return
-          const matchedBook = books.find((b) => normalizeBookName(b.name) === normalizeBookName(selectedBook))
-          if (!matchedBook || !window.api.getVerses) return
-          window.api.getVerses(matchedBook.id, selectedChapter).then((verses) => {
-            if (verses && verses.length > 0) {
-              setDbVerses(
-                verses.map((v) => ({
-                  id: v.id,
-                  ref: `${matchedBook.name} ${v.chapter}:${v.verse}`,
-                  book: matchedBook.name,
-                  chapter: v.chapter,
-                  verse: v.verse,
-                  text: v.text
-                }))
-              )
-            }
-          })
-        })
-      }
+        } else {
+          if (window.api.getBooks) {
+            window.api.getBooks(bibleId).then((books) => {
+              if (stale) return
+              if (!books || books.length === 0) return
+              const matchedBook = books.find((b) => normalizeBookName(b.name) === normalizeBookName(selectedBook))
+              if (!matchedBook || !window.api.getVerses) return
+              window.api.getVerses(matchedBook.id, selectedChapter).then((verses) => {
+                if (stale) return
+                if (verses && verses.length > 0) {
+                  setDbVerses(
+                    verses.map((v) => ({
+                      id: v.id,
+                      ref: `${matchedBook.name} ${v.chapter}:${v.verse}`,
+                      book: matchedBook.name,
+                      chapter: v.chapter,
+                      verse: v.verse,
+                      text: v.text
+                    }))
+                  )
+                } else {
+                  setDbVerses([])
+                }
+              })
+            })
+          }
+        }
+      },
+      searchQuery.trim() ? 250 : 0
+    )
+    return () => {
+      stale = true
+      clearTimeout(timer)
     }
   }, [searchQuery, selectedTranslation, selectedBook, selectedChapter, biblesList])
 
@@ -279,8 +295,13 @@ export default function App() {
     }
   }, [activeTab])
 
+  // Once a real Bible is imported we never fall back to the demo verses,
+// so an empty search result correctly shows nothing instead of placeholder data.
+  const hasRealBibles = biblesList && biblesList.length > 0
   const filteredVerses = dbVerses.length > 0
     ? dbVerses
+    : hasRealBibles
+    ? []
     : searchQuery.trim()
     ? fallbackVerses.filter(
         (v) =>
@@ -292,7 +313,7 @@ export default function App() {
       )
 
   const activeSelectedVerse =
-    filteredVerses[selectedVerseIndex] || filteredVerses[0] || fallbackVerses[0]
+    filteredVerses[selectedVerseIndex] || filteredVerses[0] || (hasRealBibles ? null : fallbackVerses[0])
 
   const handleAddToPlaylist = (verse) => {
     if (!verse) return

@@ -49,6 +49,21 @@ export default function BibleView({
   const otHeading = isTwi ? 'Apam Dedaw — Old Testament' : 'Old Testament'
   const ntHeading = isTwi ? 'Apam Foforo — New Testament' : 'New Testament'
 
+  // Highlight the search term inside verse text (case-insensitive, safe regex)
+  const highlightText = (text, query) => {
+    const q = String(query || '').trim()
+    if (!q || !text) return text
+    const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const lowerQ = q.toLowerCase()
+    return String(text)
+      .split(new RegExp(`(${escaped})`, 'ig'))
+      .map((part, idx) =>
+        part.toLowerCase() === lowerQ
+          ? <span key={idx} className="bg-[#D4A94A]/25 text-[#D4A94A] font-semibold rounded-sm px-0.5">{part}</span>
+          : part
+      )
+  }
+
   return (
     <div className="space-y-5 max-w-5xl mx-auto">
       {/* Top Header Bar: Translations & View Mode Toggle */}
@@ -298,7 +313,7 @@ export default function BibleView({
                       ? isLight ? 'text-[#111827]' : 'text-[#EDEDEE]'
                       : isLight ? 'text-[#4B5563]' : 'text-[#9B9CA3]'
                   }`}>
-                    {v.text}
+                    {highlightText(v.text, searchQuery)}
                   </p>
                 </div>
               )
@@ -329,7 +344,7 @@ export default function BibleView({
                       ? 'bg-[#F3F4F6] border-[#E5E7EB] text-[#111827]'
                       : 'bg-[#1C1D21] border-[#2A2C31] text-[#EDEDEE]'
                   }`}>
-                    "{activeSelectedVerse.text}"
+                    "{highlightText(activeSelectedVerse.text, searchQuery)}"
                   </p>
                 </div>
               )}

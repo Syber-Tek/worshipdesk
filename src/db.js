@@ -642,14 +642,16 @@ export function getVerses(bookId, chapter) {
 
 export function searchVerses(query, bibleId) {
   if (!db || !query) return []
-  const pattern = `%${query}%`
+  // Escape LIKE wildcards so user input (% _ \) is matched literally
+  const escaped = String(query).replace(/[\\%_]/g, (m) => `\\${m}`)
+  const pattern = `%${escaped}%`
   return db.prepare(`
     SELECT v.*, b.name as book_name
     FROM verses v
     JOIN books b ON v.book_id = b.id
-    WHERE v.text LIKE ?
+    WHERE v.text LIKE ? ESCAPE '\\'
       AND (? IS NULL OR b.bible_id = ?)
-    ORDER BY b.bible_id ASC, b.book_number ASC, v.chapter ASC, v.verse ASC
+    ORDER BY b.book_number ASC, v.chapter ASC, v.verse ASC
     LIMIT 30
   `).all(pattern, bibleId || null, bibleId || null)
 }
@@ -661,12 +663,13 @@ export function getHymns() {
 
 export function searchHymns(query) {
   if (!db || !query) return getHymns()
-  const pattern = `%${query}%`
+  const escaped = String(query).replace(/[\\%_]/g, (m) => `\\${m}`)
+  const pattern = `%${escaped}%`
   const isNumber = !isNaN(query)
   if (isNumber) {
-    return db.prepare('SELECT * FROM hymns WHERE hymn_number = ? OR title LIKE ? OR lyrics LIKE ?').all(parseInt(query), pattern, pattern)
+    return db.prepare('SELECT * FROM hymns WHERE hymn_number = ? OR title LIKE ? ESCAPE ? OR lyrics LIKE ? ESCAPE ? ORDER BY hymn_number ASC').all(parseInt(query), pattern, '\\', pattern, '\\')
   }
-  return db.prepare('SELECT * FROM hymns WHERE title LIKE ? OR lyrics LIKE ? ORDER BY hymn_number ASC').all(pattern, pattern)
+  return db.prepare('SELECT * FROM hymns WHERE title LIKE ? ESCAPE ? OR lyrics LIKE ? ESCAPE ? ORDER BY hymn_number ASC').all(pattern, '\\', pattern, '\\')
 }
 
 export function addHymn({ number, title, category, author, lyrics }) {
