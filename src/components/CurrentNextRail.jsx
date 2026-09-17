@@ -1,13 +1,13 @@
 import React from 'react'
 import {
-  FaCircle,
-  FaBackwardStep,
-  FaForwardStep,
-  FaEraser,
-  FaBan,
-  FaPlay,
-  FaStop
-} from 'react-icons/fa6'
+  ArrowLeft,
+  ArrowRight,
+  Hide,
+  CloseSquare,
+  Play,
+  Delete,
+  Activity
+} from 'react-iconly'
 
 export default function CurrentNextRail({
   currentSlide,
@@ -23,109 +23,176 @@ export default function CurrentNextRail({
   handleToggleBlack,
   handleTransportPresent,
   handleTransportStop,
-  themeMode
+  themeMode,
+  outputTheme = 'dark',
+  setOutputTheme
 }) {
   const isLight = themeMode === 'light'
 
   return (
     <aside
-      className={`w-[230px] border-l flex flex-col justify-between p-3 select-none z-10 text-xs shrink-0 transition-colors duration-200 ${
+      className={`w-57.5 border-l flex flex-col justify-between p-3 select-none z-10 text-xs shrink-0 transition-colors duration-200 ${
         isLight
           ? 'bg-[#FFFFFF] border-[#E5E7EB]'
-          : 'bg-[#151619] border-[#2A2C31]'
+          : 'bg-[#141518] border-[#26282E]'
       }`}
     >
       <div className="space-y-4">
         {/* CURRENT LIVE CARD */}
         <div
-          className={`p-3 rounded-lg border transition ${
+          className={`border rounded-lg p-3 space-y-2 relative transition ${
             isLive
-              ? 'bg-[#E5484D]/10 border-[#E5484D] shadow-[0_0_12px_rgba(229,72,77,0.2)]'
+              ? 'bg-[#E5484D]/10 border-[#E5484D]'
               : isLight
-              ? 'bg-[#F3F4F6] border-[#E5E7EB] text-[#4B5563]'
-              : 'bg-[#1C1D21] border-[#2A2C31] text-[#9B9CA3]'
+              ? 'bg-[#F9FAFB] border-[#E5E7EB]'
+              : 'bg-[#1C1D21] border-[#2A2C31]'
           }`}
         >
-          <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] uppercase font-bold tracking-wider text-[#E5484D] flex items-center gap-1">
+              <Activity set="bold" primaryColor="#E5484D" size="small" /> LIVE OUTPUT
+            </span>
             <span
-              className={`text-[10px] uppercase tracking-wider font-bold flex items-center gap-1.5 ${
-                isLive ? 'text-[#E5484D]' : isLight ? 'text-[#6B7280]' : 'text-[#6B6C73]'
+              className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                isLive ? 'bg-[#E5484D] text-white animate-pulse' : isLight ? 'bg-[#E5E7EB] text-[#6B7280]' : 'bg-[#24262B] text-[#6B6C73]'
               }`}
             >
-              <FaCircle className={`text-[6px] ${isLive ? 'animate-pulse' : ''}`} />
-              {isLive ? 'Current Live' : 'Live Output (Off)'}
+              {isLive ? 'ON AIR' : 'OFFLINE'}
             </span>
-            <span className={`text-[10px] ${isLight ? 'text-[#6B7280]' : 'text-[#6B6C73]'}`}>{currentSlide.type}</span>
           </div>
 
-          {isBlack ? (
-            <div className="bg-[#0B0C0E] text-[#6B6C73] p-2 rounded text-center font-mono text-[10px]">
-              [ BLACK SCREEN ]
-            </div>
-          ) : isBlank ? (
-            <div className="bg-[#0B0C0E] text-[#6B6C73] p-2 rounded text-center font-mono text-[10px]">
-              [ CLEAR TEXT ]
-            </div>
-          ) : (
-            <>
-              <h4 className={`font-semibold text-xs mb-1 ${isLight ? 'text-[#111827]' : 'text-[#EDEDEE]'}`}>
-                {currentSlide.title}
-              </h4>
-              <p className={`text-[11px] line-clamp-3 leading-relaxed ${isLight ? 'text-[#4B5563]' : 'text-[#9B9CA3]'}`}>
-                "{currentSlide.content}"
+          <div className="min-h-14 flex flex-col justify-center">
+            {currentSlide ? (
+              <>
+                <h4 className={`font-bold text-xs ${isLight ? 'text-[#111827]' : 'text-[#EDEDEE]'}`}>
+                  {currentSlide.title || currentSlide.ref}
+                </h4>
+                <p className={`text-[11px] line-clamp-2 mt-0.5 ${isLight ? 'text-[#4B5563]' : 'text-[#9B9CA3]'}`}>
+                  {currentSlide.content || currentSlide.text}
+                </p>
+              </>
+            ) : (
+              <p className={`text-[11px] italic ${isLight ? 'text-[#9CA3AF]' : 'text-[#6B6C73]'}`}>
+                No active live slide projected
               </p>
-            </>
-          )}
+            )}
+          </div>
         </div>
 
-        {/* NEXT QUEUED CARD */}
-        <div className={`p-3 rounded-lg border ${
-          isLight ? 'bg-[#F3F4F6] border-[#E5E7EB]' : 'bg-[#1C1D21] border-[#2A2C31]'
-        }`}>
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] uppercase tracking-wider font-semibold text-[#D4A94A] flex items-center gap-1.5">
-              <FaCircle className="text-[6px] text-[#D4A94A]" /> Next Queued
+        {/* NEXT STAGED CARD */}
+        <div
+          className={`border rounded-lg p-3 space-y-2 transition ${
+            isLight
+              ? 'bg-[#F3F4F6] border-[#D4A94A]'
+              : 'bg-[#1C1D21] border-[#D4A94A]/50'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] uppercase font-bold tracking-wider text-[#D4A94A] flex items-center gap-1">
+              <Activity set="bold" primaryColor="#D4A94A" size="small" /> NEXT STAGED
             </span>
-            <span className={`text-[10px] ${isLight ? 'text-[#6B7280]' : 'text-[#6B6C73]'}`}>{nextSlide.type}</span>
+            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${isLight ? 'bg-[#E5E7EB] text-[#D4A94A]' : 'bg-[#24262B] text-[#D4A94A]'}`}>
+              PREPARED
+            </span>
           </div>
-          <h4 className={`font-semibold text-xs mb-1 ${isLight ? 'text-[#111827]' : 'text-[#EDEDEE]'}`}>{nextSlide.title}</h4>
-          <p className={`text-[11px] line-clamp-3 leading-relaxed ${isLight ? 'text-[#4B5563]' : 'text-[#9B9CA3]'}`}>
-            "{nextSlide.content}"
-          </p>
+
+          <div className="min-h-14 flex flex-col justify-center">
+            {nextSlide ? (
+              <>
+                <h4 className={`font-bold text-xs ${isLight ? 'text-[#111827]' : 'text-[#EDEDEE]'}`}>
+                  {nextSlide.title || nextSlide.ref}
+                </h4>
+                <p className={`text-[11px] line-clamp-2 mt-0.5 ${isLight ? 'text-[#4B5563]' : 'text-[#9B9CA3]'}`}>
+                  {nextSlide.content || nextSlide.text}
+                </p>
+              </>
+            ) : (
+              <p className={`text-[11px] italic ${isLight ? 'text-[#9CA3AF]' : 'text-[#6B6C73]'}`}>
+                No next slide staged
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* TRANSPORT CONTROLS BAR */}
-      <div className={`pt-3 border-t space-y-2 ${isLight ? 'border-[#E5E7EB]' : 'border-[#2A2C31]'}`}>
+      {/* TRANSPORT & OVERLAY CONTROL BAR */}
+      <div className="space-y-2 pt-3 border-t border-[#2A2C31]">
+        {/* Output Screen Theme Quick Selector */}
+        {setOutputTheme && (
+          <div className="space-y-1">
+            <div className={`text-[10px] uppercase font-bold tracking-wider ${isLight ? 'text-[#6B7280]' : 'text-[#9B9CA3]'}`}>
+              Output Screen Theme
+            </div>
+            <div className="grid grid-cols-3 gap-1">
+              <button
+                onClick={() => setOutputTheme('dark')}
+                className={`py-1 rounded text-[10px] font-semibold transition border cursor-pointer ${
+                  outputTheme === 'dark'
+                    ? 'bg-[#D4A94A] text-[#0B0C0E] border-[#D4A94A]'
+                    : isLight
+                    ? 'bg-[#E5E7EB] text-[#374151] border-[#D1D5DB] hover:bg-[#D1D5DB]'
+                    : 'bg-[#24262B] text-[#9B9CA3] border-[#2A2C31] hover:text-[#EDEDEE]'
+                }`}
+              >
+                Dark
+              </button>
+              <button
+                onClick={() => setOutputTheme('light')}
+                className={`py-1 rounded text-[10px] font-semibold transition border cursor-pointer ${
+                  outputTheme === 'light'
+                    ? 'bg-[#D4A94A] text-[#0B0C0E] border-[#D4A94A]'
+                    : isLight
+                    ? 'bg-[#E5E7EB] text-[#374151] border-[#D1D5DB] hover:bg-[#D1D5DB]'
+                    : 'bg-[#24262B] text-[#9B9CA3] border-[#2A2C31] hover:text-[#EDEDEE]'
+                }`}
+              >
+                Light
+              </button>
+              <button
+                onClick={() => setOutputTheme('image')}
+                className={`py-1 rounded text-[10px] font-semibold transition border cursor-pointer ${
+                  outputTheme === 'image'
+                    ? 'bg-[#D4A94A] text-[#0B0C0E] border-[#D4A94A]'
+                    : isLight
+                    ? 'bg-[#E5E7EB] text-[#374151] border-[#D1D5DB] hover:bg-[#D1D5DB]'
+                    : 'bg-[#24262B] text-[#9B9CA3] border-[#2A2C31] hover:text-[#EDEDEE]'
+                }`}
+              >
+                Image
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-1.5">
           <button
             onClick={handleTransportPrev}
             disabled={selectedVerseIndex <= 0}
-            className={`py-1.5 border rounded text-[11px] font-medium flex items-center justify-center gap-1 transition ${
+            className={`py-2 border rounded font-semibold text-[11px] flex items-center justify-center gap-1 transition disabled:opacity-40 cursor-pointer ${
               isLight
-                ? 'bg-[#E5E7EB] hover:bg-[#D1D5DB] border-[#D1D5DB] text-[#111827] disabled:opacity-40'
-                : 'bg-[#24262B] hover:bg-[#2A2C31] border-[#2A2C31] text-[#EDEDEE] disabled:opacity-40'
+                ? 'bg-[#E5E7EB] hover:bg-[#D1D5DB] border-[#D1D5DB] text-[#111827]'
+                : 'bg-[#24262B] hover:bg-[#2A2C31] border-[#2A2C31] text-[#EDEDEE]'
             }`}
           >
-            <FaBackwardStep className="text-[10px]" /> Prev
+            <ArrowLeft set="light" primaryColor="currentColor" size="small" /> Prev
           </button>
           <button
             onClick={handleTransportNext}
             disabled={selectedVerseIndex >= filteredVersesLength - 1}
-            className={`py-1.5 border rounded text-[11px] font-medium flex items-center justify-center gap-1 transition ${
+            className={`py-2 border rounded font-semibold text-[11px] flex items-center justify-center gap-1 transition disabled:opacity-40 cursor-pointer ${
               isLight
-                ? 'bg-[#E5E7EB] hover:bg-[#D1D5DB] border-[#D1D5DB] text-[#111827] disabled:opacity-40'
-                : 'bg-[#24262B] hover:bg-[#2A2C31] border-[#2A2C31] text-[#EDEDEE] disabled:opacity-40'
+                ? 'bg-[#E5E7EB] hover:bg-[#D1D5DB] border-[#D1D5DB] text-[#111827]'
+                : 'bg-[#24262B] hover:bg-[#2A2C31] border-[#2A2C31] text-[#EDEDEE]'
             }`}
           >
-            Next <FaForwardStep className="text-[10px]" />
+            Next <ArrowRight set="light" primaryColor="currentColor" size="small" />
           </button>
         </div>
 
         <div className="grid grid-cols-2 gap-1.5">
           <button
             onClick={handleToggleClear}
-            className={`py-1.5 border rounded text-[11px] font-medium flex items-center justify-center gap-1 transition ${
+            className={`py-1.5 border rounded text-[11px] font-medium flex items-center justify-center gap-1 transition cursor-pointer ${
               isBlank
                 ? 'bg-[#D4A94A]/20 border-[#D4A94A] text-[#D4A94A]'
                 : isLight
@@ -133,11 +200,11 @@ export default function CurrentNextRail({
                 : 'bg-[#24262B] hover:bg-[#2A2C31] border-[#2A2C31] text-[#EDEDEE]'
             }`}
           >
-            <FaEraser className="text-[10px]" /> Clear
+            <Hide set="light" primaryColor="currentColor" size="small" /> Clear
           </button>
           <button
             onClick={handleToggleBlack}
-            className={`py-1.5 border rounded text-[11px] font-medium flex items-center justify-center gap-1 transition ${
+            className={`py-1.5 border rounded text-[11px] font-medium flex items-center justify-center gap-1 transition cursor-pointer ${
               isBlack
                 ? 'bg-[#E5484D]/20 border-[#E5484D] text-[#E5484D]'
                 : isLight
@@ -145,30 +212,34 @@ export default function CurrentNextRail({
                 : 'bg-[#24262B] hover:bg-[#2A2C31] border-[#2A2C31] text-[#EDEDEE]'
             }`}
           >
-            <FaBan className="text-[10px]" /> Black
+            <CloseSquare set="light" primaryColor="currentColor" size="small" /> Black
           </button>
         </div>
 
         <div className="grid grid-cols-2 gap-1.5">
           <button
             onClick={handleTransportPresent}
-            className="py-2 bg-[#D4A94A] hover:bg-[#D4A94A]/90 text-[#0B0C0E] font-bold rounded text-[11px] flex items-center justify-center gap-1 shadow transition"
+            className="py-2 bg-[#D4A94A] hover:bg-[#D4A94A]/90 text-[#0B0C0E] font-bold rounded text-[11px] flex items-center justify-center gap-1 shadow transition cursor-pointer"
           >
-            <FaPlay className="text-[9px]" /> Present
+            <Play set="bold" primaryColor="#0B0C0E" size="small" /> Present
           </button>
           <button
             onClick={handleTransportStop}
             disabled={!isLive}
-            className={`py-2 border font-semibold rounded text-[11px] flex items-center justify-center gap-1 transition ${
+            className={`py-2 border font-semibold rounded text-[11px] flex items-center justify-center gap-1.5 transition disabled:opacity-40 cursor-pointer ${
               isLight
-                ? 'bg-[#E5E7EB] hover:bg-[#D1D5DB] border-[#D1D5DB] text-[#E5484D] disabled:opacity-40'
-                : 'bg-[#24262B] hover:bg-[#2A2C31] border-[#2A2C31] text-[#E5484D] disabled:opacity-40'
+                ? 'bg-[#E5E7EB] hover:bg-[#D1D5DB] border-[#D1D5DB] text-[#E5484D]'
+                : 'bg-[#24262B] hover:bg-[#2A2C31] border-[#2A2C31] text-[#E5484D]'
             }`}
           >
-            <FaStop className="text-[9px]" /> Stop
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" className="shrink-0">
+              <rect x="4" y="4" width="16" height="16" rx="2" />
+            </svg>
+            <span>Stop</span>
           </button>
         </div>
       </div>
     </aside>
   )
 }
+

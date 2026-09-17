@@ -1,5 +1,5 @@
 import React from 'react'
-import { FaPlus, FaXmark } from 'react-icons/fa6'
+import { Plus, CloseSquare } from 'react-iconly'
 
 export default function AddItemModal({
   showAddModal,
@@ -30,13 +30,13 @@ export default function AddItemModal({
           isLight ? 'border-[#E5E7EB]' : 'border-[#2A2C31]'
         }`}>
           <h3 className="text-sm font-bold text-[#D4A94A] flex items-center gap-2">
-            <FaPlus /> Add New Service Playlist Item
+            <Plus set="bold" primaryColor="#D4A94A" size="small" /> Add New Service Playlist Item
           </h3>
           <button
             onClick={() => setShowAddModal(false)}
-            className={`transition ${isLight ? 'text-[#6B7280] hover:text-[#111827]' : 'text-[#6B6C73] hover:text-[#EDEDEE]'}`}
+            className={`transition cursor-pointer ${isLight ? 'text-[#6B7280] hover:text-[#111827]' : 'text-[#6B6C73] hover:text-[#EDEDEE]'}`}
           >
-            <FaXmark className="text-base" />
+            <CloseSquare set="light" primaryColor="currentColor" size="medium" />
           </button>
         </div>
 

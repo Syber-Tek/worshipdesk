@@ -79,11 +79,24 @@ export function initDatabase() {
       title TEXT NOT NULL,
       category TEXT NOT NULL,
       author TEXT,
-      lyrics TEXT NOT NULL
+      lyrics TEXT NOT NULL,
+      source_file TEXT
     );
 
     CREATE INDEX IF NOT EXISTS idx_hymns_number ON hymns(hymn_number);
   `)
+
+  // Migration: add source_file to hymns for older installs
+  try {
+    db.exec('ALTER TABLE hymns ADD COLUMN source_file TEXT')
+  } catch {
+    // Column already exists
+  }
+
+  // One-off cleanup: older builds stored raw RTF markup and duplicated rows on
+  // every launch. Drop those broken importer rows; the folder scan re-imports
+  // them cleanly (see autoScanHymnsFolder).
+  db.prepare("DELETE FROM hymns WHERE lyrics LIKE '%\\par%' OR lyrics LIKE '%{\\rtf%'").run()
 
   // Seed system_status if empty
   const statusCount = db.prepare('SELECT COUNT(*) as count FROM system_status').get()
@@ -408,9 +421,78 @@ Place your Bible files in these folders to import them on the next app start:
   }
 }
 
-export function importSngFile(filePath) {
+// Windows-1252 code points that RTF hex escapes (\'92 etc.) rely on
+const CP1252 = {
+  0x80: '€', 0x82: '‚', 0x83: 'ƒ', 0x84: '„', 0x85: '…', 0x86: '†', 0x87: '‡',
+  0x88: 'ˆ', 0x89: '‰', 0x8a: 'Š', 0x8b: '‹', 0x8c: 'Œ', 0x8e: 'Ž', 0x91: '‘',
+  0x92: '’', 0x93: '“', 0x94: '”', 0x95: '•', 0x96: '–', 0x97: '—', 0x98: '˜',
+  0x99: '™', 0x9a: 'š', 0x9b: '›', 0x9c: 'œ', 0x9e: 'ž', 0x9f: 'Ÿ', 0xb6: '•'
+}
+
+// Convert the RTF body of a .sng file to readable plain text (verse breaks on \par)
+function rtfToPlainText(rtf) {
+  let text = String(rtf || '')
+  // Drop whole header groups (fonts/colors/info) before stripping braces
+  text = text.replace(/\{\\fonttbl(?:\{[^{}]*\})*\}/g, '')
+  text = text.replace(/\{\\colortbl[^{}]*\}/g, '')
+  text = text.replace(/\{\\info(?:\{[^{}]*\})*\}/g, '')
+  text = text.replace(/\{\\\*\\[^{}]*\}/g, '')
+  text = text.replace(/\r?\n/g, '')
+  text = text.replace(/\\'([0-9a-fA-F]{2})/g, (_, hex) => {
+    const code = parseInt(hex, 16)
+    return CP1252[code] !== undefined ? CP1252[code] : String.fromCharCode(code)
+  })
+  // Protect escaped braces so group-brace stripping does not eat them
+  text = text.replace(/\\([\\{}])/g, (_, ch) => (ch === '\\' ? '\\' : ch === '{' ? '\u0001' : '\u0002'))
+  text = text.replace(/\\par\b/g, '\n').replace(/\\line\b/g, '\n').replace(/\\tab\b/g, '\t')
+  text = text.replace(/\\[a-zA-Z]+-?\d* ?/g, '')
+  text = text.replace(/\\[^a-zA-Z]/g, '')
+  text = text.replace(/[{}]/g, '')
+  text = text.replace(/\u0001/g, '{').replace(/\u0002/g, '}')
+  return text
+    .replace(/^[ \t]+/gm, '')
+    .replace(/[ \t]+$/gm, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
+// The Twi hymnals come from a "WL-Sims Akan" font where ASCII brackets stand in
+// for the Akan letters ɛ / ɔ. Restore the real letters so text is searchable.
+function twiGlyphFix(text) {
+  return String(text || '')
+    .replace(/\[/g, 'ɛ')
+    .replace(/\]/g, 'ɔ')
+    .replace(/\{/g, 'ɛ')
+    .replace(/\}/g, 'ɔ')
+}
+
+function parseHymnNumber(...candidates) {
+  for (const candidate of candidates) {
+    if (candidate === undefined || candidate === null) continue
+    const match = String(candidate).match(/(\d{1,4})/)
+    if (match) return parseInt(match[1], 10)
+  }
+  return 0
+}
+
+// Map a hymns/ sub-folder name to the category + author used across the app
+export function deriveCategoryAndAuthor(folderName) {
+  const name = String(folderName || '').toLowerCase()
+  const methodist = name.includes('methodist')
+  const twi = name.includes('twi')
+  const liturgy = name.includes('liturgy')
+  const denom = methodist ? 'Methodist' : 'Presby'
+  const category = liturgy ? `${denom} Liturgy` : `${denom} Hymns (${twi ? 'Twi' : 'Eng'})`
+  const author = methodist ? 'Methodist Church Ghana' : 'Presbyterian Church of Ghana'
+  return { category, author, isTwi: twi }
+}
+
+export function importSngFile(filePath, defaultCategory, defaultAuthor, isTwi) {
   if (!db || !fs.existsSync(filePath)) return { success: false, message: 'File not found' }
   try {
+    const baseName = path.basename(filePath, path.extname(filePath))
+    if (/^readme/i.test(baseName)) return { success: false, message: 'Skipped readme' }
+
     const rawBuffer = fs.readFileSync(filePath)
     let content = ''
     if ((rawBuffer[0] === 0xFF && rawBuffer[1] === 0xFE) || rawBuffer.includes(0x00)) {
@@ -420,60 +502,39 @@ export function importSngFile(filePath) {
     }
     content = content.replace(/^\uFEFF/, '')
 
-    const fileName = path.basename(filePath, path.extname(filePath))
-    let title = fileName
-    let hymnNumber = 0
-    let author = 'Presbyterian Church of Ghana'
-    let category = 'Presby Hymnal'
-
-    const numMatch = fileName.match(/^(?:PH\s*)?(\d+)/i)
-    if (numMatch) {
-      hymnNumber = parseInt(numMatch[1], 10)
+    // Collect the "##Key=Value" metadata block used by SongShow-style .sng files
+    const meta = {}
+    for (const rawLine of content.split(/\r?\n/)) {
+      const match = rawLine.trim().match(/^#+\s*([A-Za-z0-9_]+)\s*=\s*(.*)$/)
+      if (match) meta[match[1].toLowerCase()] = match[2].trim()
     }
 
-    const lines = content.split(/\r?\n/)
-    const lyricLines = []
+    let title = meta.title || baseName
+    title = title.replace(/\s*\([A-Za-z]{1,4}\s*\d+\)\s*$/, '').trim() || baseName
 
-    for (let rawLine of lines) {
-      const line = rawLine.trim()
-      if (!line) {
-        lyricLines.push('')
-        continue
-      }
+    const hymnNumber = parseHymnNumber(meta.userinfo1, meta.cclinum, meta.number, baseName, title)
+    const author = meta.wordsby || meta.musicby || defaultAuthor || 'Church Library'
+    const category = defaultCategory || meta.category || 'General Hymn'
 
-      const titleMatch = line.match(/^#?Title\s*[:=]\s*(.+)$/i)
-      if (titleMatch) {
-        title = titleMatch[1].trim()
-        continue
-      }
-      const authorMatch = line.match(/^#?Author\s*[:=]\s*(.+)$/i)
-      if (authorMatch) {
-        author = authorMatch[1].trim()
-        continue
-      }
-      const numberMatch = line.match(/^#?(?:Number|HymnNumber|No)\s*[:=]\s*(\d+)$/i)
-      if (numberMatch) {
-        hymnNumber = parseInt(numberMatch[1], 10)
-        continue
-      }
-      const catMatch = line.match(/^#?Category\s*[:=]\s*(.+)$/i)
-      if (catMatch) {
-        category = catMatch[1].trim()
-        continue
-      }
-
-      if (line.startsWith('#') && line.includes('=')) continue
-
-      lyricLines.push(line)
+    let lyrics = ''
+    const rtfStart = content.search(/\{\\rtf/i)
+    if (rtfStart >= 0) {
+      lyrics = rtfToPlainText(content.slice(rtfStart))
+    } else {
+      lyrics = content
+        .split(/\r?\n/)
+        .filter((line) => !/^\s*#+\s*[A-Za-z0-9_]+\s*=/.test(line))
+        .join('\n')
+        .trim()
     }
+    if (isTwi) lyrics = twiGlyphFix(lyrics)
+    if (!lyrics) return { success: false, message: 'No lyrics found' }
 
-    let lyrics = lyricLines.join('\n').trim()
-    if (!lyrics) lyrics = content.trim()
-
-    title = title.replace(/^[0-9\s_\-]+/, '').replace(/\.sng$/i, '').trim() || fileName
-
-    const insert = db.prepare('INSERT INTO hymns (hymn_number, title, category, author, lyrics) VALUES (?, ?, ?, ?, ?)')
-    insert.run(hymnNumber, title, category, author, lyrics)
+    const sourceFile = path.relative(process.cwd(), filePath)
+    const insert = db.prepare(
+      'INSERT INTO hymns (hymn_number, title, category, author, lyrics, source_file) VALUES (?, ?, ?, ?, ?, ?)'
+    )
+    insert.run(hymnNumber, title, category, author, lyrics, sourceFile)
 
     return { success: true, title, hymnNumber }
   } catch (err) {
@@ -482,16 +543,19 @@ export function importSngFile(filePath) {
   }
 }
 
-export function importSngFolder(folderPath) {
+export function importSngFolder(folderPath, defaultCategory, defaultAuthor, isTwi) {
   if (!db || !fs.existsSync(folderPath)) return { success: false, message: 'Folder not found' }
   try {
-    const files = fs.readdirSync(folderPath).filter((f) => f.endsWith('.sng') || f.endsWith('.txt'))
-    let count = 0
-    for (const file of files) {
-      const res = importSngFile(path.join(folderPath, file))
-      if (res.success) count++
-    }
-    return { success: true, count }
+    const files = fs.readdirSync(folderPath).filter((f) => f.endsWith('.sng') && !/^readme/i.test(f))
+    const importAll = db.transaction(() => {
+      let count = 0
+      for (const file of files) {
+        const res = importSngFile(path.join(folderPath, file), defaultCategory, defaultAuthor, isTwi)
+        if (res.success) count++
+      }
+      return count
+    })
+    return { success: true, count: importAll() }
   } catch (err) {
     console.error('Failed to import .sng folder:', err)
     return { success: false, error: err.message }
@@ -506,12 +570,16 @@ export function autoScanHymnsFolder() {
       return
     }
 
-    importSngFolder(hymnsDir)
+    // Folder imports are re-imported from scratch so fixes/re-scans never duplicate.
+    // Manual imports (JSON / single files) have no source_file and are preserved.
+    db.prepare('DELETE FROM hymns WHERE source_file IS NOT NULL').run()
 
-    const subdirs = fs.readdirSync(hymnsDir).filter(f => fs.statSync(path.join(hymnsDir, f)).isDirectory())
+    const subdirs = fs.readdirSync(hymnsDir).filter((f) => fs.statSync(path.join(hymnsDir, f)).isDirectory())
     for (const sub of subdirs) {
-      importSngFolder(path.join(hymnsDir, sub))
+      const { category, author, isTwi } = deriveCategoryAndAuthor(sub)
+      importSngFolder(path.join(hymnsDir, sub), category, author, isTwi)
     }
+    importSngFolder(hymnsDir, 'General Hymn', 'Church Library', false)
   } catch (err) {
     console.warn('Auto scan hymns folder notice:', err.message)
   }
@@ -666,15 +734,26 @@ export function getHymns() {
   return db.prepare('SELECT * FROM hymns ORDER BY hymn_number ASC').all()
 }
 
-export function searchHymns(query) {
-  if (!db || !query) return getHymns()
+export function searchHymns(query, category) {
+  if (!db) return []
+  const activeCategory = category && category !== 'All' ? category : null
+  if (!query) {
+    if (activeCategory) {
+      return db.prepare('SELECT * FROM hymns WHERE category = ? ORDER BY hymn_number ASC').all(activeCategory)
+    }
+    return getHymns()
+  }
   const escaped = String(query).replace(/[\\%_]/g, (m) => `\\${m}`)
   const pattern = `%${escaped}%`
+  const catClause = activeCategory ? ' AND category = ?' : ''
+  const catParams = activeCategory ? [activeCategory] : []
   const isNumber = !isNaN(query)
   if (isNumber) {
-    return db.prepare('SELECT * FROM hymns WHERE hymn_number = ? OR title LIKE ? ESCAPE ? OR lyrics LIKE ? ESCAPE ? ORDER BY hymn_number ASC').all(parseInt(query), pattern, '\\', pattern, '\\')
+    return db.prepare(`SELECT * FROM hymns WHERE (hymn_number = ? OR title LIKE ? ESCAPE ? OR lyrics LIKE ? ESCAPE ?)${catClause} ORDER BY hymn_number ASC`)
+      .all(parseInt(query), pattern, '\\', pattern, '\\', ...catParams)
   }
-  return db.prepare('SELECT * FROM hymns WHERE title LIKE ? ESCAPE ? OR lyrics LIKE ? ESCAPE ? ORDER BY hymn_number ASC').all(pattern, '\\', pattern, '\\')
+  return db.prepare(`SELECT * FROM hymns WHERE (title LIKE ? ESCAPE ? OR lyrics LIKE ? ESCAPE ?)${catClause} ORDER BY hymn_number ASC`)
+    .all(pattern, '\\', pattern, '\\', ...catParams)
 }
 
 export function addHymn({ number, title, category, author, lyrics }) {

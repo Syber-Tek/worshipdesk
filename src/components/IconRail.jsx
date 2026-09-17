@@ -1,30 +1,23 @@
 import React from 'react'
-import {
-  FaHouse,
-  FaBookOpen,
-  FaMusic,
-  FaListCheck,
-  FaGear,
-  FaWifi
-} from 'react-icons/fa6'
+import { Home, Document, Voice2, TickSquare, Setting, Activity } from 'react-iconly'
 
 export default function IconRail({ activeTab, setActiveTab, themeMode }) {
   const navItems = [
-    { id: 'home', icon: FaHouse, label: 'Home' },
-    { id: 'bible', icon: FaBookOpen, label: 'Bible' },
-    { id: 'songs', icon: FaMusic, label: 'Songs' },
-    { id: 'plan', icon: FaListCheck, label: 'Plan' },
-    { id: 'settings', icon: FaGear, label: 'Settings' }
+    { id: 'home', icon: Home, label: 'Home' },
+    { id: 'bible', icon: Document, label: 'Bible' },
+    { id: 'songs', icon: Voice2, label: 'Songs' },
+    { id: 'plan', icon: TickSquare, label: 'Plan' },
+    { id: 'settings', icon: Setting, label: 'Settings' }
   ]
 
   const isLight = themeMode === 'light'
 
   return (
     <aside
-      className={`w-[52px] border-r flex flex-col items-center justify-between py-3 z-20 transition-colors duration-200 ${
+      className={`w-13 border-r flex flex-col items-center justify-between py-3 z-20 transition-colors duration-200 ${
         isLight
           ? 'bg-[#FFFFFF] border-[#E5E7EB]'
-          : 'bg-[#151619] border-[#2A2C31]'
+          : 'bg-[#121316] border-[#26282E]'
       }`}
     >
       <div className="flex flex-col items-center gap-4 w-full">
@@ -50,17 +43,17 @@ export default function IconRail({ activeTab, setActiveTab, themeMode }) {
                 }`}
               >
                 {isActive && (
-                  <span className="absolute left-0 top-2 bottom-2 w-[3px] bg-[#D4A94A] rounded-r-full" />
+                  <span className="absolute left-0 top-2 bottom-2 w-0.75 bg-[#D4A94A] rounded-r-full" />
                 )}
-                <Icon />
+                <Icon set={isActive ? 'bold' : 'light'} primaryColor="currentColor" size="medium" />
               </button>
             )
           })}
         </nav>
       </div>
 
-      <div title="Offline-First Mode Active" className="text-[#6FCF97] text-[11px]">
-        <FaWifi />
+      <div title="Offline-First Mode Active" className="text-[#6FCF97] p-2 flex items-center justify-center">
+        <Activity set="bold" primaryColor="currentColor" size="small" />
       </div>
     </aside>
   )

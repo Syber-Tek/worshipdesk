@@ -21,10 +21,17 @@ export default function App() {
     return <PresentationOutputWindow />
   }
 
-  // Active Tab & Theme Mode state ('dark' | 'light' | 'system')
+  // Active Tab & Theme Mode state ('dark' | 'light' | 'system') persisted in localStorage
   const [activeTab, setActiveTab] = useState('plan')
   const [settingsSection, setSettingsSection] = useState('general')
-  const [themeMode, setThemeMode] = useState('dark')
+  const [themeMode, setThemeMode] = useState(() => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const saved = localStorage.getItem('church_presenter_theme_mode')
+      if (saved === 'dark' || saved === 'light' || saved === 'system') return saved
+    }
+    return 'dark'
+  })
+
   const [systemTheme, setSystemTheme] = useState(() =>
     typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
   )
@@ -37,12 +44,37 @@ export default function App() {
     return () => mediaQuery.removeEventListener('change', handleChange)
   }, [])
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.setItem('church_presenter_theme_mode', themeMode)
+    }
+  }, [themeMode])
+
   const effectiveTheme = themeMode === 'system' ? systemTheme : themeMode
 
-  // Live Presentation & Transport State
-  const [isLive, setIsLive] = useState(false)
-  const [isBlank, setIsBlank] = useState(false)
-  const [isBlack, setIsBlack] = useState(false)
+  // Live Output Presentation Theme & Background State
+  const [outputTheme, setOutputTheme] = useState(() => {
+    return localStorage.getItem('church_presenter_output_theme') || 'dark'
+  })
+  const [outputBgImage, setOutputBgImage] = useState(() => {
+    return localStorage.getItem('church_presenter_output_bg_image') || ''
+  })
+
+  const [showVerseQuotes, setShowVerseQuotes] = useState(() => {
+    return localStorage.getItem('church_presenter_show_quotes') !== 'false'
+  })
+
+  useEffect(() => {
+    localStorage.setItem('church_presenter_output_theme', outputTheme)
+  }, [outputTheme])
+
+  useEffect(() => {
+    localStorage.setItem('church_presenter_output_bg_image', outputBgImage)
+  }, [outputBgImage])
+
+  useEffect(() => {
+    localStorage.setItem('church_presenter_show_quotes', showVerseQuotes ? 'true' : 'false')
+  }, [showVerseQuotes])
 
   // Current Live & Next Staged Slide
   const [currentSlide, setCurrentSlide] = useState({
@@ -60,19 +92,26 @@ export default function App() {
   })
 
   // Broadcast Live Slide via IPC
-  const broadcastToPresentation = (overrides = {}) => {
+  const broadcastToPresentation = useCallback((overrides = {}) => {
     if (window.api && window.api.sendLiveSlide) {
       window.api.sendLiveSlide({
-        title: currentSlide.title,
-        content: currentSlide.content,
-        type: currentSlide.type,
+        title: currentSlide?.title || currentSlide?.ref || '',
+        content: currentSlide?.content || currentSlide?.text || '',
+        type: currentSlide?.type || 'Bible Verse',
         isLive,
         isBlank,
         isBlack,
+        outputTheme,
+        outputBgImage,
+        showVerseQuotes,
         ...overrides
       })
     }
-  }
+  }, [currentSlide, isLive, isBlank, isBlack, outputTheme, outputBgImage, showVerseQuotes])
+
+  useEffect(() => {
+    broadcastToPresentation()
+  }, [broadcastToPresentation])
 
   // Service Playlist State
   const [playlist, setPlaylist] = useState([
@@ -547,7 +586,20 @@ export default function App() {
 
         {/* MAIN ROUTED VIEW CONTENT AREA */}
         <main className="flex-1 overflow-y-auto p-5 text-xs">
-          {activeTab === 'home' && <HomeView themeMode={effectiveTheme} />}
+          {activeTab === 'home' && (
+            <HomeView
+              setActiveTab={setActiveTab}
+              playlist={playlist}
+              biblesList={biblesList}
+              displays={displays}
+              isLive={isLive}
+              currentSlide={currentSlide}
+              nextSlide={nextSlide}
+              handlePresentNow={handlePresentNow}
+              handleStageNext={handleStageNext}
+              themeMode={effectiveTheme}
+            />
+          )}
 
           {activeTab === 'bible' && (
             <BibleView
@@ -573,7 +625,14 @@ export default function App() {
             />
           )}
 
-          {activeTab === 'songs' && <SongsView themeMode={effectiveTheme} />}
+          {activeTab === 'songs' && (
+            <SongsView
+              handleStageNext={handleStageNext}
+              handlePresentNow={handlePresentNow}
+              handleAddToPlaylist={handleAddToPlaylist}
+              themeMode={effectiveTheme}
+            />
+          )}
 
           {activeTab === 'plan' && (
             <PlanView
@@ -603,6 +662,12 @@ export default function App() {
               setThemeMode={setThemeMode}
               biblesList={biblesList}
               refreshBibles={refreshBibles}
+              outputTheme={outputTheme}
+              setOutputTheme={setOutputTheme}
+              outputBgImage={outputBgImage}
+              setOutputBgImage={setOutputBgImage}
+              showVerseQuotes={showVerseQuotes}
+              setShowVerseQuotes={setShowVerseQuotes}
             />
           )}
         </main>
@@ -624,6 +689,8 @@ export default function App() {
         handleTransportPresent={handleTransportPresent}
         handleTransportStop={handleTransportStop}
         themeMode={effectiveTheme}
+        outputTheme={outputTheme}
+        setOutputTheme={setOutputTheme}
       />
 
       {/* ADD ITEM MODAL */}

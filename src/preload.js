@@ -20,7 +20,7 @@ contextBridge.exposeInMainWorld('api', {
   rescanBibles: () => ipcRenderer.invoke('rescan-bibles'),
   // Hymn API Methods
   getHymns: () => ipcRenderer.invoke('get-hymns'),
-  searchHymns: (query) => ipcRenderer.invoke('search-hymns', query),
+  searchHymns: (query, category) => ipcRenderer.invoke('search-hymns', query, category),
   // Import Dialogs
   importSongsDialog: () => ipcRenderer.invoke('import-songs-dialog'),
   importBibleSql: () => ipcRenderer.invoke('import-bible-sql-dialog'),

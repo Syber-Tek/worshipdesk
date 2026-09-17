@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
 import {
+  Setting,
+  Category,
+  Video,
+  Document,
+  InfoSquare,
+  Activity,
+  TickSquare,
+} from "react-iconly";
+import {
   FaSliders,
   FaPalette,
   FaDesktop,
@@ -30,6 +39,12 @@ export default function SettingsView({
   setThemeMode,
   biblesList,
   refreshBibles,
+  outputTheme,
+  setOutputTheme,
+  outputBgImage,
+  setOutputBgImage,
+  showVerseQuotes = true,
+  setShowVerseQuotes,
 }) {
   const [bibleStats, setBibleStats] = useState([]);
   const [libraryNotice, setLibraryNotice] = useState("");
@@ -51,22 +66,18 @@ export default function SettingsView({
     if (refreshBibles) refreshBibles();
   };
   const settingsMenu = [
-    { id: "general", label: "General", icon: FaSliders },
-    { id: "appearance", label: "Appearance", icon: FaPalette },
-    { id: "display", label: "Display & Projector", icon: FaDesktop },
-    { id: "presentation", label: "Presentation", icon: FaTv },
-    { id: "bible", label: "Bible & Scripture", icon: FaBookOpen },
-    { id: "content", label: "Content & Storage", icon: FaDatabase },
-    { id: "languages", label: "Languages", icon: FaLanguage },
-    { id: "shortcuts", label: "Keyboard Shortcuts", icon: FaKeyboard },
-    { id: "backup", label: "Backup & Export", icon: FaFloppyDisk },
-    { id: "about", label: "About App", icon: FaCircleInfo },
+    { id: "general", label: "General", icon: Setting },
+    { id: "appearance", label: "Appearance", icon: Category },
+    { id: "display", label: "Display & Projector", icon: Video },
+    { id: "presentation", label: "Presentation", icon: Video },
+    { id: "bible", label: "Bible & Scripture", icon: Document },
+    { id: "content", label: "Content & Storage", icon: Document },
+    { id: "languages", label: "Languages", icon: Category },
+    { id: "shortcuts", label: "Keyboard Shortcuts", icon: TickSquare },
+    { id: "backup", label: "Backup & Export", icon: Activity },
+    { id: "about", label: "About App", icon: InfoSquare },
   ];
-  const activeEffectiveTheme = effectiveTheme || (
-    themeMode === 'system'
-      ? (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
-      : themeMode
-  );
+  const activeEffectiveTheme = effectiveTheme || themeMode || 'dark';
   const isLight = activeEffectiveTheme === "light";
   const cardClass = isLight
     ? "bg-[#F9FAFB] border-[#E5E7EB] text-[#111827]"
@@ -104,7 +115,7 @@ export default function SettingsView({
             <button
               key={item.id}
               onClick={() => setSettingsSection(item.id)}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded text-xs font-medium transition ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded text-xs font-medium transition cursor-pointer ${
                 isActive
                   ? isLight
                     ? "bg-[#E5E7EB] text-[#D4A94A] border border-[#D4A94A]/30"
@@ -114,7 +125,7 @@ export default function SettingsView({
                     : "text-[#9B9CA3] hover:text-[#EDEDEE] hover:bg-[#1C1D21]"
               }`}
             >
-              <Icon className="text-xs shrink-0" />
+              <Icon set={isActive ? "bold" : "light"} primaryColor="currentColor" size="small" />
               <span className="truncate">{item.label}</span>
             </button>
           );
@@ -207,7 +218,7 @@ export default function SettingsView({
                     Launch on System Startup
                   </div>
                   <div className={`text-[11px] ${textSub}`}>
-                    Automatically open when Windows starts
+                    Start app automatically when PC boots
                   </div>
                 </div>
                 <input
@@ -249,11 +260,14 @@ export default function SettingsView({
                           : "bg-[#151619] border-[#2A2C31] text-[#9B9CA3] hover:text-[#EDEDEE]"
                     }`}
                   >
-                    <FaDesktop className="text-base shrink-0 text-[#D4A94A]" />
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-[#D4A94A]">
+                      <rect width="20" height="14" x="2" y="3" rx="2"/>
+                      <path d="M12 17v4M8 21h8"/>
+                    </svg>
                     <div className="text-left">
                       <div className="font-bold text-xs">System Preference</div>
                       <div className="text-[10px] opacity-70">
-                        Auto ({activeEffectiveTheme === 'light' ? 'Light' : 'Dark'})
+                        Auto OS Theme
                       </div>
                     </div>
                   </button>
@@ -268,7 +282,17 @@ export default function SettingsView({
                           : "bg-[#151619] border-[#2A2C31] text-[#9B9CA3] hover:text-[#EDEDEE]"
                     }`}
                   >
-                    <FaMoon className="text-base shrink-0" />
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-[#D4A94A]">
+                      <circle cx="12" cy="12" r="5" />
+                      <line x1="12" y1="1" x2="12" y2="3" />
+                      <line x1="12" y1="21" x2="12" y2="23" />
+                      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                      <line x1="1" y1="12" x2="3" y2="12" />
+                      <line x1="21" y1="12" x2="23" y2="12" />
+                      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                    </svg>
                     <div className="text-left">
                       <div className="font-bold text-xs">Dark Obsidian</div>
                       <div className="text-[10px] opacity-70">
@@ -289,7 +313,9 @@ export default function SettingsView({
                           : "bg-[#151619] border-[#2A2C31] text-[#9B9CA3] hover:text-[#EDEDEE]"
                     }`}
                   >
-                    <FaSun className="text-base shrink-0" />
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-[#D4A94A]">
+                      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                    </svg>
                     <div className="text-left">
                       <div className="font-bold text-xs">Light Clean</div>
                       <div className="text-[10px] opacity-70">
@@ -551,35 +577,218 @@ export default function SettingsView({
                 <FaTv /> Presentation Output & Slide Themes
               </h3>
               <p className={`text-xs mt-1 ${textSub}`}>
-                Configure Projector typography, padding margins, and background
-                styling.
+                Configure Projector typography, background theme (Dark, Light, or Custom Image), and presentation overlays.
               </p>
             </div>
 
             <div className={`space-y-4 pt-2 border-t ${borderDivider}`}>
-              <div
-                className={`flex items-center justify-between p-3.5 rounded border ${cardClass}`}
-              >
+              {/* Output Theme Selection */}
+              <div className={`p-4 rounded border ${cardClass} space-y-3`}>
                 <div>
                   <div className={`font-semibold text-xs ${textTitle}`}>
-                    Default Output Theme
+                    Output Display Background Theme
                   </div>
                   <div className={`text-[11px] ${textSub}`}>
-                    Background tone on church projector
+                    Choose the visual theme for your live projector/presenter screen
                   </div>
                 </div>
-                <select
-                  className={`text-xs rounded px-2.5 py-1 outline-none border ${selectClass}`}
-                >
-                  <option value="dark">Cluely Obsidian (#0B0C0E)</option>
-                  <option value="black">Pure Black (#000000)</option>
-                  <option value="navy">Deep Navy (#0A0F1D)</option>
-                </select>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setOutputTheme && setOutputTheme('dark')}
+                    className={`p-3 rounded-lg border flex flex-col items-center gap-2 transition cursor-pointer ${
+                      outputTheme === 'dark'
+                        ? 'border-[#D4A94A] bg-[#D4A94A]/10 text-[#D4A94A]'
+                        : isLight
+                        ? 'border-[#E5E7EB] bg-[#F9FAFB] text-[#4B5563] hover:border-[#D1D5DB]'
+                        : 'border-[#26282E] bg-[#141518] text-[#9B9CA3] hover:border-[#2A2C31]'
+                    }`}
+                  >
+                    <div className="w-full h-10 rounded bg-[#0B0C0E] border border-[#2A2C31] flex items-center justify-center text-[10px] text-white font-semibold">
+                      DARK MODE
+                    </div>
+                    <span className="text-xs font-bold">Dark Obsidian</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setOutputTheme && setOutputTheme('light')}
+                    className={`p-3 rounded-lg border flex flex-col items-center gap-2 transition cursor-pointer ${
+                      outputTheme === 'light'
+                        ? 'border-[#D4A94A] bg-[#D4A94A]/10 text-[#D4A94A]'
+                        : isLight
+                        ? 'border-[#E5E7EB] bg-[#F9FAFB] text-[#4B5563] hover:border-[#D1D5DB]'
+                        : 'border-[#26282E] bg-[#141518] text-[#9B9CA3] hover:border-[#2A2C31]'
+                    }`}
+                  >
+                    <div className="w-full h-10 rounded bg-[#FFFFFF] border border-[#E5E7EB] flex items-center justify-center text-[10px] text-[#111827] font-semibold">
+                      LIGHT MODE
+                    </div>
+                    <span className="text-xs font-bold">Pure White</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setOutputTheme && setOutputTheme('image')}
+                    className={`p-3 rounded-lg border flex flex-col items-center gap-2 transition cursor-pointer ${
+                      outputTheme === 'image'
+                        ? 'border-[#D4A94A] bg-[#D4A94A]/10 text-[#D4A94A]'
+                        : isLight
+                        ? 'border-[#E5E7EB] bg-[#F9FAFB] text-[#4B5563] hover:border-[#D1D5DB]'
+                        : 'border-[#26282E] bg-[#141518] text-[#9B9CA3] hover:border-[#2A2C31]'
+                    }`}
+                  >
+                    <div className="w-full h-10 rounded bg-gradient-to-r from-blue-900 to-indigo-900 border border-blue-700 flex items-center justify-center text-[10px] text-white font-semibold">
+                      IMAGE WALLPAPER
+                    </div>
+                    <span className="text-xs font-bold">Custom Image</span>
+                  </button>
+                </div>
               </div>
 
-              <div
-                className={`flex items-center justify-between p-3.5 rounded border ${cardClass}`}
-              >
+              {/* Background Image Configuration (When Theme is Image or always editable) */}
+              <div className={`p-4 rounded border ${cardClass} space-y-3`}>
+                <div>
+                  <div className={`font-semibold text-xs ${textTitle}`}>
+                    Background Wallpaper Image
+                  </div>
+                  <div className={`text-[11px] ${textSub}`}>
+                    Provide an image URL or choose a worship preset wallpaper
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Paste image URL (https://...)"
+                      value={outputBgImage || ''}
+                      onChange={(e) => setOutputBgImage && setOutputBgImage(e.target.value)}
+                      className={`flex-1 text-xs rounded px-3 py-1.5 outline-none border ${selectClass}`}
+                    />
+                    <label className="px-3 py-1.5 bg-[#D4A94A] hover:bg-[#D4A94A]/90 text-[#0B0C0E] font-bold rounded text-xs cursor-pointer flex items-center">
+                      Browse File
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) {
+                            const reader = new FileReader()
+                            reader.onload = (evt) => {
+                              if (evt.target?.result && setOutputBgImage) {
+                                setOutputBgImage(evt.target.result)
+                              }
+                            }
+                            reader.readAsDataURL(file)
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+
+                  {/* Wallpaper Presets */}
+                  <div className="pt-2">
+                    <div className={`text-[10px] uppercase font-bold tracking-wider mb-2 ${textSub}`}>
+                      Recommended Worship Presets:
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (setOutputBgImage) setOutputBgImage('https://images.unsplash.com/photo-1438232992991-995b7058bbb3?q=80&w=1600&auto=format&fit=crop')
+                          if (setOutputTheme) setOutputTheme('image')
+                        }}
+                        className="h-12 rounded border border-white/20 bg-cover bg-center overflow-hidden flex items-end p-1 transition hover:opacity-90"
+                        style={{ backgroundImage: `url('https://images.unsplash.com/photo-1438232992991-995b7058bbb3?q=80&w=1600&auto=format&fit=crop')` }}
+                      >
+                        <span className="text-[9px] font-bold text-white bg-black/60 px-1 rounded">Dark Horizon</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (setOutputBgImage) setOutputBgImage('https://images.unsplash.com/photo-1519817650390-64a93db51149?q=80&w=1600&auto=format&fit=crop')
+                          if (setOutputTheme) setOutputTheme('image')
+                        }}
+                        className="h-12 rounded border border-white/20 bg-cover bg-center overflow-hidden flex items-end p-1 transition hover:opacity-90"
+                        style={{ backgroundImage: `url('https://images.unsplash.com/photo-1519817650390-64a93db51149?q=80&w=1600&auto=format&fit=crop')` }}
+                      >
+                        <span className="text-[9px] font-bold text-white bg-black/60 px-1 rounded">Worship Light</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (setOutputBgImage) setOutputBgImage('https://images.unsplash.com/photo-1509021436468-d72a45025144?q=80&w=1600&auto=format&fit=crop')
+                          if (setOutputTheme) setOutputTheme('image')
+                        }}
+                        className="h-12 rounded border border-white/20 bg-cover bg-center overflow-hidden flex items-end p-1 transition hover:opacity-90"
+                        style={{ backgroundImage: `url('https://images.unsplash.com/photo-1509021436468-d72a45025144?q=80&w=1600&auto=format&fit=crop')` }}
+                      >
+                        <span className="text-[9px] font-bold text-white bg-black/60 px-1 rounded">Starry Night</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (setOutputBgImage) setOutputBgImage('https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?q=80&w=1600&auto=format&fit=crop')
+                          if (setOutputTheme) setOutputTheme('image')
+                        }}
+                        className="h-12 rounded border border-white/20 bg-cover bg-center overflow-hidden flex items-end p-1 transition hover:opacity-90"
+                        style={{ backgroundImage: `url('https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?q=80&w=1600&auto=format&fit=crop')` }}
+                      >
+                        <span className="text-[9px] font-bold text-white bg-black/60 px-1 rounded">Nature Fog</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Projector Mini Preview */}
+              <div className={`p-4 rounded border ${cardClass} space-y-2`}>
+                <div className={`font-semibold text-xs ${textTitle}`}>
+                  Live Projector Output Preview
+                </div>
+                <div className="w-full aspect-video rounded-lg overflow-hidden border border-[#2A2C31] relative flex flex-col justify-between p-4 shadow-inner">
+                  {outputTheme === 'image' ? (
+                    <div
+                      className="absolute inset-0 bg-cover bg-center"
+                      style={{ backgroundImage: `url("${outputBgImage || 'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?q=80&w=1600&auto=format&fit=crop'}")` }}
+                    >
+                      <div className="absolute inset-0 bg-black/60" />
+                    </div>
+                  ) : null}
+
+                  <div
+                    className={`relative z-10 h-full flex flex-col justify-between ${
+                      outputTheme === 'light'
+                        ? 'bg-[#FFFFFF] text-[#111827]'
+                        : outputTheme === 'dark'
+                        ? 'bg-[#0B0C0E] text-[#EDEDEE]'
+                        : ''
+                    } ${outputTheme !== 'image' ? '-m-4 p-4' : ''}`}
+                  >
+                    <div className="flex justify-between items-center text-[10px] font-bold tracking-widest text-[#D4A94A] uppercase border-b border-current/20 pb-2">
+                      <span>Church Presenter</span>
+                      <span>Bible Verse</span>
+                    </div>
+
+                    <div className="my-auto text-center px-4">
+                      <p className={`text-xs font-bold leading-relaxed ${outputTheme === 'image' ? 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]' : ''}`}>
+                        {showVerseQuotes ? '"For God so loved the world, that he gave his only begotten Son..."' : 'For God so loved the world, that he gave his only begotten Son...'}
+                      </p>
+                    </div>
+
+                    <div className="text-center pt-2 border-t border-current/20">
+                      <span className="text-[10px] font-bold text-[#D4A94A] uppercase">
+                        — JOHN 3:16 (KJV) —
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className={`flex items-center justify-between p-3.5 rounded border ${cardClass}`}>
                 <div>
                   <div className={`font-semibold text-xs ${textTitle}`}>
                     Slide Margin Padding
@@ -597,9 +806,7 @@ export default function SettingsView({
                 </select>
               </div>
 
-              <div
-                className={`flex items-center justify-between p-3.5 rounded border ${cardClass}`}
-              >
+              <div className={`flex items-center justify-between p-3.5 rounded border ${cardClass}`}>
                 <div>
                   <div className={`font-semibold text-xs ${textTitle}`}>
                     Attribution Line Position
@@ -848,7 +1055,8 @@ export default function SettingsView({
                 </div>
                 <input
                   type="checkbox"
-                  defaultChecked
+                  checked={showVerseQuotes}
+                  onChange={(e) => setShowVerseQuotes && setShowVerseQuotes(e.target.checked)}
                   className="accent-[#D4A94A] w-4 h-4 cursor-pointer"
                 />
               </div>

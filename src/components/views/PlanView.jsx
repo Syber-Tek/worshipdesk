@@ -1,15 +1,5 @@
 import React from 'react'
-import {
-  FaListCheck,
-  FaPlus,
-  FaGripVertical,
-  FaCircle,
-  FaEye,
-  FaPaperPlane,
-  FaArrowUp,
-  FaArrowDown,
-  FaTrash
-} from 'react-icons/fa6'
+import { TickSquare, Plus, Show, Send, ArrowUp, ArrowDown, Delete, Activity } from 'react-iconly'
 
 export default function PlanView({
   playlist,
@@ -33,7 +23,7 @@ export default function PlanView({
         }`}>
           <div>
             <h2 className="text-sm font-bold text-[#D4A94A] flex items-center gap-2">
-              <FaListCheck /> Sunday Service Order Playlist
+              <TickSquare set="bold" primaryColor="#D4A94A" size="small" /> Sunday Service Order Playlist
             </h2>
             <p className={`text-[11px] mt-0.5 ${isLight ? 'text-[#6B7280]' : 'text-[#9B9CA3]'}`}>
               Reorderable service items (click item to stage or present).
@@ -41,9 +31,9 @@ export default function PlanView({
           </div>
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#D4A94A] hover:bg-[#D4A94A]/90 text-[#0B0C0E] rounded font-semibold text-xs transition shadow"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#D4A94A] hover:bg-[#D4A94A]/90 text-[#0B0C0E] rounded font-semibold text-xs transition shadow cursor-pointer"
           >
-            <FaPlus /> Add Service Item
+            <Plus set="bold" primaryColor="#0B0C0E" size="small" /> Add Service Item
           </button>
         </div>
 
@@ -51,14 +41,16 @@ export default function PlanView({
           <div className={`p-8 rounded-lg border text-center space-y-3 ${
             isLight ? 'bg-[#F3F4F6] border-[#E5E7EB]' : 'bg-[#1C1D21] border-[#2A2C31]'
           }`}>
-            <FaListCheck className={`text-3xl mx-auto ${isLight ? 'text-[#9CA3AF]' : 'text-[#6B6C73]'}`} />
+            <div className="flex justify-center">
+              <TickSquare set="light" primaryColor={isLight ? '#9CA3AF' : '#6B6C73'} size="large" />
+            </div>
             <h3 className={`text-sm font-bold ${isLight ? 'text-[#111827]' : 'text-[#EDEDEE]'}`}>No Items in Service Playlist</h3>
             <p className={`text-xs max-w-sm mx-auto ${isLight ? 'text-[#4B5563]' : 'text-[#9B9CA3]'}`}>
               Your service order is currently empty. Add scripture readings, hymns, or sermon slides to build your Sunday worship plan.
             </p>
             <button
               onClick={() => setShowAddModal(true)}
-              className="px-4 py-2 bg-[#D4A94A] text-[#0B0C0E] font-semibold text-xs rounded shadow hover:bg-[#D4A94A]/90 transition"
+              className="px-4 py-2 bg-[#D4A94A] text-[#0B0C0E] font-semibold text-xs rounded shadow hover:bg-[#D4A94A]/90 transition cursor-pointer"
             >
               + Add First Service Item
             </button>
@@ -82,7 +74,6 @@ export default function PlanView({
               >
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <div className={`flex items-center gap-1.5 ${isLight ? 'text-[#9CA3AF]' : 'text-[#6B6C73]'}`}>
-                    <FaGripVertical className="text-xs cursor-grab" />
                     <span className="font-mono text-[10px]">
                       #{index + 1}
                     </span>
@@ -90,13 +81,10 @@ export default function PlanView({
 
                   <div className="flex items-center gap-1.5">
                     {item.status === 'live' && (
-                      <FaCircle className="text-[7px] text-[#E5484D] animate-pulse" />
+                      <Activity set="bold" primaryColor="#E5484D" size="small" />
                     )}
                     {item.status === 'next' && (
-                      <FaCircle className="text-[7px] text-[#D4A94A]" />
-                    )}
-                    {item.status === 'pending' && (
-                      <FaCircle className={`text-[7px] ${isLight ? 'text-[#9CA3AF]' : 'text-[#6B6C73]'}`} />
+                      <Activity set="bold" primaryColor="#D4A94A" size="small" />
                     )}
                   </div>
 
@@ -123,55 +111,55 @@ export default function PlanView({
                   <button
                     onClick={() => handleSelectItem(item)}
                     title="Stage as Next"
-                    className={`p-1.5 border rounded transition ${
+                    className={`p-1 border rounded transition cursor-pointer ${
                       isLight
                         ? 'bg-[#E5E7EB] hover:bg-[#D1D5DB] text-[#D4A94A] border-[#D1D5DB]'
                         : 'bg-[#24262B] hover:bg-[#2A2C31] text-[#D4A94A] border-[#2A2C31]'
                     }`}
                   >
-                    <FaEye className="text-xs" />
+                    <Show set="bold" primaryColor="#D4A94A" size="small" />
                   </button>
                   <button
                     onClick={() => handlePresentItemNow(item)}
                     title="Present Live Now"
-                    className="p-1.5 bg-[#D4A94A] hover:bg-[#D4A94A]/90 text-[#0B0C0E] rounded transition shadow"
+                    className="p-1 bg-[#D4A94A] hover:bg-[#D4A94A]/90 text-[#0B0C0E] rounded transition shadow cursor-pointer"
                   >
-                    <FaPaperPlane className="text-xs" />
+                    <Send set="bold" primaryColor="#0B0C0E" size="small" />
                   </button>
                   <button
                     onClick={() => handleMoveUp(index)}
                     disabled={index === 0}
                     title="Move Up"
-                    className={`p-1.5 border rounded transition disabled:opacity-30 ${
+                    className={`p-1 border rounded transition disabled:opacity-30 cursor-pointer ${
                       isLight
                         ? 'bg-[#E5E7EB] hover:bg-[#D1D5DB] text-[#4B5563] border-[#D1D5DB]'
                         : 'bg-[#24262B] hover:bg-[#2A2C31] text-[#9B9CA3] border-[#2A2C31]'
                     }`}
                   >
-                    <FaArrowUp className="text-[10px]" />
+                    <ArrowUp set="light" primaryColor="currentColor" size="small" />
                   </button>
                   <button
                     onClick={() => handleMoveDown(index)}
                     disabled={index === playlist.length - 1}
                     title="Move Down"
-                    className={`p-1.5 border rounded transition disabled:opacity-30 ${
+                    className={`p-1 border rounded transition disabled:opacity-30 cursor-pointer ${
                       isLight
                         ? 'bg-[#E5E7EB] hover:bg-[#D1D5DB] text-[#4B5563] border-[#D1D5DB]'
                         : 'bg-[#24262B] hover:bg-[#2A2C31] text-[#9B9CA3] border-[#2A2C31]'
                     }`}
                   >
-                    <FaArrowDown className="text-[10px]" />
+                    <ArrowDown set="light" primaryColor="currentColor" size="small" />
                   </button>
                   <button
                     onClick={() => handleDeleteItem(item.id)}
                     title="Delete Item"
-                    className={`p-1.5 border rounded transition ${
+                    className={`p-1 border rounded transition cursor-pointer ${
                       isLight
                         ? 'bg-[#E5E7EB] hover:bg-[#E5484D]/20 text-[#6B7280] hover:text-[#E5484D] border-[#D1D5DB]'
                         : 'bg-[#24262B] hover:bg-[#E5484D]/20 text-[#6B6C73] hover:text-[#E5484D] border-[#2A2C31]'
                     }`}
                   >
-                    <FaTrash className="text-[10px]" />
+                    <Delete set="light" primaryColor="#E5484D" size="small" />
                   </button>
                 </div>
               </div>

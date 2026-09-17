@@ -74,7 +74,7 @@ ipcMain.handle('search-verses', (_e, query, bibleId) => searchVerses(query, bibl
 
 // Hymns IPC Handlers
 ipcMain.handle('get-hymns', () => getHymns());
-ipcMain.handle('search-hymns', (_e, query) => searchHymns(query));
+ipcMain.handle('search-hymns', (_e, query, category) => searchHymns(query, category));
 
 // Native File Import Handler (.sng, .json, .txt)
 ipcMain.handle('import-songs-dialog', async () => {

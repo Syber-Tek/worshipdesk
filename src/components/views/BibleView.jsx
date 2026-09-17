@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { FaMagnifyingGlass, FaEye, FaPlus, FaPaperPlane, FaTableCells, FaBookOpen } from 'react-icons/fa6'
+import { Search, Show, Plus, Send, Category, Document } from 'react-iconly'
 import { getBibleBookLists, normalizeBookName, isTwiCode } from '../../bibleBooks.js'
 
 export default function BibleView({
@@ -114,7 +114,7 @@ export default function BibleView({
                 : 'text-[#9B9CA3] hover:text-[#EDEDEE]'
             }`}
           >
-            <FaTableCells /> OT / NT Chapter Grid
+            <Category set="bold" primaryColor="currentColor" size="small" /> OT / NT Chapter Grid
           </button>
           <button
             onClick={() => setViewMode('reader')}
@@ -126,14 +126,16 @@ export default function BibleView({
                 : 'text-[#9B9CA3] hover:text-[#EDEDEE]'
             }`}
           >
-            <FaBookOpen /> Verses & Live Controls
+            <Document set="bold" primaryColor="currentColor" size="small" /> Verses & Live Controls
           </button>
         </div>
       </div>
 
       {/* Scripture Search Bar */}
-      <div className="relative">
-        <FaMagnifyingGlass className={`absolute left-3.5 top-3 text-xs ${isLight ? 'text-[#6B7280]' : 'text-[#6B6C73]'}`} />
+      <div className="relative flex items-center">
+        <div className="absolute left-3 pointer-events-none">
+          <Search set="light" primaryColor={isLight ? '#6B7280' : '#6B6C73'} size="small" />
+        </div>
         <input
           ref={searchInputRef}
           type="text"
@@ -274,7 +276,7 @@ export default function BibleView({
       {/* 2. READER VIEW: VERSES GRID & LIVE PROJECTION CONTROLS */}
       {viewMode === 'reader' && (
         <div className="grid grid-cols-12 gap-4">
-          <div className={`col-span-7 border rounded-lg p-3 space-y-2 max-h-[500px] overflow-y-auto ${
+          <div className={`col-span-7 border rounded-lg p-3 space-y-2 max-h-125 overflow-y-auto ${
             isLight ? 'bg-[#FFFFFF] border-[#E5E7EB]' : 'bg-[#151619] border-[#2A2C31]'
           }`}>
             <div className={`px-2 py-1.5 text-[10px] uppercase font-bold tracking-wider border-b flex justify-between items-center ${
@@ -359,7 +361,7 @@ export default function BibleView({
                     : 'bg-[#1C1D21] hover:bg-[#24262B] border-[#2A2C31] text-[#EDEDEE]'
                 }`}
               >
-                <FaEye className="text-[#D4A94A]" /> Stage as Next
+                <Show set="bold" primaryColor="#D4A94A" size="small" /> Stage as Next
               </button>
               <button
                 onClick={() => handleAddToPlaylist && handleAddToPlaylist(activeSelectedVerse)}
@@ -369,13 +371,13 @@ export default function BibleView({
                     : 'bg-[#1C1D21] hover:bg-[#24262B] border-[#2A2C31] text-[#EDEDEE]'
                 }`}
               >
-                <FaPlus className="text-[#6FCF97]" /> Add to Service Playlist
+                <Plus set="bold" primaryColor="#6FCF97" size="small" /> Add to Service Playlist
               </button>
               <button
                 onClick={() => handlePresentNow(activeSelectedVerse)}
                 className="w-full py-3 px-3 bg-[#D4A94A] hover:bg-[#D4A94A]/90 text-[#0B0C0E] rounded-lg text-xs font-bold flex items-center justify-center gap-2 shadow-lg transition cursor-pointer"
               >
-                <FaPaperPlane /> Present Live Now
+                <Send set="bold" primaryColor="#0B0C0E" size="small" /> Present Live Now
               </button>
             </div>
           </div>

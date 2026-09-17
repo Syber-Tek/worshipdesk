@@ -1,5 +1,5 @@
 import React from 'react'
-import { FaTv, FaDesktop, FaCircle, FaSun, FaMoon } from 'react-icons/fa6'
+import { Video, Category, Activity } from 'react-iconly'
 
 export default function Header({ displays, isLive, setIsLive, broadcastToPresentation, themeMode, effectiveTheme, setThemeMode }) {
   const toggleLiveStatus = () => {
@@ -12,9 +12,7 @@ export default function Header({ displays, isLive, setIsLive, broadcastToPresent
   const isLight = currentTheme === 'light'
 
   const handleCycleTheme = () => {
-    if (themeMode === 'dark') setThemeMode('light')
-    else if (themeMode === 'light') setThemeMode('system')
-    else setThemeMode('dark')
+    setThemeMode((prev) => (prev === 'dark' ? 'light' : 'dark'))
   }
 
   return (
@@ -22,7 +20,7 @@ export default function Header({ displays, isLive, setIsLive, broadcastToPresent
       className={`h-11 border-b px-4 flex items-center justify-between text-xs transition-colors duration-200 ${
         isLight
           ? 'bg-[#FFFFFF] border-[#E5E7EB]'
-          : 'bg-[#151619] border-[#2A2C31]'
+          : 'bg-[#141518] border-[#26282E]'
       }`}
     >
       <div className="flex items-center gap-3">
@@ -37,14 +35,14 @@ export default function Header({ displays, isLive, setIsLive, broadcastToPresent
         <div className={`flex items-center gap-1.5 text-[11px] ${isLight ? 'text-[#4B5563]' : 'text-[#9B9CA3]'}`}>
           {displays.length > 1 ? (
             <>
-              <FaTv className="text-[#6FCF97]" />
+              <Video set="bold" primaryColor="#6FCF97" size="small" />
               <span className="text-[#6FCF97] font-medium">
                 Projector Connected ({displays.length} Displays)
               </span>
             </>
           ) : (
             <>
-              <FaDesktop className={isLight ? 'text-[#4B5563]' : 'text-[#9B9CA3]'} />
+              <Category set="light" primaryColor="currentColor" size="small" />
               <span>Single Display Mode</span>
             </>
           )}
@@ -52,30 +50,50 @@ export default function Header({ displays, isLive, setIsLive, broadcastToPresent
       </div>
 
       <div className="flex items-center gap-2">
-        {/* Quick Dark / Light / System Theme Toggle */}
+        {/* Quick Dark / Light Theme Toggle */}
         <button
           onClick={handleCycleTheme}
-          title={`Theme Mode: ${themeMode === 'system' ? 'System Preference' : themeMode === 'dark' ? 'Dark Obsidian' : 'Light Clean'} (Click to cycle)`}
-          className="p-1.5 bg-[#24262B] hover:bg-[#2A2C31] border border-[#2A2C31] text-[#D4A94A] rounded text-xs transition cursor-pointer flex items-center justify-center gap-1"
+          title={`Theme Mode: ${themeMode === 'dark' ? 'Dark Mode' : 'Light Mode'} (Click to toggle)`}
+          className={`px-2.5 py-1 rounded text-[11px] font-semibold flex items-center gap-1.5 transition cursor-pointer border ${
+            isLight
+              ? 'bg-[#F3F4F6] border-[#E5E7EB] text-[#4B5563] hover:text-[#111827]'
+              : 'bg-[#24262B] border-[#2A2C31] text-[#D4A94A] hover:bg-[#2A2C31]'
+          }`}
         >
-          {themeMode === 'system' ? (
-            <FaDesktop className="text-xs" />
-          ) : themeMode === 'dark' ? (
-            <FaSun className="text-xs" />
+          {themeMode === 'light' ? (
+            <>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+              <span>Light</span>
+            </>
           ) : (
-            <FaMoon className="text-xs" />
+            <>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="5" />
+                <line x1="12" y1="1" x2="12" y2="3" />
+                <line x1="12" y1="21" x2="12" y2="23" />
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                <line x1="1" y1="12" x2="3" y2="12" />
+                <line x1="21" y1="12" x2="23" y2="12" />
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+              </svg>
+              <span>Dark</span>
+            </>
           )}
         </button>
 
         <button
           onClick={toggleLiveStatus}
-          className={`flex items-center gap-1.5 px-3 py-1 rounded text-[11px] font-semibold uppercase tracking-wider transition ${
+          className={`flex items-center gap-1.5 px-3 py-1 rounded text-[11px] font-semibold uppercase tracking-wider transition cursor-pointer ${
             isLive
               ? 'bg-[#E5484D] text-white shadow-[0_0_12px_rgba(229,72,77,0.4)] animate-pulse'
               : 'bg-[#24262B] text-[#9B9CA3] hover:text-[#EDEDEE] border border-[#2A2C31]'
           }`}
         >
-          <FaCircle className="text-[7px]" />
+          <Activity set="bold" primaryColor="currentColor" size="small" />
           {isLive ? 'LIVE ON-AIR' : 'STANDBY'}
         </button>
       </div>
