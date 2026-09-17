@@ -66,6 +66,11 @@ export function initDatabase() {
     CREATE INDEX IF NOT EXISTS idx_verses_lookup ON verses(book_id, chapter, verse);
   `)
 
+  // One-off cleanup: an earlier build imported the first Twi XML under the
+  // temporary code "TWI_XML". It is superseded by the properly-coded XML
+  // translations (AKUA / TWIRV), so drop the orphan (cascades to books/verses).
+  db.prepare('DELETE FROM bibles WHERE code = ?').run('TWI_XML')
+
   // Create Hymns & Songs Schema tables
   db.exec(`
     CREATE TABLE IF NOT EXISTS hymns (
