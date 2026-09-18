@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('api', {
   getAppInfo: () => ipcRenderer.invoke('get-app-info'),
   getDbStatus: () => ipcRenderer.invoke('get-db-status'),
   getDisplays: () => ipcRenderer.invoke('get-displays'),
+  openPresentationWindows: (displayIds) => ipcRenderer.invoke('open-presentation-windows', displayIds),
   onDisplaysChanged: (callback) => {
     const subscription = (_event, displays) => callback(displays)
     ipcRenderer.on('displays-changed', subscription)

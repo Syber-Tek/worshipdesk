@@ -29,7 +29,7 @@ if (started) {
 
 let dbPath = '';
 let mainWindow = null;
-let presentationWindow = null;
+const presentationWindows = new Map(); // displayId -> BrowserWindow
 
 function getDisplayDetails() {
   const primaryDisplay = screen.getPrimaryDisplay();
@@ -172,43 +172,53 @@ ipcMain.handle('rescan-bibles', () => rescanBiblesFolder());
 
 // STAGE 5: PRESENTATION OUTPUT MULTI-WINDOW IPC FORWARDING
 ipcMain.on('send-live-slide', (_event, slideData) => {
-  if (presentationWindow && !presentationWindow.isDestroyed()) {
-    presentationWindow.webContents.send('update-presentation-slide', slideData);
+  for (const win of presentationWindows.values()) {
+    if (win && !win.isDestroyed()) {
+      win.webContents.send('update-presentation-slide', slideData);
+    }
   }
 });
 
-// Deck navigation sent from the projector window (arrow keys) back to the control window.
+// Deck navigation sent from any projector window (arrow keys) back to the control window.
 ipcMain.on('deck-nav', (_event, dir) => {
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('deck-nav', dir);
   }
 });
 
-const createPresentationWindow = () => {
-  const allDisplays = screen.getAllDisplays();
-  const secondaryDisplay = allDisplays.find((d) => d.id !== screen.getPrimaryDisplay().id);
+// Open (or close) projector windows so the renderer can choose which displays are
+// used for projection, including multiple displays at once.
+ipcMain.handle('open-presentation-windows', (_event, displayIds) => {
+  const ids = Array.isArray(displayIds) ? displayIds.map(Number).filter((n) => Number.isFinite(n)) : [];
+  const activeDisplays = screen.getAllDisplays();
 
-  let windowBounds = {
-    x: 100,
-    y: 100,
-    width: 1024,
-    height: 768,
-  };
-
-  if (secondaryDisplay) {
-    windowBounds = {
-      x: secondaryDisplay.bounds.x,
-      y: secondaryDisplay.bounds.y,
-      width: secondaryDisplay.bounds.width,
-      height: secondaryDisplay.bounds.height,
-    };
+  for (const [id, win] of Array.from(presentationWindows.entries())) {
+    if (!ids.includes(Number(id))) {
+      if (win && !win.isDestroyed()) win.destroy();
+      presentationWindows.delete(id);
+    }
   }
 
-  presentationWindow = new BrowserWindow({
-    x: windowBounds.x,
-    y: windowBounds.y,
-    width: windowBounds.width,
-    height: windowBounds.height,
+  for (const id of ids) {
+    const display = activeDisplays.find((d) => d.id === Number(id));
+    if (display && !presentationWindows.has(String(id))) {
+      createPresentationWindow(display);
+    }
+  }
+
+  return { ok: true, active: Array.from(presentationWindows.keys()).map(Number) };
+});
+
+const createPresentationWindow = (display) => {
+  const isPrimary = display.id === screen.getPrimaryDisplay().id;
+  const bounds = display.bounds;
+
+  const win = new BrowserWindow({
+    x: bounds.x,
+    y: bounds.y,
+    width: bounds.width,
+    height: bounds.height,
+    fullscreen: !isPrimary,
     title: 'Church Presenter - Live Projector Output',
     autoHideMenuBar: true,
     backgroundColor: '#000000',
@@ -220,17 +230,18 @@ const createPresentationWindow = () => {
     },
   });
 
+  presentationWindows.set(String(display.id), win);
+  win.on('closed', () => {
+    presentationWindows.delete(String(display.id));
+  });
+
   const baseUrl = MAIN_WINDOW_VITE_DEV_SERVER_URL || `file://${path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`)}`;
   const presentationUrl = `${baseUrl}?window=presentation`;
 
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-    presentationWindow.loadURL(presentationUrl);
+    win.loadURL(presentationUrl);
   } else {
-    presentationWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`), { query: { window: 'presentation' } });
-  }
-
-  if (secondaryDisplay) {
-    presentationWindow.setFullScreen(true);
+    win.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`), { query: { window: 'presentation' } });
   }
 };
 
@@ -257,7 +268,6 @@ const createWindow = () => {
 app.whenReady().then(() => {
   dbPath = initDatabase();
   createWindow();
-  createPresentationWindow();
 
   const notifyDisplayChange = () => {
     if (mainWindow && !mainWindow.isDestroyed()) {
@@ -272,7 +282,6 @@ app.whenReady().then(() => {
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
-      createPresentationWindow();
     }
   });
 });
