@@ -19,6 +19,8 @@ contextBridge.exposeInMainWorld('api', {
   searchVerses: (query, bibleId) => ipcRenderer.invoke('search-verses', query, bibleId),
   removeBible: (bibleId) => ipcRenderer.invoke('remove-bible', bibleId),
   rescanBibles: () => ipcRenderer.invoke('rescan-bibles'),
+  backupDatabase: () => ipcRenderer.invoke('backup-database'),
+  notifyNative: (payload) => ipcRenderer.send('native-notification', payload),
   // Hymn API Methods
   getHymns: () => ipcRenderer.invoke('get-hymns'),
   searchHymns: (query, category) => ipcRenderer.invoke('search-hymns', query, category),

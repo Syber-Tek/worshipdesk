@@ -1,6 +1,11 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
+import '@fontsource/plus-jakarta-sans/400.css'
+import '@fontsource/plus-jakarta-sans/500.css'
+import '@fontsource/plus-jakarta-sans/600.css'
+import '@fontsource/plus-jakarta-sans/700.css'
+import '@fontsource/plus-jakarta-sans/800.css'
 import './index.css'
 
 class ErrorBoundary extends React.Component {
@@ -21,7 +26,7 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="h-screen w-screen bg-bg text-text-primary flex flex-col items-center justify-center p-8 select-none font-sans">
+        <div className="h-screen w-screen bg-surface text-text-primary flex flex-col items-center justify-center p-8 select-none font-sans">
           <div className="max-w-lg w-full bg-panel border border-border rounded-xl p-6 space-y-4 shadow-xl text-center">
             <div className="w-12 h-12 rounded-xl bg-live/10 border border-live/30 flex items-center justify-center text-live font-bold text-lg mx-auto">
               ⚠️
@@ -29,10 +34,10 @@ class ErrorBoundary extends React.Component {
             <h2 className="text-lg font-bold text-text-primary">
               WorshipDesk Application Error
             </h2>
-            <p className="text-xs text-[#9B9CA3] leading-relaxed">
+            <p className="text-xs text-dim leading-relaxed">
               An unexpected issue occurred while rendering the interface:
             </p>
-            <div className="bg-bg border border-border p-3 rounded text-left overflow-x-auto max-h-36">
+            <div className="bg-surface border border-border p-3 rounded text-left overflow-x-auto max-h-36">
               <code className="text-[11px] text-live font-mono break-all">
                 {this.state.error?.toString() || 'Unknown Error'}
               </code>

@@ -7,6 +7,7 @@
   "private": true,
   "scripts": {
     "start": "electron-forge start",
+    "renderer:dev": "vite --config vite.renderer.config.mjs",
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
@@ -41,6 +42,7 @@
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-iconly": "^2.2.10",
-    "react-icons": "^5.7.0"
+    "react-icons": "^5.7.0",
+    "sonner": "^2.0.8"
   }
 }

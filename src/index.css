@@ -1,11 +1,6 @@
-@import "@fontsource/plus-jakarta-sans/400.css";
-@import "@fontsource/plus-jakarta-sans/500.css";
-@import "@fontsource/plus-jakarta-sans/600.css";
-@import "@fontsource/plus-jakarta-sans/700.css";
-@import "@fontsource/plus-jakarta-sans/800.css";
 @import "tailwindcss";
 
-/* @theme {
+@theme {
   --font-sans: 'Plus Jakarta Sans', 'Jakarta Pro', system-ui, -apple-system, sans-serif;
   --color-bg: #0B0C0E;
   --color-panel: #141518;
@@ -21,46 +16,10 @@
   --color-accent-hover: #E2B757;
   --color-live: #E5484D;
   --color-success: #6FCF97;
-} */
-@theme {
-  --font-sans:
-    "Plus Jakarta Sans", "Jakarta Pro", system-ui, -apple-system, sans-serif;
-
-  /* Backgrounds */
-  --color-bg: #0b0c0e;
-  --color-panel: #141518;
-  --color-surface: #1b1c20;
-  --color-raised: #22242a;
-  --color-hover: #292b32;
-
-  /* Borders */
-  --color-border: #26282e;
-  --color-border-strong: #333640;
-
-  /* Text */
-  --color-text-primary: #ededee;
-  --color-text-secondary: #9ca0ac;
-  --color-text-muted: #696c75;
-
-  /* Brand */
-  --color-accent: #d4a94a;
-  --color-accent-hover: #e2b757;
-
-  /* Status */
-  --color-live: #e5484d;
-  --color-success: #6fcf97;
 }
-body,
-input,
-button,
-select,
-textarea {
-  font-family:
-    "Plus Jakarta Sans",
-    "Jakarta Pro",
-    system-ui,
-    -apple-system,
-    sans-serif;
+
+body, input, button, select, textarea {
+  font-family: 'Plus Jakarta Sans', 'Jakarta Pro', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -74,15 +33,15 @@ textarea {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #282a30;
+  background: #282A30;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #383b44;
+  background: #383B44;
 }
 
 /* Crisp custom selection highlight */
 ::selection {
   background: rgba(212, 169, 74, 0.25);
-  color: #ededee;
+  color: #EDEDEE;
 }

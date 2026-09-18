@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, screen, dialog } from 'electron';
+import { app, BrowserWindow, ipcMain, screen, dialog, Notification } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
 import started from 'electron-squirrel-startup';
@@ -169,6 +169,28 @@ ipcMain.handle('get-bible-stats', () => getBibleStats());
 ipcMain.handle('remove-bible', (_e, bibleId) => removeBible(bibleId));
 
 ipcMain.handle('rescan-bibles', () => rescanBiblesFolder());
+
+ipcMain.handle('backup-database', async () => {
+  try {
+    const { canceled, filePath } = await dialog.showSaveDialog({
+      title: 'Backup Church Presenter Database',
+      defaultPath: `church-presenter-backup-${new Date().toISOString().slice(0, 10)}.db`,
+      filters: [{ name: 'SQLite Database', extensions: ['db'] }],
+    });
+    if (canceled || !filePath) return { success: false, message: 'Cancelled' };
+    await fs.promises.copyFile(dbPath, filePath);
+    return { success: true, message: filePath };
+  } catch (err) {
+    return { success: false, message: String((err && err.message) || err) };
+  }
+});
+
+// Native OS notification (Windows toast / tray balloon) fired from the renderer.
+ipcMain.on('native-notification', (_event, { title, body } = {}) => {
+  if (!Notification.isSupported()) return;
+  const notification = new Notification({ title: title || 'Church Presenter', body: body || '' });
+  notification.show();
+});
 
 // STAGE 5: PRESENTATION OUTPUT MULTI-WINDOW IPC FORWARDING
 ipcMain.on('send-live-slide', (_event, slideData) => {
