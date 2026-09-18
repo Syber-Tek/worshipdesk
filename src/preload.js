@@ -31,5 +31,12 @@ contextBridge.exposeInMainWorld('api', {
     const subscription = (_event, data) => callback(data)
     ipcRenderer.on('update-presentation-slide', subscription)
     return () => ipcRenderer.removeListener('update-presentation-slide', subscription)
+  },
+  // Projector -> Control deck navigation (arrow keys on the projector screen)
+  sendDeckNav: (dir) => ipcRenderer.send('deck-nav', dir),
+  onDeckNav: (callback) => {
+    const subscription = (_event, dir) => callback(dir)
+    ipcRenderer.on('deck-nav', subscription)
+    return () => ipcRenderer.removeListener('deck-nav', subscription)
   }
 })

@@ -22,6 +22,22 @@ export default function PresentationOutputWindow() {
     }
   }, [])
 
+  // Arrow keys / space on the projector window move through the verse deck.
+  useEffect(() => {
+    const onKey = (e) => {
+      if (!window.api || !window.api.sendDeckNav) return
+      if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'].includes(e.key)) {
+        e.preventDefault()
+        window.api.sendDeckNav('next')
+      } else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) {
+        e.preventDefault()
+        window.api.sendDeckNav('prev')
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   // Explicit Black Screen Override Mode
   if (slideData.isBlack) {
     return <div className="h-screen w-screen bg-black flex items-center justify-center select-none" />
@@ -64,6 +80,19 @@ export default function PresentationOutputWindow() {
     ? 'whitespace-pre-line text-2xl md:text-4xl font-normal leading-normal tracking-normal'
     : 'whitespace-pre-line text-3xl md:text-5xl font-bold leading-relaxed tracking-wide'
 
+  const deckChip =
+    slideData.deckTotal > 0 ? (
+      <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-current/10 opacity-90">
+        {slideData.deckPosition} / {slideData.deckTotal}
+      </span>
+    ) : null
+  const headerRight = slideData.isBlank ? '' : (
+    <span className="flex items-center gap-2">
+      {slideData.type}
+      {deckChip}
+    </span>
+  )
+
   if (isImage) {
     return (
       <div
@@ -77,7 +106,7 @@ export default function PresentationOutputWindow() {
           {/* Top Header Label */}
           <div className="flex justify-between items-center text-sm font-semibold tracking-widest text-[#D4A94A] uppercase border-b border-white/20 pb-4 drop-shadow">
             <span>Church Presenter</span>
-            <span>{slideData.isBlank ? '' : slideData.type}</span>
+            {headerRight}
           </div>
 
           {/* Main Centered Text Block */}
@@ -107,14 +136,14 @@ export default function PresentationOutputWindow() {
       <div className="h-screen w-screen bg-[#FFFFFF] text-[#111827] flex flex-col justify-between p-16 select-none overflow-hidden font-sans">
         {/* Top Header Label */}
         <div className="flex justify-between items-center text-sm font-semibold tracking-widest text-[#B4821E] uppercase border-b border-[#E5E7EB] pb-4">
-          <span>Church Presenter</span>
-          <span>{slideData.isBlank ? '' : slideData.type}</span>
-        </div>
+<span>Church Presenter</span>
+            {headerRight}
+          </div>
 
-        {/* Main Centered Text Block */}
-        {!slideData.isBlank && (
-          <div className="my-auto max-w-5xl mx-auto text-center px-8">
-            <p className={`${bodyClasses} text-[#111827]`}>
+          {/* Main Centered Text Block */}
+          {!slideData.isBlank && (
+            <div className="my-auto max-w-5xl mx-auto text-center px-8">
+              <p className={`${bodyClasses} text-[#111827]`}>
               {displayContent}
             </p>
           </div>
@@ -137,14 +166,14 @@ export default function PresentationOutputWindow() {
     <div className="h-screen w-screen bg-[#0B0C0E] text-[#EDEDEE] flex flex-col justify-between p-16 select-none overflow-hidden font-sans">
       {/* Top Header Label */}
       <div className="flex justify-between items-center text-sm font-semibold tracking-widest text-[#D4A94A] uppercase border-b border-[#2A2C31]/40 pb-4">
-        <span>Church Presenter</span>
-        <span>{slideData.isBlank ? '' : slideData.type}</span>
-      </div>
+<span>Church Presenter</span>
+            {headerRight}
+          </div>
 
-      {/* Main Centered Text Block */}
-      {!slideData.isBlank && (
-        <div className="my-auto max-w-5xl mx-auto text-center px-8">
-          <p className={`${bodyClasses} text-[#EDEDEE]`}>
+          {/* Main Centered Text Block */}
+          {!slideData.isBlank && (
+            <div className="my-auto max-w-5xl mx-auto text-center px-8">
+              <p className={`${bodyClasses} text-[#EDEDEE]`}>
             {displayContent}
           </p>
         </div>

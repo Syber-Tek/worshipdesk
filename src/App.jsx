@@ -11,6 +11,16 @@ import SettingsView from './components/views/SettingsView'
 import AddItemModal from './components/modals/AddItemModal'
 import { mapBookToTranslation, normalizeBookName } from './bibleBooks.js'
 
+// Split a hymn's lyrics at blank lines into separate stanza slides so hymns can
+// also be presented verse-by-verse (stanza-by-stanza) like scripture.
+const splitHymnStanzas = (lyrics) => {
+  if (!lyrics) return ['']
+  return String(lyrics)
+    .split(/\n\s*\n/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+}
+
 export default function App() {
   const isPresentationMode =
     typeof window !== 'undefined' &&
@@ -96,28 +106,6 @@ export default function App() {
     type: 'Hymn'
   })
 
-  // Broadcast Live Slide via IPC
-  const broadcastToPresentation = useCallback((overrides = {}) => {
-    if (window.api && window.api.sendLiveSlide) {
-      window.api.sendLiveSlide({
-        title: currentSlide?.title || currentSlide?.ref || '',
-        content: currentSlide?.content || currentSlide?.text || '',
-        type: currentSlide?.type || 'Bible Verse',
-        isLive,
-        isBlank,
-        isBlack,
-        outputTheme,
-        outputBgImage,
-        showVerseQuotes,
-        ...overrides
-      })
-    }
-  }, [currentSlide, isLive, isBlank, isBlack, outputTheme, outputBgImage, showVerseQuotes])
-
-  useEffect(() => {
-    broadcastToPresentation()
-  }, [broadcastToPresentation])
-
   // Service Playlist State
   const [playlist, setPlaylist] = useState([
     {
@@ -162,6 +150,9 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [dbVerses, setDbVerses] = useState([])
   const [selectedVerseIndex, setSelectedVerseIndex] = useState(0)
+  // Hymn stanza deck (set when presenting a hymn so it navigates stanza by stanza)
+  const [hymnDeck, setHymnDeck] = useState([])
+  const [hymnDeckIndex, setHymnDeckIndex] = useState(0)
   const searchInputRef = useRef(null)
 
   const fallbackVerses = [
@@ -359,6 +350,36 @@ export default function App() {
   const activeSelectedVerse =
     filteredVerses[selectedVerseIndex] || filteredVerses[0] || (hasRealBibles ? null : fallbackVerses[0])
 
+  // Broadcast Live Slide via IPC
+  const broadcastToPresentation = useCallback((overrides = {}) => {
+    if (window.api && window.api.sendLiveSlide) {
+      const isVerseDeck = (currentSlide?.type || 'Bible Verse') === 'Bible Verse'
+      const isHymnDeckActive = !isVerseDeck && hymnDeck.length > 1
+      window.api.sendLiveSlide({
+        title: currentSlide?.title || currentSlide?.ref || '',
+        content: currentSlide?.content || currentSlide?.text || '',
+        type: currentSlide?.type || 'Bible Verse',
+        isLive,
+        isBlank,
+        isBlack,
+        outputTheme,
+        outputBgImage,
+        showVerseQuotes,
+        deckPosition: isVerseDeck
+          ? Math.min(selectedVerseIndex + 1, filteredVerses.length)
+          : isHymnDeckActive
+          ? hymnDeckIndex + 1
+          : 0,
+        deckTotal: isVerseDeck ? filteredVerses.length : isHymnDeckActive ? hymnDeck.length : 0,
+        ...overrides
+      })
+    }
+  }, [currentSlide, isLive, isBlank, isBlack, outputTheme, outputBgImage, showVerseQuotes, selectedVerseIndex, filteredVerses.length, hymnDeck, hymnDeckIndex])
+
+  useEffect(() => {
+    broadcastToPresentation()
+  }, [broadcastToPresentation])
+
   const handleAddToPlaylist = (verse) => {
     if (!verse) return
     const newItem = {
@@ -372,6 +393,10 @@ export default function App() {
   }
 
   const handleKeyDown = (e) => {
+    const tag = e.target && e.target.tagName ? e.target.tagName.toUpperCase() : ''
+    if (/INPUT|TEXTAREA|SELECT/.test(tag) || (e.target && e.target.isContentEditable)) return
+    if (tag === 'BUTTON' || tag === 'A') return
+
     if (e.key === 'ArrowDown') {
       e.preventDefault()
       setSelectedVerseIndex((prev) =>
@@ -380,6 +405,15 @@ export default function App() {
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
       setSelectedVerseIndex((prev) => (prev > 0 ? prev - 1 : 0))
+    } else if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+      e.preventDefault()
+      handleTransportPresentNext()
+    } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+      e.preventDefault()
+      handleTransportPresentPrev()
+    } else if (e.key === ' ') {
+      e.preventDefault()
+      if (activeSelectedVerse) handlePresentNow(activeSelectedVerse)
     }
   }
 
@@ -483,11 +517,28 @@ export default function App() {
 
   const handlePresentNow = (item) => {
     const isVerse = !!(item && item.ref)
-    const updated = {
-      id: item.id ? `verse-${item.id}` : `present-${Date.now()}`,
-      title: isVerse ? `${item.ref} (${selectedTranslation})` : item.title || '',
-      content: isVerse ? item.text : item.content || '',
-      type: item.type || 'Bible Verse'
+    const isHymn = !!item && item.type === 'Hymn'
+    let updated
+    if (isHymn) {
+      const stanzas = splitHymnStanzas(item.content || item.lyrics)
+      const slides = stanzas.map((s) => ({
+        id: `hymn-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        title: item.title,
+        content: s,
+        type: 'Hymn'
+      }))
+      setHymnDeck(slides)
+      setHymnDeckIndex(0)
+      updated = slides[0]
+    } else {
+      setHymnDeck([])
+      setHymnDeckIndex(0)
+      updated = {
+        id: item.id ? `verse-${item.id}` : `present-${Date.now()}`,
+        title: isVerse ? `${item.ref} (${selectedTranslation})` : item.title || '',
+        content: isVerse ? item.text : item.content || '',
+        type: item.type || 'Bible Verse'
+      }
     }
     setCurrentSlide(updated)
     setIsLive(true)
@@ -565,9 +616,21 @@ export default function App() {
     }
   }
 
-  // Advance to the next verse AND present it in one action.
+  // Advance to the next verse/stanza AND present it in one action.
   const handleTransportPresentNext = () => {
-    if (selectedVerseIndex < filteredVerses.length - 1) {
+    const isHymnDeckActive = hymnDeck.length > 1 && currentSlide?.type === 'Hymn'
+    if (isHymnDeckActive) {
+      if (hymnDeckIndex < hymnDeck.length - 1) {
+        const nI = hymnDeckIndex + 1
+        const slide = hymnDeck[nI]
+        setHymnDeckIndex(nI)
+        setCurrentSlide(slide)
+        setIsLive(true)
+        setIsBlack(false)
+        setIsBlank(false)
+        broadcastToPresentation({ ...slide, isLive: true, isBlack: false, isBlank: false })
+      }
+    } else if (selectedVerseIndex < filteredVerses.length - 1) {
       const nextV = filteredVerses[selectedVerseIndex + 1]
       const updated = {
         id: `verse-${nextV.id}`,
@@ -590,6 +653,59 @@ export default function App() {
       })
     }
   }
+
+  // Go back to the previous verse/stanza AND present it in one action.
+  const handleTransportPresentPrev = () => {
+    const isHymnDeckActive = hymnDeck.length > 1 && currentSlide?.type === 'Hymn'
+    if (isHymnDeckActive) {
+      if (hymnDeckIndex > 0) {
+        const pI = hymnDeckIndex - 1
+        const slide = hymnDeck[pI]
+        setHymnDeckIndex(pI)
+        setCurrentSlide(slide)
+        setIsLive(true)
+        setIsBlack(false)
+        setIsBlank(false)
+        broadcastToPresentation({ ...slide, isLive: true, isBlack: false, isBlank: false })
+      }
+    } else if (selectedVerseIndex > 0) {
+      const prevV = filteredVerses[selectedVerseIndex - 1]
+      const updated = {
+        id: `verse-${prevV.id}`,
+        title: `${prevV.ref} (${selectedTranslation})`,
+        content: prevV.text,
+        type: 'Bible Verse'
+      }
+      setSelectedVerseIndex(selectedVerseIndex - 1)
+      setNextSlide(updated)
+      setCurrentSlide(updated)
+      setIsLive(true)
+      setIsBlack(false)
+      setIsBlank(false)
+
+      broadcastToPresentation({
+        ...updated,
+        isLive: true,
+        isBlack: false,
+        isBlank: false
+      })
+    }
+  }
+
+  // Arrows pressed on the projector window advance the verse deck here.
+  useEffect(() => {
+    if (window.api && window.api.onDeckNav) {
+      const unsubscribe = window.api.onDeckNav((dir) => {
+        if (dir === 'next') handleTransportPresentNext()
+        else if (dir === 'prev') handleTransportPresentPrev()
+      })
+      return unsubscribe
+    }
+  }, [handleTransportPresentNext, handleTransportPresentPrev])
+
+  const isHymnDeckActive = hymnDeck.length > 1 && currentSlide?.type === 'Hymn'
+  const presentNextDisabled = !isLive || (isHymnDeckActive ? hymnDeckIndex >= hymnDeck.length - 1 : selectedVerseIndex >= filteredVerses.length - 1 || filteredVerses.length === 0)
+  const presentPrevDisabled = isHymnDeckActive ? hymnDeckIndex <= 0 : selectedVerseIndex <= 0
 
   return (
     <div
@@ -714,6 +830,9 @@ export default function App() {
         isBlank={isBlank}
         selectedVerseIndex={selectedVerseIndex}
         filteredVersesLength={filteredVerses.length}
+        hymnDeckActive={isHymnDeckActive}
+        presentNextDisabled={presentNextDisabled}
+        presentPrevDisabled={presentPrevDisabled}
         handleTransportPrev={handleTransportPrev}
         handleTransportNext={handleTransportNext}
         handleTransportPresentNext={handleTransportPresentNext}

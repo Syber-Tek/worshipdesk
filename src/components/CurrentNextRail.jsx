@@ -17,6 +17,9 @@ export default function CurrentNextRail({
   isBlank,
   selectedVerseIndex,
   filteredVersesLength,
+  hymnDeckActive = false,
+  presentNextDisabled,
+  presentPrevDisabled,
   handleTransportPrev,
   handleTransportNext,
   handleTransportPresentNext,
@@ -121,11 +124,11 @@ export default function CurrentNextRail({
           {/* Present Next Verse (single click: next + present) */}
           <button
             onClick={handleTransportPresentNext}
-            disabled={!isLive || selectedVerseIndex >= filteredVersesLength - 1 || filteredVersesLength === 0}
+            disabled={presentNextDisabled}
             className="w-full py-3 bg-[#D4A94A] hover:bg-[#D4A94A]/90 text-[#0B0C0E] font-bold rounded-lg text-sm flex items-center justify-center gap-2 shadow transition cursor-pointer disabled:opacity-40"
           >
             <Play set="bold" primaryColor="#0B0C0E" size="small" />
-            Present Next
+            {hymnDeckActive ? 'Present Next Stanza' : 'Present Next'}
           </button>
 
         {/* Output Screen Theme Quick Selector */}
@@ -178,7 +181,7 @@ export default function CurrentNextRail({
         <div className="grid grid-cols-2 gap-1.5">
           <button
             onClick={handleTransportPrev}
-            disabled={selectedVerseIndex <= 0}
+            disabled={hymnDeckActive || selectedVerseIndex <= 0}
             className={`py-2 border rounded font-semibold text-[11px] flex items-center justify-center gap-1 transition disabled:opacity-40 cursor-pointer ${
               isLight
                 ? 'bg-[#E5E7EB] hover:bg-[#D1D5DB] border-[#D1D5DB] text-[#111827]'
@@ -189,7 +192,7 @@ export default function CurrentNextRail({
           </button>
           <button
             onClick={handleTransportNext}
-            disabled={selectedVerseIndex >= filteredVersesLength - 1}
+            disabled={hymnDeckActive || selectedVerseIndex >= filteredVersesLength - 1}
             className={`py-2 border rounded font-semibold text-[11px] flex items-center justify-center gap-1 transition disabled:opacity-40 cursor-pointer ${
               isLight
                 ? 'bg-[#E5E7EB] hover:bg-[#D1D5DB] border-[#D1D5DB] text-[#111827]'

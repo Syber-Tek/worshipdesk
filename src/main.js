@@ -173,6 +173,13 @@ ipcMain.on('send-live-slide', (_event, slideData) => {
   }
 });
 
+// Deck navigation sent from the projector window (arrow keys) back to the control window.
+ipcMain.on('deck-nav', (_event, dir) => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('deck-nav', dir);
+  }
+});
+
 const createPresentationWindow = () => {
   const allDisplays = screen.getAllDisplays();
   const secondaryDisplay = allDisplays.find((d) => d.id !== screen.getPrimaryDisplay().id);
