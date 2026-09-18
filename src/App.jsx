@@ -79,6 +79,14 @@ export default function App() {
     return localStorage.getItem('church_presenter_show_quotes') !== 'false'
   })
 
+  const [appNamePosition, setAppNamePosition] = useState(() => {
+    return localStorage.getItem('church_presenter_app_name_pos') || 'top-left'
+  })
+
+  const [customHeaderTitle, setCustomHeaderTitle] = useState(() => {
+    return localStorage.getItem('church_presenter_header_title') || 'Church Presenter'
+  })
+
   useEffect(() => {
     localStorage.setItem('church_presenter_output_theme', outputTheme)
   }, [outputTheme])
@@ -90,6 +98,14 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('church_presenter_show_quotes', showVerseQuotes ? 'true' : 'false')
   }, [showVerseQuotes])
+
+  useEffect(() => {
+    localStorage.setItem('church_presenter_app_name_pos', appNamePosition)
+  }, [appNamePosition])
+
+  useEffect(() => {
+    localStorage.setItem('church_presenter_header_title', customHeaderTitle)
+  }, [customHeaderTitle])
 
   // Current Live & Next Staged Slide
   const [currentSlide, setCurrentSlide] = useState({
@@ -105,6 +121,7 @@ export default function App() {
     content: 'Great is Thy faithfulness, O God my Father...',
     type: 'Hymn'
   })
+
 
   // Service Playlist State
   const [playlist, setPlaylist] = useState([
@@ -365,6 +382,8 @@ export default function App() {
         outputTheme,
         outputBgImage,
         showVerseQuotes,
+        appNamePosition,
+        customHeaderTitle,
         deckPosition: isVerseDeck
           ? Math.min(selectedVerseIndex + 1, filteredVerses.length)
           : isHymnDeckActive
@@ -374,7 +393,7 @@ export default function App() {
         ...overrides
       })
     }
-  }, [currentSlide, isLive, isBlank, isBlack, outputTheme, outputBgImage, showVerseQuotes, selectedVerseIndex, filteredVerses.length, hymnDeck, hymnDeckIndex])
+  }, [currentSlide, isLive, isBlank, isBlack, outputTheme, outputBgImage, showVerseQuotes, appNamePosition, customHeaderTitle, selectedVerseIndex, filteredVerses.length, hymnDeck, hymnDeckIndex])
 
   useEffect(() => {
     broadcastToPresentation()
@@ -816,6 +835,10 @@ export default function App() {
               setOutputBgImage={setOutputBgImage}
               showVerseQuotes={showVerseQuotes}
               setShowVerseQuotes={setShowVerseQuotes}
+              appNamePosition={appNamePosition}
+              setAppNamePosition={setAppNamePosition}
+              customHeaderTitle={customHeaderTitle}
+              setCustomHeaderTitle={setCustomHeaderTitle}
             />
           )}
         </main>

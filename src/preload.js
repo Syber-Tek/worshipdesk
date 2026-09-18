@@ -21,6 +21,8 @@ contextBridge.exposeInMainWorld('api', {
   // Hymn API Methods
   getHymns: () => ipcRenderer.invoke('get-hymns'),
   searchHymns: (query, category) => ipcRenderer.invoke('search-hymns', query, category),
+  listHymns: (query, category) => ipcRenderer.invoke('list-hymns', query, category),
+  getHymnLyrics: (id) => ipcRenderer.invoke('get-hymn-lyrics', id),
   // Import Dialogs
   importSongsDialog: () => ipcRenderer.invoke('import-songs-dialog'),
   importBibleSql: () => ipcRenderer.invoke('import-bible-sql-dialog'),

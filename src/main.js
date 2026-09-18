@@ -12,6 +12,8 @@ import {
   searchVerses,
   getHymns,
   searchHymns,
+  listHymns,
+  getHymnLyrics,
   importHymnsBatch,
   importSqlFile,
   importXmlBibleFile,
@@ -75,6 +77,8 @@ ipcMain.handle('search-verses', (_e, query, bibleId) => searchVerses(query, bibl
 // Hymns IPC Handlers
 ipcMain.handle('get-hymns', () => getHymns());
 ipcMain.handle('search-hymns', (_e, query, category) => searchHymns(query, category));
+ipcMain.handle('list-hymns', (_e, query, category) => listHymns(query, category));
+ipcMain.handle('get-hymn-lyrics', (_e, id) => getHymnLyrics(id));
 
 // Native File Import Handler (.sng, .json, .txt)
 ipcMain.handle('import-songs-dialog', async () => {

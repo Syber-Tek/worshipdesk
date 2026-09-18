@@ -45,6 +45,10 @@ export default function SettingsView({
   setOutputBgImage,
   showVerseQuotes = true,
   setShowVerseQuotes,
+  appNamePosition = 'top-left',
+  setAppNamePosition,
+  customHeaderTitle = 'Church Presenter',
+  setCustomHeaderTitle,
 }) {
   const [bibleStats, setBibleStats] = useState([]);
   const [libraryNotice, setLibraryNotice] = useState("");
@@ -744,6 +748,50 @@ export default function SettingsView({
                 </div>
               </div>
 
+              {/* App Name Display & Branding Position Settings */}
+              <div className={`p-4 rounded border ${cardClass} space-y-3`}>
+                <div>
+                  <div className={`font-semibold text-xs ${textTitle}`}>
+                    App Name & Branding Position on Projector
+                  </div>
+                  <div className={`text-[11px] ${textSub}`}>
+                    Configure where and how the app title is displayed on the live presentation window
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={`block text-[11px] font-semibold mb-1 ${textTitle}`}>
+                      Branding Display Location
+                    </label>
+                    <select
+                      value={appNamePosition || 'top-left'}
+                      onChange={(e) => setAppNamePosition && setAppNamePosition(e.target.value)}
+                      className={`w-full text-xs rounded px-2.5 py-1.5 outline-none border ${selectClass}`}
+                    >
+                      <option value="top-left">Top Header Left (Default)</option>
+                      <option value="top-right">Top Header Right</option>
+                      <option value="bottom-left">Bottom Footer Left</option>
+                      <option value="bottom-right">Bottom Footer Right</option>
+                      <option value="hidden">Hidden (Do Not Display App Name)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className={`block text-[11px] font-semibold mb-1 ${textTitle}`}>
+                      Header Branding Text
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Church Presenter"
+                      value={customHeaderTitle ?? 'Church Presenter'}
+                      onChange={(e) => setCustomHeaderTitle && setCustomHeaderTitle(e.target.value)}
+                      className={`w-full text-xs rounded px-2.5 py-1.5 outline-none border ${selectClass}`}
+                    />
+                  </div>
+                </div>
+              </div>
+
               {/* Projector Mini Preview */}
               <div className={`p-4 rounded border ${cardClass} space-y-2`}>
                 <div className={`font-semibold text-xs ${textTitle}`}>
@@ -768,21 +816,30 @@ export default function SettingsView({
                         : ''
                     } ${outputTheme !== 'image' ? '-m-4 p-4' : ''}`}
                   >
+                    {/* Header */}
                     <div className="flex justify-between items-center text-[10px] font-bold tracking-widest text-[#D4A94A] uppercase border-b border-current/20 pb-2">
-                      <span>Church Presenter</span>
-                      <span>Bible Verse</span>
+                      <span>{appNamePosition === 'top-left' ? customHeaderTitle : 'Bible Verse'}</span>
+                      <span>{appNamePosition === 'top-left' ? 'Bible Verse' : appNamePosition === 'top-right' ? customHeaderTitle : ''}</span>
                     </div>
 
+                    {/* Content */}
                     <div className="my-auto text-center px-4">
                       <p className={`text-xs font-bold leading-relaxed ${outputTheme === 'image' ? 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]' : ''}`}>
                         {showVerseQuotes ? '"For God so loved the world, that he gave his only begotten Son..."' : 'For God so loved the world, that he gave his only begotten Son...'}
                       </p>
                     </div>
 
-                    <div className="text-center pt-2 border-t border-current/20">
-                      <span className="text-[10px] font-bold text-[#D4A94A] uppercase">
+                    {/* Footer */}
+                    <div className="flex items-center justify-between pt-2 border-t border-current/20 text-[10px] font-bold text-[#D4A94A] uppercase">
+                      <div className="w-1/4 text-left">
+                        {appNamePosition === 'bottom-left' ? customHeaderTitle : ''}
+                      </div>
+                      <div className="w-1/2 text-center">
                         — JOHN 3:16 (KJV) —
-                      </span>
+                      </div>
+                      <div className="w-1/4 text-right">
+                        {appNamePosition === 'bottom-right' ? customHeaderTitle : ''}
+                      </div>
                     </div>
                   </div>
                 </div>

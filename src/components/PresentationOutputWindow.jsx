@@ -86,12 +86,32 @@ export default function PresentationOutputWindow() {
         {slideData.deckPosition} / {slideData.deckTotal}
       </span>
     ) : null
-  const headerRight = slideData.isBlank ? '' : (
+  const brandText = slideData.customHeaderTitle || 'Church Presenter'
+  const appNamePos = slideData.appNamePosition || 'top-left'
+
+  const slideTypeNode = slideData.isBlank ? null : (
     <span className="flex items-center gap-2">
       {slideData.type}
       {deckChip}
     </span>
   )
+
+  let headerLeft = null
+  let headerRight = null
+
+  if (appNamePos === 'top-left') {
+    headerLeft = <span>{brandText}</span>
+    headerRight = slideTypeNode
+  } else if (appNamePos === 'top-right') {
+    headerLeft = slideTypeNode
+    headerRight = <span>{brandText}</span>
+  } else {
+    headerLeft = slideTypeNode
+    headerRight = null
+  }
+
+  const footerLeft = appNamePos === 'bottom-left' ? <span className="text-xs font-semibold tracking-wider uppercase">{brandText}</span> : null
+  const footerRight = appNamePos === 'bottom-right' ? <span className="text-xs font-semibold tracking-wider uppercase">{brandText}</span> : null
 
   if (isImage) {
     return (
@@ -105,8 +125,8 @@ export default function PresentationOutputWindow() {
         <div className="relative z-10 flex flex-col justify-between h-full">
           {/* Top Header Label */}
           <div className="flex justify-between items-center text-sm font-semibold tracking-widest text-[#D4A94A] uppercase border-b border-white/20 pb-4 drop-shadow">
-            <span>Church Presenter</span>
-            {headerRight}
+            <div>{headerLeft}</div>
+            <div>{headerRight}</div>
           </div>
 
           {/* Main Centered Text Block */}
@@ -118,14 +138,18 @@ export default function PresentationOutputWindow() {
             </div>
           )}
 
-          {/* Reference / Attribution Line Below */}
-          {!slideData.isBlank && slideData.title && (
-            <div className="text-center pt-6 border-t border-white/20">
-              <h2 className="text-xl md:text-2xl font-bold text-[#D4A94A] tracking-wider uppercase drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
-                — {slideData.title} —
-              </h2>
+          {/* Reference / Attribution Line Below & Footer App Name */}
+          <div className="flex items-center justify-between pt-6 border-t border-white/20 text-[#D4A94A]">
+            <div className="w-1/4 text-left drop-shadow">{footerLeft}</div>
+            <div className="w-1/2 text-center">
+              {!slideData.isBlank && slideData.title && (
+                <h2 className="text-xl md:text-2xl font-bold tracking-wider uppercase drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+                  — {slideData.title} —
+                </h2>
+              )}
             </div>
-          )}
+            <div className="w-1/4 text-right drop-shadow">{footerRight}</div>
+          </div>
         </div>
       </div>
     )
@@ -136,27 +160,31 @@ export default function PresentationOutputWindow() {
       <div className="h-screen w-screen bg-[#FFFFFF] text-[#111827] flex flex-col justify-between p-16 select-none overflow-hidden font-sans">
         {/* Top Header Label */}
         <div className="flex justify-between items-center text-sm font-semibold tracking-widest text-[#B4821E] uppercase border-b border-[#E5E7EB] pb-4">
-<span>Church Presenter</span>
-            {headerRight}
-          </div>
+          <div>{headerLeft}</div>
+          <div>{headerRight}</div>
+        </div>
 
-          {/* Main Centered Text Block */}
-          {!slideData.isBlank && (
-            <div className="my-auto max-w-5xl mx-auto text-center px-8">
-              <p className={`${bodyClasses} text-[#111827]`}>
+        {/* Main Centered Text Block */}
+        {!slideData.isBlank && (
+          <div className="my-auto max-w-5xl mx-auto text-center px-8">
+            <p className={`${bodyClasses} text-[#111827]`}>
               {displayContent}
             </p>
           </div>
         )}
 
-        {/* Reference / Attribution Line Below */}
-        {!slideData.isBlank && slideData.title && (
-          <div className="text-center pt-6 border-t border-[#E5E7EB]">
-            <h2 className="text-xl md:text-2xl font-bold text-[#B4821E] tracking-wider uppercase">
-              — {slideData.title} —
-            </h2>
+        {/* Reference / Attribution Line Below & Footer App Name */}
+        <div className="flex items-center justify-between pt-6 border-t border-[#E5E7EB] text-[#B4821E]">
+          <div className="w-1/4 text-left">{footerLeft}</div>
+          <div className="w-1/2 text-center">
+            {!slideData.isBlank && slideData.title && (
+              <h2 className="text-xl md:text-2xl font-bold tracking-wider uppercase">
+                — {slideData.title} —
+              </h2>
+            )}
           </div>
-        )}
+          <div className="w-1/4 text-right">{footerRight}</div>
+        </div>
       </div>
     )
   }
@@ -166,28 +194,31 @@ export default function PresentationOutputWindow() {
     <div className="h-screen w-screen bg-[#0B0C0E] text-[#EDEDEE] flex flex-col justify-between p-16 select-none overflow-hidden font-sans">
       {/* Top Header Label */}
       <div className="flex justify-between items-center text-sm font-semibold tracking-widest text-[#D4A94A] uppercase border-b border-[#2A2C31]/40 pb-4">
-<span>Church Presenter</span>
-            {headerRight}
-          </div>
+        <div>{headerLeft}</div>
+        <div>{headerRight}</div>
+      </div>
 
-          {/* Main Centered Text Block */}
-          {!slideData.isBlank && (
-            <div className="my-auto max-w-5xl mx-auto text-center px-8">
-              <p className={`${bodyClasses} text-[#EDEDEE]`}>
+      {/* Main Centered Text Block */}
+      {!slideData.isBlank && (
+        <div className="my-auto max-w-5xl mx-auto text-center px-8">
+          <p className={`${bodyClasses} text-[#EDEDEE]`}>
             {displayContent}
           </p>
         </div>
       )}
 
-      {/* Reference / Attribution Line Below */}
-      {!slideData.isBlank && slideData.title && (
-        <div className="text-center pt-6 border-t border-[#2A2C31]/40">
-          <h2 className="text-xl md:text-2xl font-bold text-[#D4A94A] tracking-wider uppercase">
-            — {slideData.title} —
-          </h2>
+      {/* Reference / Attribution Line Below & Footer App Name */}
+      <div className="flex items-center justify-between pt-6 border-t border-[#2A2C31]/40 text-[#D4A94A]">
+        <div className="w-1/4 text-left">{footerLeft}</div>
+        <div className="w-1/2 text-center">
+          {!slideData.isBlank && slideData.title && (
+            <h2 className="text-xl md:text-2xl font-bold tracking-wider uppercase">
+              — {slideData.title} —
+            </h2>
+          )}
         </div>
-      )}
+        <div className="w-1/4 text-right">{footerRight}</div>
+      </div>
     </div>
   )
 }
-

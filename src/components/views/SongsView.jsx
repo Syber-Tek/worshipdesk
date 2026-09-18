@@ -21,6 +21,7 @@ export default function SongsView({
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [selectedHymn, setSelectedHymn] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [lyricsCache, setLyricsCache] = useState({})
 
   const cardClass = isLight
     ? 'bg-[#FFFFFF] border-[#E5E7EB] text-[#111827] shadow-sm'
@@ -50,18 +51,44 @@ export default function SongsView({
 
   useEffect(() => {
     fetchHymns(searchQuery, selectedCategory)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, selectedCategory])
+
+  // Loads full lyrics for the selected hymn once (cached per hymn id).
+  const loadLyrics = async (hymn) => {
+    if (!hymn || lyricsCache[hymn.id]) return
+    if (window.api && window.api.getHymnLyrics) {
+      try {
+        const full = await window.api.getHymnLyrics(hymn.id)
+        if (full && full.lyrics) {
+          setLyricsCache((prev) => ({ ...prev, [hymn.id]: full.lyrics }))
+        }
+      } catch (err) {
+        console.error('Failed to load hymn lyrics:', err)
+      }
+    }
+  }
+
+  const handleSelectHymn = (hymn) => {
+    setSelectedHymn(hymn)
+    loadLyrics(hymn)
+  }
 
   const fetchHymns = async (query, cat) => {
     setIsLoading(true)
     try {
-      if (window.api && window.api.searchHymns) {
-        const results = await window.api.searchHymns(query, cat === 'All' ? null : cat)
+      if (window.api && window.api.listHymns) {
+        const results = await window.api.listHymns(query, cat === 'All' ? null : cat)
         if (Array.isArray(results)) {
           setHymnsList(results)
-          setSelectedHymn((prev) =>
-            prev && results.some((h) => h.id === prev.id) ? prev : results[0] || null
-          )
+          const keep = selectedHymn && results.some((h) => h.id === selectedHymn.id)
+          if (keep) {
+            loadLyrics(selectedHymn)
+          } else {
+            const next = results[0] || null
+            setSelectedHymn(next)
+            if (next) loadLyrics(next)
+          }
         }
       } else {
         // Fallback sample offline hymns if IPC not bound
@@ -97,6 +124,9 @@ export default function SongsView({
           return matchQ && matchCat
         })
         setHymnsList(filtered)
+        const seedCache = {}
+        filtered.forEach((h) => { seedCache[h.id] = h.lyrics })
+        setLyricsCache((prev) => ({ ...prev, ...seedCache }))
         setSelectedHymn((prev) =>
           prev && filtered.some((h) => h.id === prev.id) ? prev : filtered[0] || null
         )
@@ -107,6 +137,8 @@ export default function SongsView({
       setIsLoading(false)
     }
   }
+
+  const selectedLyrics = selectedHymn ? lyricsCache[selectedHymn.id] || '' : ''
 
   return (
     <div className="space-y-5 max-w-6xl mx-auto pb-6">
@@ -185,7 +217,7 @@ export default function SongsView({
                   return (
                     <div
                       key={hymn.id}
-                      onClick={() => setSelectedHymn(hymn)}
+                      onClick={() => handleSelectHymn(hymn)}
                       className={`p-3 rounded-lg border transition cursor-pointer ${
                         isSelected
                           ? 'bg-[#D4A94A]/15 border-[#D4A94A] text-[#EDEDEE]'
@@ -204,7 +236,7 @@ export default function SongsView({
                       </div>
                       <h4 className={`text-xs font-bold truncate ${headingClass}`}>{hymn.title}</h4>
                       <p className={`text-[11px] line-clamp-1 mt-0.5 ${labelClass}`}>
-                        {hymn.lyrics}
+                        {hymn.excerpt || ''}
                       </p>
                     </div>
                   )
@@ -235,16 +267,20 @@ export default function SongsView({
 
                 {/* Lyrics Reader Area */}
                 <div className={`p-5 rounded-xl border max-h-[380px] overflow-y-auto ${innerCardClass}`}>
-                  <pre className={`font-sans text-sm leading-relaxed whitespace-pre-wrap ${headingClass}`}>
-                    {selectedHymn.lyrics}
-                  </pre>
+                  {selectedLyrics ? (
+                    <pre className={`font-sans text-sm leading-relaxed whitespace-pre-wrap ${headingClass}`}>
+                      {selectedLyrics}
+                    </pre>
+                  ) : (
+                    <p className={`text-xs ${labelClass} animate-pulse`}>Loading lyrics…</p>
+                  )}
                 </div>
               </div>
 
               {/* Action Buttons */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-[#26282E]">
                 <button
-                  onClick={() => handleStageNext && handleStageNext({ title: selectedHymn.title, content: selectedHymn.lyrics, type: 'Hymn' })}
+                  onClick={() => handleStageNext && handleStageNext({ title: selectedHymn.title, content: selectedLyrics || selectedHymn.lyrics || '', type: 'Hymn' })}
                   className={`py-2.5 px-3 border rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer ${
                     isLight
                       ? 'bg-[#F3F4F6] hover:bg-[#E5E7EB] border-[#E5E7EB] text-[#111827]'
@@ -254,7 +290,7 @@ export default function SongsView({
                   <Show set="bold" primaryColor="#D4A94A" size="small" /> Stage as Next
                 </button>
                 <button
-                  onClick={() => handleAddToPlaylist && handleAddToPlaylist({ title: selectedHymn.title, content: selectedHymn.lyrics, type: 'Hymn' })}
+                  onClick={() => handleAddToPlaylist && handleAddToPlaylist({ title: selectedHymn.title, content: selectedLyrics || selectedHymn.lyrics || '', type: 'Hymn' })}
                   className={`py-2.5 px-3 border rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer ${
                     isLight
                       ? 'bg-[#F3F4F6] hover:bg-[#E5E7EB] border-[#E5E7EB] text-[#111827]'
@@ -264,7 +300,7 @@ export default function SongsView({
                   <Plus set="bold" primaryColor="#6FCF97" size="small" /> Add to Playlist
                 </button>
                 <button
-                  onClick={() => handlePresentNow && handlePresentNow({ title: selectedHymn.title, content: selectedHymn.lyrics, type: 'Hymn' })}
+                  onClick={() => handlePresentNow && handlePresentNow({ title: selectedHymn.title, content: selectedLyrics || selectedHymn.lyrics || '', type: 'Hymn' })}
                   className="py-2.5 px-3 bg-[#D4A94A] hover:bg-[#E2B757] text-[#0B0C0E] rounded-lg text-xs font-bold flex items-center justify-center gap-2 shadow transition cursor-pointer"
                 >
                   <Send set="bold" primaryColor="#0B0C0E" size="small" /> Present Live

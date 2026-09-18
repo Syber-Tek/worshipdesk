@@ -735,6 +735,47 @@ export function getHymns() {
   return db.prepare('SELECT * FROM hymns ORDER BY hymn_number ASC').all()
 }
 
+// Lightweight list for the Songs tab: no full lyrics, just a short excerpt so the
+// initial fetch stays fast even with 2000+ hymns.
+export function listHymns(searchQuery, activeCategory) {
+  if (!db) return []
+  const query = searchQuery && String(searchQuery).trim()
+  const cat = activeCategory && activeCategory !== 'All' ? activeCategory : null
+  const select = (whereClause, params) =>
+    db.prepare(`
+      SELECT id, hymn_number, title, category, author,
+             substr(replace(replace(lyrics, char(10), ' '), char(13), ' '), 1, 90) AS excerpt
+      FROM hymns ${whereClause}
+      ORDER BY hymn_number ASC
+    `).all(...params)
+
+  if (!query) {
+    if (cat) return select('WHERE category = ?', [cat])
+    return select('', [])
+  }
+
+  const escaped = query.replace(/[\\%_]/g, (m) => `\\${m}`)
+  const pattern = `%${escaped}%`
+  const catClause = cat ? ' AND category = ?' : ''
+  const catParams = cat ? [cat] : []
+  const isNumber = !isNaN(query)
+  if (isNumber) {
+    return select(
+      `WHERE (hymn_number = ? OR title LIKE ? ESCAPE '\\' OR lyrics LIKE ? ESCAPE '\\')${catClause}`,
+      [parseInt(query), pattern, pattern, ...catParams]
+    )
+  }
+  return select(
+    `WHERE (title LIKE ? ESCAPE '\\' OR lyrics LIKE ? ESCAPE '\\')${catClause}`,
+    [pattern, pattern, ...catParams]
+  )
+}
+
+export function getHymnLyrics(id) {
+  if (!db || !id) return null
+  return db.prepare('SELECT * FROM hymns WHERE id = ?').get(id) || null
+}
+
 export function searchHymns(query, category) {
   if (!db) return []
   const activeCategory = category && category !== 'All' ? category : null
