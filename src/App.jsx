@@ -52,6 +52,11 @@ export default function App() {
 
   const effectiveTheme = themeMode === 'system' ? systemTheme : themeMode
 
+  // Live Presentation & Transport State
+  const [isLive, setIsLive] = useState(false)
+  const [isBlank, setIsBlank] = useState(false)
+  const [isBlack, setIsBlack] = useState(false)
+
   // Live Output Presentation Theme & Background State
   const [outputTheme, setOutputTheme] = useState(() => {
     return localStorage.getItem('church_presenter_output_theme') || 'dark'
@@ -476,12 +481,13 @@ export default function App() {
     })
   }
 
-  const handlePresentNow = (verse) => {
+  const handlePresentNow = (item) => {
+    const isVerse = !!(item && item.ref)
     const updated = {
-      id: `verse-${verse.id}`,
-      title: `${verse.ref} (${selectedTranslation})`,
-      content: verse.text,
-      type: 'Bible Verse'
+      id: item.id ? `verse-${item.id}` : `present-${Date.now()}`,
+      title: isVerse ? `${item.ref} (${selectedTranslation})` : item.title || '',
+      content: isVerse ? item.text : item.content || '',
+      type: item.type || 'Bible Verse'
     }
     setCurrentSlide(updated)
     setIsLive(true)
@@ -555,6 +561,32 @@ export default function App() {
         title: `${nextV.ref} (${selectedTranslation})`,
         content: nextV.text,
         type: 'Bible Verse'
+      })
+    }
+  }
+
+  // Advance to the next verse AND present it in one action.
+  const handleTransportPresentNext = () => {
+    if (selectedVerseIndex < filteredVerses.length - 1) {
+      const nextV = filteredVerses[selectedVerseIndex + 1]
+      const updated = {
+        id: `verse-${nextV.id}`,
+        title: `${nextV.ref} (${selectedTranslation})`,
+        content: nextV.text,
+        type: 'Bible Verse'
+      }
+      setSelectedVerseIndex(selectedVerseIndex + 1)
+      setNextSlide(updated)
+      setCurrentSlide(updated)
+      setIsLive(true)
+      setIsBlack(false)
+      setIsBlank(false)
+
+      broadcastToPresentation({
+        ...updated,
+        isLive: true,
+        isBlack: false,
+        isBlank: false
       })
     }
   }
@@ -684,6 +716,7 @@ export default function App() {
         filteredVersesLength={filteredVerses.length}
         handleTransportPrev={handleTransportPrev}
         handleTransportNext={handleTransportNext}
+        handleTransportPresentNext={handleTransportPresentNext}
         handleToggleClear={handleToggleClear}
         handleToggleBlack={handleToggleBlack}
         handleTransportPresent={handleTransportPresent}

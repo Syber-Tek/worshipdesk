@@ -22,9 +22,32 @@ export default function PresentationOutputWindow() {
     }
   }, [])
 
-  // Black Screen Mode
-  if (slideData.isBlack || !slideData.isLive) {
+  // Explicit Black Screen Override Mode
+  if (slideData.isBlack) {
     return <div className="h-screen w-screen bg-black flex items-center justify-center select-none" />
+  }
+
+  // Standby Display Mode (When not live on air)
+  if (!slideData.isLive) {
+    return (
+      <div className="h-screen w-screen bg-[#0B0C0E] text-[#EDEDEE] flex flex-col items-center justify-center select-none font-sans p-8 border-4 border-[#26282E]">
+        <div className="flex flex-col items-center gap-3 opacity-70">
+          <div className="w-12 h-12 rounded-xl bg-[#D4A94A]/10 border border-[#D4A94A]/40 flex items-center justify-center text-[#D4A94A] font-bold text-sm shadow">
+            CP
+          </div>
+          <h2 className="text-xl font-bold tracking-widest text-[#EDEDEE] uppercase">
+            Church Presenter
+          </h2>
+          <div className="px-3 py-1 rounded bg-[#24262B] border border-[#2A2C31] text-[11px] font-semibold text-[#D4A94A] flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#D4A94A] animate-pulse" />
+            PROJECTOR DISPLAY READY — STANDBY MODE
+          </div>
+          <p className="text-xs text-[#9B9CA3] max-w-md text-center mt-1 leading-relaxed">
+            Click <span className="text-[#D4A94A] font-bold">"Present"</span> or toggle <span className="text-[#E5484D] font-bold">"LIVE ON-AIR"</span> in the main control window to project scriptures and hymns.
+          </p>
+        </div>
+      </div>
+    )
   }
 
   const theme = slideData.outputTheme || 'dark'
@@ -32,8 +55,14 @@ export default function PresentationOutputWindow() {
   const isImage = theme === 'image'
   const bgImg = slideData.outputBgImage || 'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?q=80&w=1600&auto=format&fit=crop'
   
-  const showQuotes = slideData.showVerseQuotes !== false
-  const displayContent = showQuotes ? `"${slideData.content}"` : slideData.content
+  const isHymn = slideData.type === 'Hymn'
+  // Quotes only make sense around scripture verses, never around hymns/sermons.
+  const showQuotes = slideData.type !== 'Hymn' && slideData.showVerseQuotes !== false
+  const content = slideData.content ?? ''
+  const displayContent = showQuotes ? `"${content}"` : content
+  const bodyClasses = isHymn
+    ? 'whitespace-pre-line text-2xl md:text-4xl font-normal leading-normal tracking-normal'
+    : 'whitespace-pre-line text-3xl md:text-5xl font-bold leading-relaxed tracking-wide'
 
   if (isImage) {
     return (
@@ -54,7 +83,7 @@ export default function PresentationOutputWindow() {
           {/* Main Centered Text Block */}
           {!slideData.isBlank && (
             <div className="my-auto max-w-5xl mx-auto text-center px-8">
-              <p className="text-3xl md:text-5xl font-bold leading-relaxed tracking-wide text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]">
+              <p className={`${bodyClasses} text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]`}>
                 {displayContent}
               </p>
             </div>
@@ -85,7 +114,7 @@ export default function PresentationOutputWindow() {
         {/* Main Centered Text Block */}
         {!slideData.isBlank && (
           <div className="my-auto max-w-5xl mx-auto text-center px-8">
-            <p className="text-3xl md:text-5xl font-bold leading-relaxed tracking-wide text-[#111827]">
+            <p className={`${bodyClasses} text-[#111827]`}>
               {displayContent}
             </p>
           </div>
@@ -115,7 +144,7 @@ export default function PresentationOutputWindow() {
       {/* Main Centered Text Block */}
       {!slideData.isBlank && (
         <div className="my-auto max-w-5xl mx-auto text-center px-8">
-          <p className="text-3xl md:text-5xl font-bold leading-relaxed tracking-wide text-[#EDEDEE]">
+          <p className={`${bodyClasses} text-[#EDEDEE]`}>
             {displayContent}
           </p>
         </div>

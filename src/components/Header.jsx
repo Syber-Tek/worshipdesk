@@ -1,7 +1,7 @@
 import React from 'react'
 import { Video, Category, Activity } from 'react-iconly'
 
-export default function Header({ displays, isLive, setIsLive, broadcastToPresentation, themeMode, effectiveTheme, setThemeMode }) {
+export default function Header({ displays = [], isLive, setIsLive, broadcastToPresentation, themeMode, effectiveTheme, setThemeMode }) {
   const toggleLiveStatus = () => {
     const nextLive = !isLive
     setIsLive(nextLive)
@@ -14,6 +14,8 @@ export default function Header({ displays, isLive, setIsLive, broadcastToPresent
   const handleCycleTheme = () => {
     setThemeMode((prev) => (prev === 'dark' ? 'light' : 'dark'))
   }
+
+  const safeDisplays = Array.isArray(displays) ? displays : []
 
   return (
     <header
@@ -33,7 +35,7 @@ export default function Header({ displays, isLive, setIsLive, broadcastToPresent
         </span>
         <span className={isLight ? 'text-[#D1D5DB]' : 'text-[#6B6C73]'}>|</span>
         <div className={`flex items-center gap-1.5 text-[11px] ${isLight ? 'text-[#4B5563]' : 'text-[#9B9CA3]'}`}>
-          {displays.length > 1 ? (
+          {safeDisplays.length > 1 ? (
             <>
               <Video set="bold" primaryColor="#6FCF97" size="small" />
               <span className="text-[#6FCF97] font-medium">

@@ -457,13 +457,13 @@ function rtfToPlainText(rtf) {
 }
 
 // The Twi hymnals come from a "WL-Sims Akan" font where ASCII brackets stand in
-// for the Akan letters ɛ / ɔ. Restore the real letters so text is searchable.
+// for the Akan vowels: [ => ɛ, ] => ɔ (lowercase) and { => Ɛ, } => Ɔ (uppercase).
 function twiGlyphFix(text) {
   return String(text || '')
     .replace(/\[/g, 'ɛ')
     .replace(/\]/g, 'ɔ')
-    .replace(/\{/g, 'ɛ')
-    .replace(/\}/g, 'ɔ')
+    .replace(/\{/g, 'Ɛ')
+    .replace(/\}/g, 'Ɔ')
 }
 
 function parseHymnNumber(...candidates) {
@@ -511,6 +511,7 @@ export function importSngFile(filePath, defaultCategory, defaultAuthor, isTwi) {
 
     let title = meta.title || baseName
     title = title.replace(/\s*\([A-Za-z]{1,4}\s*\d+\)\s*$/, '').trim() || baseName
+    if (isTwi) title = twiGlyphFix(title)
 
     const hymnNumber = parseHymnNumber(meta.userinfo1, meta.cclinum, meta.number, baseName, title)
     const author = meta.wordsby || meta.musicby || defaultAuthor || 'Church Library'

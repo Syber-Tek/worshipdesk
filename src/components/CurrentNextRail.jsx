@@ -19,6 +19,7 @@ export default function CurrentNextRail({
   filteredVersesLength,
   handleTransportPrev,
   handleTransportNext,
+  handleTransportPresentNext,
   handleToggleClear,
   handleToggleBlack,
   handleTransportPresent,
@@ -117,6 +118,16 @@ export default function CurrentNextRail({
 
       {/* TRANSPORT & OVERLAY CONTROL BAR */}
       <div className="space-y-2 pt-3 border-t border-[#2A2C31]">
+          {/* Present Next Verse (single click: next + present) */}
+          <button
+            onClick={handleTransportPresentNext}
+            disabled={!isLive || selectedVerseIndex >= filteredVersesLength - 1 || filteredVersesLength === 0}
+            className="w-full py-3 bg-[#D4A94A] hover:bg-[#D4A94A]/90 text-[#0B0C0E] font-bold rounded-lg text-sm flex items-center justify-center gap-2 shadow transition cursor-pointer disabled:opacity-40"
+          >
+            <Play set="bold" primaryColor="#0B0C0E" size="small" />
+            Present Next
+          </button>
+
         {/* Output Screen Theme Quick Selector */}
         {setOutputTheme && (
           <div className="space-y-1">
