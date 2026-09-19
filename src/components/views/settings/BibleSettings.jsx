@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { FaBookOpen, FaDatabase } from "react-icons/fa6";
 
 export default function BibleSettings({
@@ -322,9 +323,15 @@ export default function BibleSettings({
           <input
             type="checkbox"
             checked={showVerseQuotes}
-            onChange={(e) =>
-              setShowVerseQuotes && setShowVerseQuotes(e.target.checked)
-            }
+            onChange={(e) => {
+              const checked = e.target.checked;
+              if (setShowVerseQuotes) setShowVerseQuotes(checked);
+              toast.success(
+                checked
+                  ? "Verse quotation marks enabled"
+                  : "Verse quotation marks disabled"
+              );
+            }}
             className="accent-accent w-4 h-4 cursor-pointer"
           />
         </div>

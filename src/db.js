@@ -832,3 +832,14 @@ export function importHymnsBatch(hymnList) {
   })
   return insertMany(hymnList)
 }
+
+export function getHymnsCount() {
+  if (!db) return 0
+  try {
+    const row = db.prepare('SELECT COUNT(*) as count FROM hymns').get()
+    return row ? row.count : 0
+  } catch {
+    return 0
+  }
+}
+

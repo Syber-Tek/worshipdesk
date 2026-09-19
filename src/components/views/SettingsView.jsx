@@ -12,6 +12,7 @@ import {
   FaCircleInfo,
   FaMusic,
 } from "react-icons/fa6";
+import { getThemeClasses } from "../../lib/themeTokens";
 
 import GeneralSettings from "./settings/GeneralSettings";
 import AppearanceSettings from "./settings/AppearanceSettings";
@@ -67,6 +68,8 @@ export default function SettingsView({
   setShowHymnNumbers,
   hymnTextScale = "normal",
   setHymnTextScale,
+  isFullscreenActive = true,
+  setFullscreenActive,
 }) {
   const settingsMenu = [
     { id: "general", label: "General", icon: FaSliders },
@@ -83,24 +86,11 @@ export default function SettingsView({
   ];
 
   const activeEffectiveTheme = effectiveTheme || themeMode || "dark";
-  const isLight = activeEffectiveTheme === "light";
-  const cardClass = isLight
-    ? "bg-[#F9FAFB] border-[#E5E7EB] text-[#111827]"
-    : "bg-[#1C1D21] border-[#2A2C31] text-[#EDEDEE]";
-  const selectClass = isLight
-    ? "bg-[#E5E7EB] border-[#D1D5DB] text-[#111827]"
-    : "bg-[#24262B] border-[#2A2C31] text-[#EDEDEE]";
-  const textTitle = isLight ? "text-[#111827]" : "text-[#EDEDEE]";
-  const textSub = isLight ? "text-[#4B5563]" : "text-[#9B9CA3]";
-  const borderDivider = isLight ? "border-[#E5E7EB]" : "border-[#2A2C31]";
+  const themeTokens = getThemeClasses(activeEffectiveTheme);
+  const isLight = themeTokens.isLight;
 
   const commonProps = {
-    cardClass,
-    selectClass,
-    textTitle,
-    textSub,
-    borderDivider,
-    isLight,
+    ...themeTokens,
   };
 
   return (
@@ -178,6 +168,8 @@ export default function SettingsView({
             setDisplays={setDisplays}
             projectionDisplays={projectionDisplays}
             setProjectionDisplays={setProjectionDisplays}
+            isFullscreenActive={isFullscreenActive}
+            setFullscreenActive={setFullscreenActive}
             {...commonProps}
           />
         )}

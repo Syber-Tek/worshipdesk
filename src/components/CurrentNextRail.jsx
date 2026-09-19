@@ -9,6 +9,7 @@ import {
   Activity,
   Video
 } from 'react-iconly'
+import { FaEraser, FaEyeSlash, FaLock, FaLockOpen } from 'react-icons/fa6'
 
 export default function CurrentNextRail({
   currentSlide,
@@ -70,7 +71,7 @@ export default function CurrentNextRail({
           </div>
 
           <div className="min-h-14 flex flex-col justify-center">
-            {currentSlide ? (
+            {currentSlide && (currentSlide.title || currentSlide.ref || currentSlide.content || currentSlide.text) ? (
               <>
                 <h4 className={`font-bold text-xs ${isLight ? 'text-[#111827]' : 'text-text-primary'}`}>
                   {currentSlide.title || currentSlide.ref}
@@ -220,17 +221,17 @@ export default function CurrentNextRail({
                     }`}
                   >
                     <span className="truncate font-semibold">
-                      {isPrimary ? 'Control Display' : `${d.label || `Display ${i + 1}`}`}
+                      {isPrimary ? 'Main Display' : `${d.label || `Display ${i + 1}`}`}
                     </span>
                     <span className={`flex items-center gap-1 font-bold ${isSelected ? 'text-accent' : isLight ? 'text-[#9CA3AF]' : 'text-[#6B6C73]'}`}>
                       {isPrimary ? (
-                        'LOCKED'
+                        <FaLock/>
                       ) : isSelected ? (
                         <>
-                          <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" /> ON
+                          <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" /> <FaLockOpen/>
                         </>
                       ) : (
-                        'OFF'
+                        <FaLock/>
                       )}
                     </span>
                   </button>
@@ -280,7 +281,7 @@ export default function CurrentNextRail({
                 : 'bg-[#24262B] hover:bg-[#2A2C31] border-[#2A2C31] text-text-primary'
             }`}
           >
-            <Hide set="light" primaryColor="currentColor" size="small" /> Clear
+            <FaEraser set="light" primaryColor="currentColor" size="16" /> Clear
           </button>
           <button
             onClick={handleToggleBlack}
@@ -292,7 +293,7 @@ export default function CurrentNextRail({
                 : 'bg-[#24262B] hover:bg-[#2A2C31] border-[#2A2C31] text-text-primary'
             }`}
           >
-            <CloseSquare set="light" primaryColor="currentColor" size="small" /> Black
+            <FaEyeSlash set="light" primaryColor="currentColor" size="16" /> Black
           </button>
         </div>
 

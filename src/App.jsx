@@ -9,6 +9,7 @@ import SongsView from "./components/views/SongsView";
 import PlanView from "./components/views/PlanView";
 import SettingsView from "./components/views/SettingsView";
 import AddItemModal from "./components/modals/AddItemModal";
+import SplashScreen from "./components/SplashScreen";
 import { Toaster } from "sonner";
 import { mapBookToTranslation, normalizeBookName } from "./bibleBooks.js";
 
@@ -41,6 +42,8 @@ export default function App() {
   if (isPresentationMode) {
     return <PresentationOutputWindow />;
   }
+
+  const [showSplash, setShowSplash] = useState(true);
 
   // Active Tab & Theme Mode state ('dark' | 'light' | 'system') persisted in localStorage
   const [activeTab, setActiveTab] = useState(() => {
@@ -105,6 +108,15 @@ export default function App() {
 
   const effectiveTheme = themeMode === "system" ? systemTheme : themeMode;
 
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.documentElement.setAttribute("data-theme", effectiveTheme);
+    }
+    if (typeof window !== "undefined" && window.api?.setWindowIcon) {
+      window.api.setWindowIcon(effectiveTheme).catch(() => {});
+    }
+  }, [effectiveTheme]);
+
   // Live Presentation & Transport State
   const [isLive, setIsLive] = useState(false);
   const [isBlank, setIsBlank] = useState(false);
@@ -160,6 +172,10 @@ export default function App() {
 
   const [hymnTextScale, setHymnTextScale] = useState(() => {
     return localStorage.getItem("church_presenter_hymn_text_scale") || "normal";
+  });
+
+  const [isFullscreenActive, setFullscreenActive] = useState(() => {
+    return localStorage.getItem("church_presenter_fullscreen") !== "false";
   });
 
   const [projectionDisplays, setProjectionDisplays] = useState(() => {
@@ -251,7 +267,7 @@ export default function App() {
   }, [projectionDisplays]);
 
   // Current Live & Next Staged Slide
-  const [currentSlide, setCurrentSlide] = useState({});
+  const [currentSlide, setCurrentSlide] = useState(null);
 
   const [nextSlide, setNextSlide] = useState({});
 
@@ -445,13 +461,12 @@ export default function App() {
   // Once a real Bible is imported we never fall back to the demo verses,
   // so an empty search result correctly shows nothing instead of placeholder data.
   const hasRealBibles = biblesList && biblesList.length > 0;
-  const filteredVerses =
-    dbVerses.length > 0 ? dbVerses : hasRealBibles ? [] : searchQuery.trim();
+  const filteredVerses = Array.isArray(dbVerses) ? dbVerses : [];
 
   const activeSelectedVerse =
-    filteredVerses[selectedVerseIndex] ||
-    filteredVerses[0] ||
-    (hasRealBibles ?? null);
+    filteredVerses.length > 0
+      ? filteredVerses[selectedVerseIndex] || filteredVerses[0]
+      : null;
 
   // Broadcast Live Slide via IPC
   const broadcastToPresentation = useCallback(
@@ -514,24 +529,27 @@ export default function App() {
   }, [broadcastToPresentation]);
 
   const normalizeSlide = (item) => {
-    if (!item) return null;
-    const isVerse = !!item.ref;
-    return {
-      title: isVerse
-        ? `${item.ref} (${selectedTranslation})`
-        : item.title || "Untitled",
-      content: isVerse ? item.text : item.content || "",
-      type: isVerse ? "Bible Verse" : item.type || "Custom Slide",
-    };
+    if (!item || typeof item !== "object") return null;
+    const isVerse = !!(item.ref || item.book || item.type === "Bible Verse");
+    const refTitle = item.ref ? `${item.ref} (${selectedTranslation})` : "";
+    const title = item.title || refTitle || "Untitled Slide";
+    const content =
+      item.content || item.text || item.lyrics || item.verse_text || "";
+    const type = item.type || (isVerse ? "Bible Verse" : "Custom Slide");
+    return { title, content, type };
   };
 
   const handleAddToPlaylist = (item) => {
     const slide = normalizeSlide(item);
-    if (!slide || !slide.title.trim() || !slide.content.trim()) return;
+    if (!slide || !slide.title.trim() || !slide.content.trim()) {
+      toast.error("Cannot add empty item to Service Plan");
+      return;
+    }
     setPlaylist((prev) => [
       ...prev,
       { ...slide, id: `item-${Date.now()}`, status: "pending" },
     ]);
+    toast.success(`Added "${slide.title}" to Service Plan`);
   };
 
   const handleKeyDown = (e) => {
@@ -642,7 +660,13 @@ export default function App() {
   };
 
   const handleDeleteItem = (id) => {
-    setPlaylist((prev) => prev.filter((i) => i.id !== id));
+    setPlaylist((prev) => {
+      const target = prev.find((i) => i.id === id);
+      if (target) {
+        toast.info(`Removed "${target.title}" from Service Plan`);
+      }
+      return prev.filter((i) => i.id !== id);
+    });
   };
 
   const handleAddItem = (e) => {
@@ -661,6 +685,7 @@ export default function App() {
     setNewItemTitle("");
     setNewItemContent("");
     setShowAddModal(false);
+    toast.success(`Added "${newItem.title}" to Service Plan`);
   };
 
   // Scripture Transport Handlers
@@ -740,12 +765,22 @@ export default function App() {
     const nextState = !isBlack;
     setIsBlack(nextState);
     broadcastToPresentation({ isBlack: nextState });
+    if (nextState) {
+      toast.warning("Blackout screen active");
+    } else {
+      toast.info("Blackout screen off");
+    }
   };
 
   const handleToggleClear = () => {
     const nextState = !isBlank;
     setIsBlank(nextState);
     broadcastToPresentation({ isBlank: nextState });
+    if (nextState) {
+      toast.info("Overlay text cleared");
+    } else {
+      toast.info("Overlay text restored");
+    }
   };
 
   const handleTransportPrev = () => {
@@ -872,6 +907,100 @@ export default function App() {
       return unsubscribe;
     }
   }, [handleTransportPresentNext, handleTransportPresentPrev]);
+
+  // Global Keyboard Shortcut Handler (Works 100% reliably anywhere in window)
+  useEffect(() => {
+    const handleGlobalKeyDown = (e) => {
+      const tag = e.target && e.target.tagName ? e.target.tagName.toUpperCase() : "";
+      const isInput =
+        /INPUT|TEXTAREA|SELECT/.test(tag) ||
+        (e.target && e.target.isContentEditable);
+
+      if (e.key === "Escape") {
+        if (document.activeElement && document.activeElement.blur) {
+          document.activeElement.blur();
+        }
+        return;
+      }
+
+      if (
+        (e.ctrlKey && e.key.toLowerCase() === "f") ||
+        (!isInput && e.key === "/")
+      ) {
+        e.preventDefault();
+        if (searchInputRef.current) {
+          searchInputRef.current.focus();
+        }
+        return;
+      }
+
+      if (isInput) return;
+
+      const key = e.key.toLowerCase();
+
+      // Quick Tab Switcher: 1-5
+      if (e.key >= "1" && e.key <= "5") {
+        e.preventDefault();
+        const tabMap = {
+          "1": "home",
+          "2": "plan",
+          "3": "bible",
+          "4": "songs",
+          "5": "settings",
+        };
+        if (tabMap[e.key]) {
+          setActiveTab(tabMap[e.key]);
+          toast.info(`Switched to ${tabMap[e.key].toUpperCase()} view`);
+        }
+        return;
+      }
+
+      // Live Transport Control Shortcuts
+      if (key === "b") {
+        e.preventDefault();
+        handleToggleBlack();
+      } else if (key === "c") {
+        e.preventDefault();
+        handleToggleClear();
+      } else if (key === "p" || e.key === "Enter") {
+        e.preventDefault();
+        if (nextSlide && nextSlide.title) {
+          handleTransportPresent();
+        } else if (activeSelectedVerse) {
+          handlePresentNow(activeSelectedVerse);
+        }
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setSelectedVerseIndex((prev) =>
+          prev < filteredVerses.length - 1 ? prev + 1 : prev,
+        );
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setSelectedVerseIndex((prev) => (prev > 0 ? prev - 1 : 0));
+      } else if (e.key === "ArrowRight" || e.key === "PageDown") {
+        e.preventDefault();
+        handleTransportPresentNext();
+      } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+        e.preventDefault();
+        handleTransportPresentPrev();
+      }
+    };
+
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, [
+    activeTab,
+    filteredVerses,
+    selectedVerseIndex,
+    activeSelectedVerse,
+    nextSlide,
+    handleTransportPresentNext,
+    handleTransportPresentPrev,
+    handleTransportPresent,
+    handleToggleBlack,
+    handleToggleClear,
+    handlePresentNow,
+  ]);
 
   const isHymnDeckActive = hymnDeck.length > 1 && currentSlide?.type === "Hymn";
   const presentNextDisabled =
@@ -1030,6 +1159,8 @@ export default function App() {
               setShowHymnNumbers={setShowHymnNumbers}
               hymnTextScale={hymnTextScale}
               setHymnTextScale={setHymnTextScale}
+              isFullscreenActive={isFullscreenActive}
+              setFullscreenActive={setFullscreenActive}
             />
           )}
         </main>
@@ -1075,6 +1206,13 @@ export default function App() {
         handleAddItem={handleAddItem}
         themeMode={effectiveTheme}
       />
+
+      {showSplash && (
+        <SplashScreen
+          themeMode={effectiveTheme}
+          onFinished={() => setShowSplash(false)}
+        />
+      )}
 
       <Toaster
         position="top-center"

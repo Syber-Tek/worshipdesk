@@ -1,5 +1,7 @@
 import React from "react";
 import { FaCircleInfo } from "react-icons/fa6";
+import appIconDark from "../../../assets/app-icon-dark.png";
+import appIconLight from "../../../assets/app-icon-light.png";
 
 export default function AboutSettings({
   cardClass,
@@ -23,6 +25,11 @@ export default function AboutSettings({
       <div className={`space-y-4 pt-2 border-t ${borderDivider}`}>
         <div className={`p-4 rounded border ${cardClass} space-y-3`}>
           <div className="flex items-center gap-3">
+            <img
+              src={appIconLight}
+              alt="WorshipDesk Logo"
+              className="w-7 h-7 object-contain rounded-md drop-shadow-sm"
+            />
             <span className="bg-[#0D3822] text-[#34D399] border border-[#10B981]/30 rounded-lg px-3 py-1 font-semibold text-xs">
               WorshipDesk v1.0.0
             </span>

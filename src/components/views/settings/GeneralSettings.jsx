@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { FaSliders } from "react-icons/fa6";
 
 export default function GeneralSettings({
@@ -11,6 +12,37 @@ export default function GeneralSettings({
   borderDivider,
   isLight,
 }) {
+  const [startup, setStartup] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    if (window.api && window.api.getLoginItem) {
+      window.api
+        .getLoginItem()
+        .then((res) => {
+          if (alive && res && typeof res.openAtLogin === "boolean") {
+            setStartup(res.openAtLogin);
+          }
+        })
+        .catch(() => {});
+    }
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  async function handleStartupToggle(next) {
+    setStartup(next);
+    if (window.api && window.api.setLoginItem) {
+      const res = await window.api.setLoginItem(next);
+      if (res && res.success) {
+        toast.success(next ? "App will launch on System Startup" : "Startup launch disabled");
+      } else if (res && res.error) {
+        setStartup(!next);
+        toast.error(`Startup toggle error: ${res.error}`);
+      }
+    }
+  }
   return (
     <div className="space-y-5">
       <div>

@@ -1,17 +1,48 @@
 @import "tailwindcss";
 
-@theme {
+:root {
   --font-sans: 'Plus Jakarta Sans', 'Jakarta Pro', system-ui, -apple-system, sans-serif;
   --color-bg: #0B0C0E;
   --color-panel: #141518;
-  --color-surface: #1B1C20;
-  --color-raised: #22242A;
+  --color-surface: #1C1D21;
+  --color-raised: #24262B;
   --color-hover: #292B32;
   --color-border: #26282E;
   --color-border-strong: #333640;
   --color-text-primary: #EDEDEE;
   --color-text-secondary: #9CA0AC;
   --color-text-muted: #696C75;
+  --color-accent: #D4A94A;
+  --color-accent-hover: #E2B757;
+  --color-live: #E5484D;
+  --color-success: #6FCF97;
+}
+
+[data-theme="light"] {
+  --color-bg: #F3F4F6;
+  --color-panel: #FFFFFF;
+  --color-surface: #F9FAFB;
+  --color-raised: #E5E7EB;
+  --color-hover: #E5E7EB;
+  --color-border: #E5E7EB;
+  --color-border-strong: #D1D5DB;
+  --color-text-primary: #111827;
+  --color-text-secondary: #4B5563;
+  --color-text-muted: #9CA3AF;
+}
+
+@theme {
+  --font-sans: 'Plus Jakarta Sans', 'Jakarta Pro', system-ui, -apple-system, sans-serif;
+  --color-bg: var(--color-bg);
+  --color-panel: var(--color-panel);
+  --color-surface: var(--color-surface);
+  --color-raised: var(--color-raised);
+  --color-hover: var(--color-hover);
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-muted: var(--color-text-muted);
   --color-accent: #D4A94A;
   --color-accent-hover: #E2B757;
   --color-live: #E5484D;
@@ -34,7 +65,6 @@ body, input, button, select, textarea {
 }
 ::-webkit-scrollbar-thumb {
   background: #282A30;
-  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #383B44;

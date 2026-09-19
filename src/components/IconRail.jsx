@@ -1,4 +1,6 @@
 import React from "react";
+import appIconDark from "../assets/app-icon-dark.png";
+import appIconLight from "../assets/app-icon-light.png";
 import {
   Home,
   Document,
@@ -23,14 +25,16 @@ export default function IconRail({ activeTab, setActiveTab, themeMode }) {
   return (
     <aside
       className={`w-13 border-r flex flex-col items-center justify-between py-3 z-20 transition-colors duration-200 ${
-        isLight
-          ? "bg-[#FFFFFF] border-[#E5E7EB]"
-          : "bg-[#121316] border-border"
+        isLight ? "bg-[#FFFFFF] border-[#E5E7EB]" : "bg-[#121316] border-border"
       }`}
     >
       <div className="flex flex-col items-center gap-4 w-full">
-        <div className="w-8 h-8 rounded-lg bg-accent/10 border border-accent/30 flex items-center justify-center text-accent font-extrabold text-xs">
-          WD
+        <div className="w-11 h-11 rounded-xl overflow-hidden flex items-center justify-center p-0.5 transition-transform duration-200 hover:scale-105">
+          <img
+            src={isLight ? appIconDark : appIconLight}
+            alt="WorshipDesk Logo"
+            className="w-full h-full object-contain"
+          />
         </div>
 
         <nav className="flex flex-col items-center gap-1.5 w-full mt-2">
@@ -62,13 +66,6 @@ export default function IconRail({ activeTab, setActiveTab, themeMode }) {
             );
           })}
         </nav>
-      </div>
-
-      <div
-        title="100% Offline Mode Active"
-        className="text-success p-2 flex items-center justify-center cursor-pointer"
-      >
-        <ShieldDone set="bold" primaryColor="currentColor" size="small" />
       </div>
     </aside>
   );

@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('api', {
   getAppInfo: () => ipcRenderer.invoke('get-app-info'),
   getDbStatus: () => ipcRenderer.invoke('get-db-status'),
   getDisplays: () => ipcRenderer.invoke('get-displays'),
+  setWindowIcon: (themeMode) => ipcRenderer.invoke('set-window-icon', themeMode),
   openPresentationWindows: (displayIds) => ipcRenderer.invoke('open-presentation-windows', displayIds),
   onDisplaysChanged: (callback) => {
     const subscription = (_event, displays) => callback(displays)
@@ -21,8 +22,15 @@ contextBridge.exposeInMainWorld('api', {
   rescanBibles: () => ipcRenderer.invoke('rescan-bibles'),
   backupDatabase: () => ipcRenderer.invoke('backup-database'),
   notifyNative: (payload) => ipcRenderer.send('native-notification', payload),
+  setPresentationFullscreen: (fullscreen) =>
+    ipcRenderer.invoke('set-presentation-fullscreen', Boolean(fullscreen)),
+
+  setLoginItem: (openAtLogin) =>
+    ipcRenderer.invoke('set-login-item-open-at-login', { openAtLogin: Boolean(openAtLogin) }),
+  getLoginItem: () => ipcRenderer.invoke('get-login-item-open-at-login'),
   // Hymn API Methods
   getHymns: () => ipcRenderer.invoke('get-hymns'),
+  getHymnsCount: () => ipcRenderer.invoke('get-hymns-count'),
   searchHymns: (query, category) => ipcRenderer.invoke('search-hymns', query, category),
   listHymns: (query, category) => ipcRenderer.invoke('list-hymns', query, category),
   getHymnLyrics: (id) => ipcRenderer.invoke('get-hymn-lyrics', id),

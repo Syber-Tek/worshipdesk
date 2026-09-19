@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { FaMusic } from "react-icons/fa6";
 
 export default function SongsSettings({
@@ -16,12 +17,16 @@ export default function SongsSettings({
 }) {
   const [hymnsCount, setHymnsCount] = useState(0);
 
-  useEffect(() => {
+  const refreshCount = () => {
     if (window.api && window.api.getHymnsCount) {
       window.api.getHymnsCount().then((count) => {
         setHymnsCount(count || 0);
       });
     }
+  };
+
+  useEffect(() => {
+    refreshCount();
   }, []);
 
   return (
@@ -51,9 +56,11 @@ export default function SongsSettings({
           </div>
           <select
             value={defaultHymnCategory || "All"}
-            onChange={(e) =>
-              setDefaultHymnCategory && setDefaultHymnCategory(e.target.value)
-            }
+            onChange={(e) => {
+              const val = e.target.value;
+              if (setDefaultHymnCategory) setDefaultHymnCategory(val);
+              toast.success(`Default hymnal set to ${val}`);
+            }}
             className={`text-xs rounded px-2.5 py-1 outline-none border ${selectClass}`}
           >
             {[
@@ -87,9 +94,15 @@ export default function SongsSettings({
           <input
             type="checkbox"
             checked={showHymnNumbers}
-            onChange={(e) =>
-              setShowHymnNumbers && setShowHymnNumbers(e.target.checked)
-            }
+            onChange={(e) => {
+              const checked = e.target.checked;
+              if (setShowHymnNumbers) setShowHymnNumbers(checked);
+              toast.success(
+                checked
+                  ? "Hymn numbers visible on projector"
+                  : "Hymn numbers hidden"
+              );
+            }}
             className="accent-accent w-4 h-4 cursor-pointer"
           />
         </div>
@@ -108,9 +121,11 @@ export default function SongsSettings({
           </div>
           <select
             value={hymnTextScale || "normal"}
-            onChange={(e) =>
-              setHymnTextScale && setHymnTextScale(e.target.value)
-            }
+            onChange={(e) => {
+              const val = e.target.value;
+              if (setHymnTextScale) setHymnTextScale(val);
+              toast.success(`Hymn text scale set to ${val}`);
+            }}
             className={`text-xs rounded px-2.5 py-1 outline-none border ${selectClass}`}
           >
             <option value="small">Small</option>
@@ -154,7 +169,10 @@ export default function SongsSettings({
                   if (window.api && window.api.importSongsDialog) {
                     const res = await window.api.importSongsDialog();
                     if (res && res.success) {
-                      alert(`Imported ${res.count} hymns!`);
+                      toast.success(`Imported ${res.count} hymns!`);
+                      refreshCount();
+                    } else if (res && res.message && res.message !== "Cancelled") {
+                      toast.error(`Import error: ${res.message}`);
                     }
                   }
                 }}

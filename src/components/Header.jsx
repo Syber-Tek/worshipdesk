@@ -1,6 +1,8 @@
 import React from "react";
+
 import { Video, Category, Activity } from "react-iconly";
 import appNotify from "../lib/notify";
+import { FaDisplay } from "react-icons/fa6";
 
 export default function Header({
   displays = [],
@@ -32,7 +34,7 @@ export default function Header({
 
   const currentTheme = effectiveTheme || themeMode;
   const isLight = currentTheme === "light";
-
+  const date = Date();
   const handleCycleTheme = () => {
     setThemeMode((prev) => (prev === "dark" ? "light" : "dark"));
   };
@@ -41,7 +43,7 @@ export default function Header({
 
   return (
     <header
-      className={`h-11 border-b px-4 flex items-center justify-between text-xs transition-colors duration-200 ${
+      className={`h-12 border-b px-4 flex items-center justify-between text-xs transition-colors duration-200 ${
         isLight ? "bg-[#FFFFFF] border-[#E5E7EB]" : "bg-panel border-border"
       }`}
     >
@@ -70,7 +72,7 @@ export default function Header({
             </>
           ) : (
             <>
-              <Category set="light" primaryColor="currentColor" size="small" />
+              <FaDisplay set="light" primaryColor="currentColor" size="14" />
               <span>Single Display Mode</span>
             </>
           )}

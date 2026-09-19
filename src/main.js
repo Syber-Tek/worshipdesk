@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, screen, dialog, Notification } from 'electron';
+import { app, BrowserWindow, ipcMain, screen, dialog, Notification, nativeImage } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
 import started from 'electron-squirrel-startup';
@@ -20,7 +20,8 @@ import {
   removeBible,
   rescanBiblesFolder,
   importSngFile,
-  importSngFolder
+  importSngFolder,
+  getHymnsCount
 } from './db.js';
 
 if (started) {
@@ -47,7 +48,7 @@ function getDisplayDetails() {
 
 ipcMain.handle('get-app-info', () => {
   return {
-    appName: 'Church Presenter',
+    appName: 'WorshipDesk',
     version: app.getVersion(),
     platform: process.platform,
     arch: process.arch,
@@ -76,6 +77,7 @@ ipcMain.handle('search-verses', (_e, query, bibleId) => searchVerses(query, bibl
 
 // Hymns IPC Handlers
 ipcMain.handle('get-hymns', () => getHymns());
+ipcMain.handle('get-hymns-count', () => getHymnsCount());
 ipcMain.handle('search-hymns', (_e, query, category) => searchHymns(query, category));
 ipcMain.handle('list-hymns', (_e, query, category) => listHymns(query, category));
 ipcMain.handle('get-hymn-lyrics', (_e, id) => getHymnLyrics(id));
@@ -173,7 +175,7 @@ ipcMain.handle('rescan-bibles', () => rescanBiblesFolder());
 ipcMain.handle('backup-database', async () => {
   try {
     const { canceled, filePath } = await dialog.showSaveDialog({
-      title: 'Backup Church Presenter Database',
+      title: 'Backup WorshipDesk Database',
       defaultPath: `church-presenter-backup-${new Date().toISOString().slice(0, 10)}.db`,
       filters: [{ name: 'SQLite Database', extensions: ['db'] }],
     });
@@ -188,9 +190,73 @@ ipcMain.handle('backup-database', async () => {
 // Native OS notification (Windows toast / tray balloon) fired from the renderer.
 ipcMain.on('native-notification', (_event, { title, body } = {}) => {
   if (!Notification.isSupported()) return;
-  const notification = new Notification({ title: title || 'Church Presenter', body: body || '' });
+  const notification = new Notification({ title: title || 'WorshipDesk', body: body || '' });
   notification.show();
 });
+
+// Persist launch-on-system-startup via native login-item (Windows Taskbar
+// startup folder / macOS launch agent / Linux .desktop autostart).
+ipcMain.handle('set-login-item-open-at-login', (_event, { openAtLogin } = {}) => {
+  try {
+    app.setLoginItemSettings({ openAtLogin: Boolean(openAtLogin) });
+    return { success: true, openAtLogin: Boolean(openAtLogin) };
+  } catch (err) {
+    return { success: false, error: String((err && err.message) || err) };
+  }
+});
+ipcMain.handle('get-login-item-open-at-login', () => {
+  try {
+    const s = app.getLoginItemSettings();
+    return { success: true, openAtLogin: Boolean(s && s.openAtLogin) };
+  } catch (err) {
+    return { success: false, error: String((err && err.message) || err) };
+  }
+});
+
+// Autostart the app when the OS session boots (Windows Startup folder via
+// app.setLoginItemSettings / macOS login items injected from the renderer).
+ipcMain.handle('set-login-item', (_event, { enabled } = {}) => {
+  try {
+    app.setLoginItemSettings({
+      openAtLogin: Boolean(enabled),
+      path: process.execPath,
+      args: ['--hidden']
+    });
+    return { success: true, openAtLogin: Boolean(enabled) };
+  } catch (err) {
+    return { success: false, error: String((err && err.message) || err) };
+  }
+});
+
+// Current persisted login-item (startup) state so the General settings toggle
+// can render the real value instead of a dead defaultChecked switch.
+ipcMain.handle('get-login-item', () => {
+  try {
+    const s = app.getLoginItemSettings();
+    return { success: true, openAtLogin: Boolean(s && s.openAtLogin) };
+  } catch (err) {
+    return { success: false, error: String((err && err.message) || err) };
+  }
+});
+
+// Fullscreen (or restore) — routed to every open presentation/projector window.
+// Handler (Promise) so the renderer gets a real window count back for toasts.
+const setPresentationFullscreen = (fullscreen) => {
+  const isFull = Boolean(fullscreen);
+  let affected = 0;
+  for (const win of presentationWindows.values()) {
+    if (win && !win.isDestroyed()) {
+      win.setFullScreen(isFull);
+      affected++;
+    }
+  }
+  return { success: true, windows: affected };
+};
+
+ipcMain.handle('set-presentation-fullscreen', () => setPresentationFullscreen(true));
+
+ipcMain.handle('set-presentation-fullscreen-off', () => setPresentationFullscreen(false));
+
 
 // STAGE 5: PRESENTATION OUTPUT MULTI-WINDOW IPC FORWARDING
 ipcMain.on('send-live-slide', (_event, slideData) => {
@@ -231,9 +297,36 @@ ipcMain.handle('open-presentation-windows', (_event, displayIds) => {
   return { ok: true, active: Array.from(presentationWindows.keys()).map(Number) };
 });
 
+function getAppIcon(themeMode = 'dark') {
+  const primaryIcon = themeMode === 'light' ? 'app-icon-dark.png' : 'app-icon-light.png';
+  const fallbackIcon = themeMode === 'light' ? 'app-icon-light.png' : 'app-icon-dark.png';
+  const candidates = [
+    path.join(process.cwd(), `src/assets/${primaryIcon}`),
+    path.join(process.cwd(), `src/assets/${fallbackIcon}`),
+    path.join(__dirname, `assets/${primaryIcon}`),
+    path.join(app.getAppPath(), `src/assets/${primaryIcon}`),
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(p)) {
+      const img = nativeImage.createFromPath(p);
+      if (!img.isEmpty()) return img;
+    }
+  }
+  return undefined;
+}
+
+ipcMain.handle('set-window-icon', (_e, themeMode) => {
+  const icon = getAppIcon(themeMode);
+  if (icon && mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.setIcon(icon);
+  }
+  return { success: true };
+});
+
 const createPresentationWindow = (display) => {
   const isPrimary = display.id === screen.getPrimaryDisplay().id;
   const bounds = display.bounds;
+  const appIcon = getAppIcon();
 
   const win = new BrowserWindow({
     x: bounds.x,
@@ -241,7 +334,8 @@ const createPresentationWindow = (display) => {
     width: bounds.width,
     height: bounds.height,
     fullscreen: !isPrimary,
-    title: 'Church Presenter - Live Projector Output',
+    title: 'WorshipDesk - Live Projector Output',
+    icon: appIcon,
     autoHideMenuBar: true,
     backgroundColor: '#000000',
     webPreferences: {
@@ -251,6 +345,10 @@ const createPresentationWindow = (display) => {
       webSecurity: true,
     },
   });
+
+  if (appIcon && !appIcon.isEmpty()) {
+    win.setIcon(appIcon);
+  }
 
   presentationWindows.set(String(display.id), win);
   win.on('closed', () => {
@@ -268,10 +366,12 @@ const createPresentationWindow = (display) => {
 };
 
 const createWindow = () => {
+  const appIcon = getAppIcon();
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
-    title: 'Church Presenter - Control Window',
+    title: 'WorshipDesk - Control Window',
+    icon: appIcon,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
@@ -279,6 +379,10 @@ const createWindow = () => {
       webSecurity: true,
     },
   });
+
+  if (appIcon && !appIcon.isEmpty()) {
+    mainWindow.setIcon(appIcon);
+  }
 
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);

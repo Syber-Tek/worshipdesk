@@ -1,4 +1,5 @@
 import React from "react";
+import { toast } from "sonner";
 import { FaDesktop, FaTv } from "react-icons/fa6";
 
 export default function DisplaySettings({
@@ -6,6 +7,8 @@ export default function DisplaySettings({
   setDisplays,
   projectionDisplays = [],
   setProjectionDisplays,
+  isFullscreenActive = true,
+  setFullscreenActive,
   cardClass,
   selectClass,
   textTitle,
@@ -90,7 +93,10 @@ export default function DisplaySettings({
             <button
               onClick={() => {
                 if (window.api && window.api.getDisplays) {
-                  window.api.getDisplays().then(setDisplays);
+                  window.api.getDisplays().then((d) => {
+                    if (setDisplays) setDisplays(d);
+                    toast.success("Refreshed system displays list");
+                  });
                 }
               }}
               className={`px-2.5 py-1 border text-[11px] font-medium text-accent rounded transition ${selectClass}`}
@@ -126,10 +132,16 @@ export default function DisplaySettings({
                   onClick={() => {
                     if (!setProjectionDisplays || isPrimary) return;
                     const numericId = Number(d.id);
+                    const nextSelected = !isSelected;
                     setProjectionDisplays((prev) =>
                       isSelected
                         ? (prev || []).filter((id) => id !== numericId)
                         : [...(prev || []), numericId]
+                    );
+                    toast.info(
+                      nextSelected
+                        ? `Display #${d.id} assigned for presentation`
+                        : `Display #${d.id} removed from presentation`
                     );
                   }}
                   className={`w-full p-3 border rounded flex items-center justify-between text-xs transition text-left ${
@@ -199,7 +211,30 @@ export default function DisplaySettings({
           </div>
           <input
             type="checkbox"
-            defaultChecked
+            checked={Boolean(isFullscreenActive)}
+            onChange={async (e) => {
+              const next = e.target.checked;
+              if (setFullscreenActive) setFullscreenActive(next);
+              if (window.api && window.api.setPresentationFullscreen) {
+                const res = await window.api.setPresentationFullscreen(next);
+                if (res && res.windows > 0) {
+                  toast.success(
+                    next ? "Fullscreen on for projection windows" : "Fullscreen off"
+                  );
+                } else if (res && res.error) {
+                  if (setFullscreenActive) setFullscreenActive(!next);
+                  toast.error(`Fullscreen error: ${res.error}`);
+                } else {
+                  toast.success(
+                    next ? "Fullscreen mode enabled" : "Fullscreen mode disabled"
+                  );
+                }
+              } else {
+                toast.success(
+                  next ? "Fullscreen mode enabled" : "Fullscreen mode disabled"
+                );
+              }
+            }}
             className="accent-accent w-4 h-4 cursor-pointer"
           />
         </div>
