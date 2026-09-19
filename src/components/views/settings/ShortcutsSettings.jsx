@@ -12,7 +12,7 @@ export default function ShortcutsSettings({
     <div className="space-y-5">
       {/* Header */}
       <div>
-        <h3 className="text-sm font-bold text-[#D4A94A] flex items-center gap-2">
+        <h3 className="text-sm font-bold text-accent flex items-center gap-2">
           <FaKeyboard /> Keyboard Shortcuts
         </h3>
         <p className={`text-xs mt-1 ${textSub}`}>
@@ -58,7 +58,7 @@ export default function ShortcutsSettings({
                 className={`flex items-center justify-between gap-3 p-3 rounded border ${
                   isLight
                     ? "bg-[#F9FAFB] border-[#E5E7EB]"
-                    : "bg-[#141518] border-[#26282E]"
+                    : "bg-panel border-border"
                 }`}
               >
                 <span className={`text-xs font-semibold ${textTitle}`}>
@@ -71,7 +71,7 @@ export default function ShortcutsSettings({
                       className={`px-2.5 py-1 rounded-md border font-mono text-xs font-semibold ${
                         isLight
                           ? "bg-[#FFFFFF] border-[#D1D5DB] text-[#111827]"
-                          : "bg-[#24262B] border-[#2A2C31] text-[#EDEDEE]"
+                          : "bg-[#24262B] border-[#2A2C31] text-text-primary"
                       }`}
                     >
                       {k}
@@ -100,7 +100,7 @@ export default function ShortcutsSettings({
                 className={`flex items-center justify-between gap-3 p-3 rounded border ${
                   isLight
                     ? "bg-[#F9FAFB] border-[#E5E7EB]"
-                    : "bg-[#141518] border-[#26282E]"
+                    : "bg-panel border-border"
                 }`}
               >
                 <span className={`text-xs font-semibold ${textTitle}`}>
@@ -110,7 +110,7 @@ export default function ShortcutsSettings({
                   className={`px-2.5 py-1 rounded-md border font-mono text-xs font-extrabold ${
                     isLight
                       ? "bg-[#FFFFFF] border-[#D1D5DB] text-[#111827]"
-                      : "bg-[#24262B] border-[#2A2C31] text-[#D4A94A]"
+                      : "bg-[#24262B] border-[#2A2C31] text-accent"
                   }`}
                 >
                   {item.key}

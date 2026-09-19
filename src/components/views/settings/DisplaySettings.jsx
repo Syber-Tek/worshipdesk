@@ -16,7 +16,7 @@ export default function DisplaySettings({
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="text-sm font-bold text-[#D4A94A] flex items-center gap-2">
+        <h3 className="text-sm font-bold text-accent flex items-center gap-2">
           <FaDesktop /> Multi-Monitor & Projector Displays
         </h3>
         <p className={`text-xs mt-1 ${textSub}`}>
@@ -32,10 +32,10 @@ export default function DisplaySettings({
               <span
                 className={`text-xs font-bold flex items-center gap-1.5 ${textTitle}`}
               >
-                <FaDesktop className="text-[#D4A94A]" /> Control Display
+                <FaDesktop className="text-accent" /> Control Display
               </span>
               <span
-                className={`text-[10px] font-mono px-1.5 py-0.5 rounded text-[#6FCF97] ${
+                className={`text-[10px] font-mono px-1.5 py-0.5 rounded text-success ${
                   isLight ? "bg-[#E5E7EB]" : "bg-[#24262B]"
                 }`}
               >
@@ -57,12 +57,12 @@ export default function DisplaySettings({
               <span
                 className={`text-xs font-bold flex items-center gap-1.5 ${textTitle}`}
               >
-                <FaTv className="text-[#E5484D]" /> Presentation Display
+                <FaTv className="text-live" /> Presentation Display
               </span>
               <span
                 className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
                   displays.length > 1
-                    ? "bg-[#6FCF97]/20 text-[#6FCF97]"
+                    ? "bg-success/20 text-success"
                     : isLight
                       ? "bg-[#E5E7EB] text-[#6B7280]"
                       : "bg-[#24262B] text-[#9B9CA3]"
@@ -93,7 +93,7 @@ export default function DisplaySettings({
                   window.api.getDisplays().then(setDisplays);
                 }
               }}
-              className={`px-2.5 py-1 border text-[11px] font-medium text-[#D4A94A] rounded transition ${selectClass}`}
+              className={`px-2.5 py-1 border text-[11px] font-medium text-accent rounded transition ${selectClass}`}
             >
               Refresh Displays
             </button>
@@ -139,8 +139,8 @@ export default function DisplaySettings({
                   } ${
                     isSelected
                       ? isLight
-                        ? "ring-2 ring-[#D4A94A] border-[#D4A94A]"
-                        : "ring-2 ring-[#D4A94A] border-[#D4A94A]"
+                        ? "ring-2 ring-accent border-accent"
+                        : "ring-2 ring-accent border-accent"
                       : ""
                   } ${isPrimary ? "opacity-70 cursor-not-allowed" : "cursor-pointer"}`}
                 >
@@ -148,8 +148,8 @@ export default function DisplaySettings({
                     <div
                       className={`w-6 h-6 rounded flex items-center justify-center font-bold font-mono text-[11px] ${
                         isSelected
-                          ? "bg-[#D4A94A] text-[#0B0C0E]"
-                          : "text-[#D4A94A] " +
+                          ? "bg-accent text-bg"
+                          : "text-accent " +
                             (isLight ? "bg-[#E5E7EB]" : "bg-[#24262B]")
                       }`}
                     >
@@ -168,7 +168,7 @@ export default function DisplaySettings({
                   <span
                     className={`text-[10px] font-semibold px-2 py-0.5 rounded ${
                       isSelected
-                        ? "bg-[#D4A94A]/15 text-[#D4A94A]"
+                        ? "bg-accent/15 text-accent"
                         : isLight
                           ? "bg-[#E5E7EB] text-[#4B5563]"
                           : "bg-[#24262B] text-[#9B9CA3]"
@@ -200,7 +200,7 @@ export default function DisplaySettings({
           <input
             type="checkbox"
             defaultChecked
-            className="accent-[#D4A94A] w-4 h-4 cursor-pointer"
+            className="accent-accent w-4 h-4 cursor-pointer"
           />
         </div>
       </div>

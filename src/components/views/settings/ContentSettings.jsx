@@ -12,11 +12,12 @@ export default function ContentSettings({
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="text-sm font-bold text-[#D4A94A] flex items-center gap-2">
+        <h3 className="text-sm font-bold text-accent flex items-center gap-2">
           <FaDatabase /> Local Storage & Data Imports
         </h3>
         <p className={`text-xs mt-1 ${textSub}`}>
-          SQLite database status, WAL mode logs, and native batch JSON importers.
+          SQLite database status, WAL mode logs, and native batch JSON
+          importers.
         </p>
       </div>
 
@@ -26,7 +27,7 @@ export default function ContentSettings({
             <span className={`font-semibold text-xs ${textTitle}`}>
               SQLite Database Connection
             </span>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#6FCF97]/20 text-[#6FCF97]">
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-success/20 text-success">
               Connected (WAL Mode)
             </span>
           </div>
@@ -59,7 +60,7 @@ export default function ContentSettings({
                 }
               }
             }}
-            className="px-3 py-1.5 bg-[#D4A94A] hover:bg-[#D4A94A]/90 text-[#0B0C0E] font-bold rounded text-xs transition shadow cursor-pointer"
+            className="px-3 py-1.5 bg-accent hover:bg-accent/90 text-bg font-bold rounded text-xs transition shadow cursor-pointer"
           >
             Select JSON File
           </button>

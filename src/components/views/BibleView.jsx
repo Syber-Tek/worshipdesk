@@ -59,7 +59,7 @@ export default function BibleView({
       .split(new RegExp(`(${escaped})`, 'ig'))
       .map((part, idx) =>
         part.toLowerCase() === lowerQ
-          ? <span key={idx} className="bg-[#D4A94A]/25 text-[#D4A94A] font-semibold rounded-sm px-0.5">{part}</span>
+          ? <span key={idx} className="bg-accent/25 text-accent font-semibold rounded-sm px-0.5">{part}</span>
           : part
       )
   }
@@ -88,10 +88,10 @@ export default function BibleView({
                 }}
                 className={`px-3 py-1 rounded text-[11px] font-semibold transition cursor-pointer ${
                   selectedTranslation === tr
-                    ? 'bg-[#D4A94A] text-[#0B0C0E] shadow'
+                    ? 'bg-accent text-bg shadow'
                     : isLight
                     ? 'text-[#4B5563] hover:text-[#111827]'
-                    : 'text-[#9B9CA3] hover:text-[#EDEDEE]'
+                    : 'text-[#9B9CA3] hover:text-text-primary'
                 }`}
               >
                 {tr}
@@ -108,10 +108,10 @@ export default function BibleView({
             onClick={() => setViewMode('grid')}
             className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-semibold transition cursor-pointer ${
               viewMode === 'grid'
-                ? 'bg-[#D4A94A] text-[#0B0C0E] shadow'
+                ? 'bg-accent text-bg shadow'
                 : isLight
                 ? 'text-[#4B5563] hover:text-[#111827]'
-                : 'text-[#9B9CA3] hover:text-[#EDEDEE]'
+                : 'text-[#9B9CA3] hover:text-text-primary'
             }`}
           >
             <Category set="bold" primaryColor="currentColor" size="small" /> OT / NT Chapter Grid
@@ -120,10 +120,10 @@ export default function BibleView({
             onClick={() => setViewMode('reader')}
             className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-semibold transition cursor-pointer ${
               viewMode === 'reader'
-                ? 'bg-[#D4A94A] text-[#0B0C0E] shadow'
+                ? 'bg-accent text-bg shadow'
                 : isLight
                 ? 'text-[#4B5563] hover:text-[#111827]'
-                : 'text-[#9B9CA3] hover:text-[#EDEDEE]'
+                : 'text-[#9B9CA3] hover:text-text-primary'
             }`}
           >
             <Document set="bold" primaryColor="currentColor" size="small" /> Verses & Live Controls
@@ -148,10 +148,10 @@ export default function BibleView({
               setViewMode('reader')
             }
           }}
-          className={`w-full border focus:border-[#D4A94A] rounded-lg pl-9 pr-4 py-2.5 text-xs outline-none transition ${
+          className={`w-full border focus:border-accent rounded-lg pl-9 pr-4 py-2.5 text-xs outline-none transition ${
             isLight
               ? 'bg-[#FFFFFF] border-[#E5E7EB] text-[#111827] placeholder-[#9CA3AF]'
-              : 'bg-[#151619] border-[#2A2C31] text-[#EDEDEE] placeholder-[#6B6C73]'
+              : 'bg-[#151619] border-[#2A2C31] text-text-primary placeholder-[#6B6C73]'
           }`}
         />
       </div>
@@ -161,14 +161,14 @@ export default function BibleView({
         isLight ? 'bg-[#FFFFFF] border-[#E5E7EB]' : 'bg-[#151619] border-[#2A2C31]'
       }`}>
         <div className="flex items-center gap-2">
-          <span className="text-[#D4A94A] font-bold">Selected Passage:</span>
-          <span className={isLight ? 'text-[#111827]' : 'text-[#EDEDEE]'}>
+          <span className="text-accent font-bold">Selected Passage:</span>
+          <span className={isLight ? 'text-[#111827]' : 'text-text-primary'}>
             {selectedBook} Chapter {selectedChapter} ({selectedTranslation})
           </span>
         </div>
         <button
           onClick={() => setViewMode(viewMode === 'grid' ? 'reader' : 'grid')}
-          className="text-[#D4A94A] hover:underline font-semibold"
+          className="text-accent hover:underline font-semibold"
         >
           {viewMode === 'grid' ? 'Open Verse Reader ➔' : 'Back to OT/NT Grid ➔'}
         </button>
@@ -183,7 +183,7 @@ export default function BibleView({
             {/* Left Column: Old Testament */}
             <div className="space-y-6">
               <h2 className={`text-2xl font-black tracking-tight border-b pb-2 ${
-                isLight ? 'text-[#111827] border-[#E5E7EB]' : 'text-[#EDEDEE] border-[#2A2C31]'
+                isLight ? 'text-[#111827] border-[#E5E7EB]' : 'text-text-primary border-[#2A2C31]'
               }`}>
                 {otHeading}
               </h2>
@@ -191,7 +191,7 @@ export default function BibleView({
               <div className="space-y-5">
                 {otBooks.map((b) => (
                   <div key={b.name} className="space-y-2">
-                    <h3 className={`text-sm font-bold ${isLight ? 'text-[#111827]' : 'text-[#EDEDEE]'}`}>
+                    <h3 className={`text-sm font-bold ${isLight ? 'text-[#111827]' : 'text-text-primary'}`}>
                       {b.name}
                     </h3>
                     <div className="flex flex-wrap gap-1.5">
@@ -209,10 +209,10 @@ export default function BibleView({
                             }}
                             className={`min-w-8 h-8 px-2 rounded text-xs font-bold flex items-center justify-center transition cursor-pointer ${
                               isSelected
-                                ? 'bg-[#D4A94A] text-[#0B0C0E] shadow-md ring-2 ring-[#D4A94A]/50'
+                                ? 'bg-accent text-bg shadow-md ring-2 ring-accent/50'
                                 : isLight
-                                ? 'bg-[#E5E7EB] text-[#111827] hover:bg-[#D4A94A] hover:text-[#0B0C0E]'
-                                : 'bg-[#24262B] text-[#EDEDEE] hover:bg-[#D4A94A] hover:text-[#0B0C0E]'
+                                ? 'bg-[#E5E7EB] text-[#111827] hover:bg-accent hover:text-bg'
+                                : 'bg-[#24262B] text-text-primary hover:bg-accent hover:text-bg'
                             }`}
                           >
                             {ch}
@@ -228,7 +228,7 @@ export default function BibleView({
             {/* Right Column: New Testament */}
             <div className="space-y-6">
               <h2 className={`text-2xl font-black tracking-tight border-b pb-2 ${
-                isLight ? 'text-[#111827] border-[#E5E7EB]' : 'text-[#EDEDEE] border-[#2A2C31]'
+                isLight ? 'text-[#111827] border-[#E5E7EB]' : 'text-text-primary border-[#2A2C31]'
               }`}>
                 {ntHeading}
               </h2>
@@ -236,7 +236,7 @@ export default function BibleView({
               <div className="space-y-5">
                 {ntBooks.map((b) => (
                   <div key={b.name} className="space-y-2">
-                    <h3 className={`text-sm font-bold ${isLight ? 'text-[#111827]' : 'text-[#EDEDEE]'}`}>
+                    <h3 className={`text-sm font-bold ${isLight ? 'text-[#111827]' : 'text-text-primary'}`}>
                       {b.name}
                     </h3>
                     <div className="flex flex-wrap gap-1.5">
@@ -254,10 +254,10 @@ export default function BibleView({
                             }}
                             className={`min-w-8 h-8 px-2 rounded text-xs font-bold flex items-center justify-center transition cursor-pointer ${
                               isSelected
-                                ? 'bg-[#D4A94A] text-[#0B0C0E] shadow-md ring-2 ring-[#D4A94A]/50'
+                                ? 'bg-accent text-bg shadow-md ring-2 ring-accent/50'
                                 : isLight
-                                ? 'bg-[#E5E7EB] text-[#111827] hover:bg-[#D4A94A] hover:text-[#0B0C0E]'
-                                : 'bg-[#24262B] text-[#EDEDEE] hover:bg-[#D4A94A] hover:text-[#0B0C0E]'
+                                ? 'bg-[#E5E7EB] text-[#111827] hover:bg-accent hover:text-bg'
+                                : 'bg-[#24262B] text-text-primary hover:bg-accent hover:text-bg'
                             }`}
                           >
                             {ch}
@@ -283,7 +283,7 @@ export default function BibleView({
               isLight ? 'text-[#6B7280] border-[#E5E7EB]' : 'text-[#6B6C73] border-[#2A2C31]'
             }`}>
               <span>Verses ({filteredVerses.length}) — Use ↑ ↓ keys to navigate</span>
-              <span className="font-mono text-[#D4A94A]">{selectedBook} Ch {selectedChapter}</span>
+              <span className="font-mono text-accent">{selectedBook} Ch {selectedChapter}</span>
             </div>
 
             {filteredVerses.map((v, index) => {
@@ -295,15 +295,15 @@ export default function BibleView({
                   className={`p-3 rounded-lg border transition cursor-pointer ${
                     isSelected
                       ? isLight
-                        ? 'bg-[#E5E7EB] border-[#D4A94A]/70 text-[#111827] shadow'
-                        : 'bg-[#24262B] border-[#D4A94A]/60 text-[#EDEDEE] shadow'
+                        ? 'bg-[#E5E7EB] border-accent/70 text-[#111827] shadow'
+                        : 'bg-[#24262B] border-accent/60 text-text-primary shadow'
                       : isLight
                       ? 'bg-[#F9FAFB] border-[#E5E7EB] text-[#4B5563] hover:bg-[#F3F4F6] hover:text-[#111827]'
-                      : 'bg-[#1C1D21] border-[#2A2C31] text-[#9B9CA3] hover:bg-[#24262B]/60 hover:text-[#EDEDEE]'
+                      : 'bg-[#1C1D21] border-[#2A2C31] text-[#9B9CA3] hover:bg-[#24262B]/60 hover:text-text-primary'
                   }`}
                 >
                   <div className="flex justify-between items-center mb-1">
-                    <span className="font-bold text-xs text-[#D4A94A]">
+                    <span className="font-bold text-xs text-accent">
                       {v.ref}
                     </span>
                     <span className={`text-[10px] font-mono ${isLight ? 'text-[#9CA3AF]' : 'text-[#6B6C73]'}`}>
@@ -312,7 +312,7 @@ export default function BibleView({
                   </div>
                   <p className={`text-xs leading-relaxed ${
                     isSelected
-                      ? isLight ? 'text-[#111827]' : 'text-[#EDEDEE]'
+                      ? isLight ? 'text-[#111827]' : 'text-text-primary'
                       : isLight ? 'text-[#4B5563]' : 'text-[#9B9CA3]'
                   }`}>
                     {highlightText(v.text, searchQuery)}
@@ -328,7 +328,7 @@ export default function BibleView({
           }`}>
             <div className="space-y-4">
               <div className={`border-b pb-2 flex justify-between items-center ${isLight ? 'border-[#E5E7EB]' : 'border-[#2A2C31]'}`}>
-                <span className="text-[10px] uppercase font-bold tracking-wider text-[#D4A94A]">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-accent">
                   Selected Scripture Reading
                 </span>
                 <span className={`text-[10px] font-mono ${isLight ? 'text-[#9CA3AF]' : 'text-[#6B6C73]'}`}>
@@ -338,13 +338,13 @@ export default function BibleView({
 
               {activeSelectedVerse && (
                 <div className="space-y-3">
-                  <h3 className={`text-base font-bold ${isLight ? 'text-[#111827]' : 'text-[#EDEDEE]'}`}>
+                  <h3 className={`text-base font-bold ${isLight ? 'text-[#111827]' : 'text-text-primary'}`}>
                     {activeSelectedVerse.ref}
                   </h3>
                   <p className={`text-xs p-4 rounded-lg border leading-relaxed ${
                     isLight
                       ? 'bg-[#F3F4F6] border-[#E5E7EB] text-[#111827]'
-                      : 'bg-[#1C1D21] border-[#2A2C31] text-[#EDEDEE]'
+                      : 'bg-[#1C1D21] border-[#2A2C31] text-text-primary'
                   }`}>
                     "{highlightText(activeSelectedVerse.text, searchQuery)}"
                   </p>
@@ -355,27 +355,27 @@ export default function BibleView({
             <div className={`space-y-2.5 pt-5 border-t ${isLight ? 'border-[#E5E7EB]' : 'border-[#2A2C31]'}`}>
               <button
                 onClick={() => handleStageNext(activeSelectedVerse)}
-                className={`w-full py-2.5 px-3 border hover:border-[#D4A94A]/50 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer ${
+                className={`w-full py-2.5 px-3 border hover:border-accent/50 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer ${
                   isLight
                     ? 'bg-[#F3F4F6] hover:bg-[#E5E7EB] border-[#E5E7EB] text-[#111827]'
-                    : 'bg-[#1C1D21] hover:bg-[#24262B] border-[#2A2C31] text-[#EDEDEE]'
+                    : 'bg-[#1C1D21] hover:bg-[#24262B] border-[#2A2C31] text-text-primary'
                 }`}
               >
                 <Show set="bold" primaryColor="#D4A94A" size="small" /> Stage as Next
               </button>
               <button
                 onClick={() => handleAddToPlaylist && handleAddToPlaylist(activeSelectedVerse)}
-                className={`w-full py-2.5 px-3 border hover:border-[#D4A94A]/50 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer ${
+                className={`w-full py-2.5 px-3 border hover:border-accent/50 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer ${
                   isLight
                     ? 'bg-[#F3F4F6] hover:bg-[#E5E7EB] border-[#E5E7EB] text-[#111827]'
-                    : 'bg-[#1C1D21] hover:bg-[#24262B] border-[#2A2C31] text-[#EDEDEE]'
+                    : 'bg-[#1C1D21] hover:bg-[#24262B] border-[#2A2C31] text-text-primary'
                 }`}
               >
                 <Plus set="bold" primaryColor="#6FCF97" size="small" /> Add to Service Playlist
               </button>
               <button
                 onClick={() => handlePresentNow(activeSelectedVerse)}
-                className="w-full py-3 px-3 bg-[#D4A94A] hover:bg-[#D4A94A]/90 text-[#0B0C0E] rounded-lg text-xs font-bold flex items-center justify-center gap-2 shadow-lg transition cursor-pointer"
+                className="w-full py-3 px-3 bg-accent hover:bg-accent/90 text-bg rounded-lg text-xs font-bold flex items-center justify-center gap-2 shadow-lg transition cursor-pointer"
               >
                 <Send set="bold" primaryColor="#0B0C0E" size="small" /> Present Live Now
               </button>

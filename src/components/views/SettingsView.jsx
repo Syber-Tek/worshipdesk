@@ -51,7 +51,7 @@ export default function SettingsView({
   setShowVerseQuotes,
   appNamePosition = "top-left",
   setAppNamePosition,
-  customHeaderTitle = "Church Presenter",
+  customHeaderTitle = "WorshipDesk",
   uiScale = "normal",
   setUiScale,
   slideMargin = "4rem",
@@ -77,7 +77,7 @@ export default function SettingsView({
     { id: "songs", label: "Songs & Hymns", icon: FaMusic },
     { id: "content", label: "Content & Storage", icon: FaDatabase },
     { id: "languages", label: "Languages", icon: FaLanguage },
-    { id: "shortcuts", label: "Keyboard Shortcuts", icon: FaKeyboard },
+    { id: "shortcuts", label: "Keybinds", icon: FaKeyboard },
     { id: "backup", label: "Backup & Export", icon: FaFloppyDisk },
     { id: "about", label: "About App", icon: FaCircleInfo },
   ];
@@ -132,11 +132,11 @@ export default function SettingsView({
               className={`flex-1 min-w-40 xl:w-full xl:flex-none flex items-center gap-2.5 px-3 py-2 rounded text-xs font-medium transition cursor-pointer ${
                 isActive
                   ? isLight
-                    ? "bg-[#E5E7EB] text-[#D4A94A] border border-[#D4A94A]/30"
-                    : "bg-[#24262B] text-[#D4A94A] border border-[#D4A94A]/30"
+                    ? "bg-[#E5E7EB] text-accent border border-accent/30"
+                    : "bg-[#24262B] text-accent border border-accent/30"
                   : isLight
                     ? "text-[#4B5563] hover:text-[#111827] hover:bg-[#F3F4F6]"
-                    : "text-[#9B9CA3] hover:text-[#EDEDEE] hover:bg-[#1C1D21]"
+                    : "text-[#9B9CA3] hover:text-text-primary hover:bg-[#1C1D21]"
               }`}
             >
               <Icon className="shrink-0" size="14" />

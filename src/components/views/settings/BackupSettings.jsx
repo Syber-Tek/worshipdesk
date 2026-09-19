@@ -11,11 +11,12 @@ export default function BackupSettings({
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="text-sm font-bold text-[#D4A94A] flex items-center gap-2">
+        <h3 className="text-sm font-bold text-accent flex items-center gap-2">
           <FaFloppyDisk /> Backup & Data Export
         </h3>
         <p className={`text-xs mt-1 ${textSub}`}>
-          Export service playlists, backup offline SQLite databases, and restore content.
+          Export service playlists, backup offline SQLite databases, and restore
+          content.
         </p>
       </div>
 
@@ -38,7 +39,11 @@ export default function BackupSettings({
                   const res = await window.api.backupDatabase();
                   if (res && res.success) {
                     toast.success(`Backup saved to ${res.message}`);
-                  } else if (res && res.message && res.message !== "Cancelled") {
+                  } else if (
+                    res &&
+                    res.message &&
+                    res.message !== "Cancelled"
+                  ) {
                     toast.error(`Backup failed: ${res.message}`);
                   }
                 } catch {
@@ -46,7 +51,7 @@ export default function BackupSettings({
                 }
               }
             }}
-            className="px-3 py-1.5 border text-xs font-semibold rounded transition cursor-pointer bg-transparent hover:bg-[#D4A94A]/10 text-[#D4A94A] border-[#D4A94A]/40"
+            className="px-3 py-1.5 border text-xs font-semibold rounded transition cursor-pointer bg-transparent hover:bg-accent/10 text-accent border-accent/40"
           >
             Export Database Backup
           </button>

@@ -28,7 +28,7 @@ export default function PresentationSettings({
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="text-sm font-bold text-[#D4A94A] flex items-center gap-2">
+        <h3 className="text-sm font-bold text-accent flex items-center gap-2">
           <FaTv /> Presentation Output & Slide Themes
         </h3>
         <p className={`text-xs mt-1 ${textSub}`}>
@@ -55,13 +55,13 @@ export default function PresentationSettings({
               onClick={() => setOutputTheme && setOutputTheme("dark")}
               className={`p-3 rounded-lg border flex flex-col items-center gap-2 transition cursor-pointer ${
                 outputTheme === "dark"
-                  ? "border-[#D4A94A] bg-[#D4A94A]/10 text-[#D4A94A]"
+                  ? "border-accent bg-accent/10 text-accent"
                   : isLight
                     ? "border-[#E5E7EB] bg-[#F9FAFB] text-[#4B5563] hover:border-[#D1D5DB]"
-                    : "border-[#26282E] bg-[#141518] text-[#9B9CA3] hover:border-[#2A2C31]"
+                    : "border-border bg-panel text-[#9B9CA3] hover:border-[#2A2C31]"
               }`}
             >
-              <div className="w-full h-10 rounded bg-[#0B0C0E] border border-[#2A2C31] flex items-center justify-center text-[10px] text-white font-semibold">
+              <div className="w-full h-10 rounded bg-bg border border-[#2A2C31] flex items-center justify-center text-[10px] text-white font-semibold">
                 DARK MODE
               </div>
               <span className="text-xs font-bold">Dark Obsidian</span>
@@ -72,16 +72,16 @@ export default function PresentationSettings({
               onClick={() => setOutputTheme && setOutputTheme("light")}
               className={`p-3 rounded-lg border flex flex-col items-center gap-2 transition cursor-pointer ${
                 outputTheme === "light"
-                  ? "border-[#D4A94A] bg-[#D4A94A]/10 text-[#D4A94A]"
+                  ? "border-accent bg-accent/10 text-accent"
                   : isLight
                     ? "border-[#E5E7EB] bg-[#F9FAFB] text-[#4B5563] hover:border-[#D1D5DB]"
-                    : "border-[#26282E] bg-[#141518] text-[#9B9CA3] hover:border-[#2A2C31]"
+                    : "border-border bg-panel text-[#9B9CA3] hover:border-[#2A2C31]"
               }`}
             >
               <div className="w-full h-10 rounded bg-[#FFFFFF] border border-[#E5E7EB] flex items-center justify-center text-[10px] text-[#111827] font-semibold">
                 LIGHT MODE
               </div>
-              <span className="text-xs font-bold">Pure White</span>
+              <span className="text-xs font-bold">Light Clean</span>
             </button>
 
             <button
@@ -89,13 +89,13 @@ export default function PresentationSettings({
               onClick={() => setOutputTheme && setOutputTheme("image")}
               className={`p-3 rounded-lg border flex flex-col items-center gap-2 transition cursor-pointer ${
                 outputTheme === "image"
-                  ? "border-[#D4A94A] bg-[#D4A94A]/10 text-[#D4A94A]"
+                  ? "border-accent bg-accent/10 text-accent"
                   : isLight
                     ? "border-[#E5E7EB] bg-[#F9FAFB] text-[#4B5563] hover:border-[#D1D5DB]"
-                    : "border-[#26282E] bg-[#141518] text-[#9B9CA3] hover:border-[#2A2C31]"
+                    : "border-border bg-panel text-[#9B9CA3] hover:border-[#2A2C31]"
               }`}
             >
-              <div className="w-full h-10 rounded bg-gradient-to-r from-blue-900 to-indigo-900 border border-blue-700 flex items-center justify-center text-[10px] text-white font-semibold">
+              <div className="w-full h-10 rounded bg-linear-to-r from-blue-900 to-indigo-900 border border-blue-700 flex items-center justify-center text-[10px] text-white font-semibold">
                 IMAGE WALLPAPER
               </div>
               <span className="text-xs font-bold">Custom Image</span>
@@ -125,7 +125,7 @@ export default function PresentationSettings({
                 }
                 className={`flex-1 text-xs rounded px-3 py-1.5 outline-none border ${selectClass}`}
               />
-              <label className="px-3 py-1.5 bg-[#D4A94A] hover:bg-[#D4A94A]/90 text-[#0B0C0E] font-bold rounded text-xs cursor-pointer flex items-center">
+              <label className="px-3 py-1.5 bg-accent hover:bg-accent/90 text-bg font-bold rounded text-xs cursor-pointer flex items-center">
                 Browse File
                 <input
                   type="file"
@@ -250,9 +250,7 @@ export default function PresentationSettings({
                 <option value="top-right">Top Header Right</option>
                 <option value="bottom-left">Bottom Footer Left</option>
                 <option value="bottom-right">Bottom Footer Right</option>
-                <option value="hidden">
-                  Hidden (Do Not Display App Name)
-                </option>
+                <option value="hidden">Hidden (Do Not Display App Name)</option>
               </select>
             </div>
 
@@ -285,8 +283,8 @@ export default function PresentationSettings({
               outputTheme === "light"
                 ? "bg-[#FFFFFF] text-[#111827]"
                 : outputTheme === "dark"
-                  ? "bg-[#0B0C0E] text-[#EDEDEE]"
-                  : "text-[#EDEDEE]"
+                  ? "bg-bg text-text-primary"
+                  : "text-text-primary"
             }`}
             style={{
               padding:
@@ -312,7 +310,7 @@ export default function PresentationSettings({
 
             <div className="relative z-10 h-full flex flex-col justify-between">
               {/* Header */}
-              <div className="flex justify-between items-center text-[10px] font-bold tracking-widest text-[#D4A94A] uppercase border-b border-current/20 pb-2">
+              <div className="flex justify-between items-center text-[10px] font-bold tracking-widest text-accent uppercase border-b border-current/20 pb-2">
                 <span>
                   {appNamePosition === "top-left"
                     ? customHeaderTitle
@@ -354,11 +352,11 @@ export default function PresentationSettings({
 
               {/* Footer */}
               {attributionPosition === "top" ? (
-                <div className="flex items-center justify-center pt-2 border-t border-current/20 text-[10px] font-bold text-[#D4A94A] uppercase">
+                <div className="flex items-center justify-center pt-2 border-t border-current/20 text-[10px] font-bold text-accent uppercase">
                   — JOHN 3:16 (KJV) —
                 </div>
               ) : (
-                <div className="flex items-center justify-between pt-2 border-t border-current/20 text-[10px] font-bold text-[#D4A94A] uppercase">
+                <div className="flex items-center justify-between pt-2 border-t border-current/20 text-[10px] font-bold text-accent uppercase">
                   <div
                     className={`${
                       attributionPosition === "bottom"
@@ -410,9 +408,9 @@ export default function PresentationSettings({
             onChange={(e) => setSlideMargin && setSlideMargin(e.target.value)}
             className={`text-xs rounded px-2.5 py-1 outline-none border ${selectClass}`}
           >
-            <option value="2rem">Compact (2rem / 32px)</option>
-            <option value="4rem">Standard (4rem / 64px)</option>
-            <option value="6rem">Wide Safe Zone (6rem / 96px)</option>
+            <option value="2rem">Compact </option>
+            <option value="4rem">Standard </option>
+            <option value="6rem">Wide Safe Zone </option>
           </select>
         </div>
 
@@ -458,11 +456,11 @@ export default function PresentationSettings({
             }
             className={`text-xs rounded px-2.5 py-1 outline-none border ${selectClass}`}
           >
-            <option value="small">Small (text-2xl / text-4xl)</option>
-            <option value="normal">Standard (text-3xl / text-5xl)</option>
-            <option value="large">Large (text-4xl / text-6xl)</option>
-            <option value="xlarge">Extra Large (text-5xl / text-7xl)</option>
-            <option value="xxlarge">Maximum (text-6xl / text-8xl)</option>
+            <option value="small">Small </option>
+            <option value="normal">Standard </option>
+            <option value="large">Large </option>
+            <option value="xlarge">Extra Large </option>
+            <option value="xxlarge">XX-Large</option>
           </select>
         </div>
       </div>

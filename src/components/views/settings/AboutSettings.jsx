@@ -11,18 +11,19 @@ export default function AboutSettings({
     <div className="space-y-5">
       {/* Header */}
       <div>
-        <h3 className="text-sm font-bold text-[#D4A94A] flex items-center gap-2">
+        <h3 className="text-sm font-bold text-accent flex items-center gap-2">
           <FaCircleInfo /> About App
         </h3>
         <p className={`text-xs mt-1 ${textSub}`}>
-          WorshipDesk — offline-first church presentation, version info, and release notes.
+          WorshipDesk — offline-first church presentation, version info, and
+          release notes.
         </p>
       </div>
 
       <div className={`space-y-4 pt-2 border-t ${borderDivider}`}>
         <div className={`p-4 rounded border ${cardClass} space-y-3`}>
           <div className="flex items-center gap-3">
-            <span className="bg-[#0D3822] text-[#34D399] border border-[#10B981]/30 rounded-full px-3 py-1 font-semibold text-xs">
+            <span className="bg-[#0D3822] text-[#34D399] border border-[#10B981]/30 rounded-lg px-3 py-1 font-semibold text-xs">
               WorshipDesk v1.0.0
             </span>
             <span className={`text-xs ${textSub}`}>September 18, 2026</span>
@@ -64,11 +65,10 @@ export default function AboutSettings({
               </li>
               <li>
                 <span className={`font-semibold ${textTitle}`}>
-                  Multi-monitor projector output has been significantly
-                  improved
+                  Multi-monitor projector output has been significantly improved
                 </span>
-                . Dual-window IPC canvas rendering delivers smooth projections for
-                secondary displays, TVs, and OBS/vMix live streams.
+                . Dual-window IPC canvas rendering delivers smooth projections
+                for secondary displays, TVs, and OBS/vMix live streams.
               </li>
               <li>
                 <span className={`font-semibold ${textTitle}`}>

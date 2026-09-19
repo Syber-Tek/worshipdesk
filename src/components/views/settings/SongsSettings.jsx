@@ -27,11 +27,12 @@ export default function SongsSettings({
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="text-sm font-bold text-[#D4A94A] flex items-center gap-2">
+        <h3 className="text-sm font-bold text-accent flex items-center gap-2">
           <FaMusic /> Songs & Hymn Preferences
         </h3>
         <p className={`text-xs mt-1 ${textSub}`}>
-          Default hymnal category, lyric formatting, and offline hymn library management.
+          Default hymnal category, lyric formatting, and offline hymn library
+          management.
         </p>
       </div>
 
@@ -50,7 +51,9 @@ export default function SongsSettings({
           </div>
           <select
             value={defaultHymnCategory || "All"}
-            onChange={(e) => setDefaultHymnCategory && setDefaultHymnCategory(e.target.value)}
+            onChange={(e) =>
+              setDefaultHymnCategory && setDefaultHymnCategory(e.target.value)
+            }
             className={`text-xs rounded px-2.5 py-1 outline-none border ${selectClass}`}
           >
             {[
@@ -84,8 +87,10 @@ export default function SongsSettings({
           <input
             type="checkbox"
             checked={showHymnNumbers}
-            onChange={(e) => setShowHymnNumbers && setShowHymnNumbers(e.target.checked)}
-            className="accent-[#D4A94A] w-4 h-4 cursor-pointer"
+            onChange={(e) =>
+              setShowHymnNumbers && setShowHymnNumbers(e.target.checked)
+            }
+            className="accent-accent w-4 h-4 cursor-pointer"
           />
         </div>
 
@@ -103,11 +108,13 @@ export default function SongsSettings({
           </div>
           <select
             value={hymnTextScale || "normal"}
-            onChange={(e) => setHymnTextScale && setHymnTextScale(e.target.value)}
+            onChange={(e) =>
+              setHymnTextScale && setHymnTextScale(e.target.value)
+            }
             className={`text-xs rounded px-2.5 py-1 outline-none border ${selectClass}`}
           >
             <option value="small">Small</option>
-            <option value="normal">Normal</option>
+            <option value="normal">Standard</option>
             <option value="large">Large</option>
             <option value="xlarge">Extra Large</option>
             <option value="xxlarge">XX-Large</option>
@@ -122,10 +129,11 @@ export default function SongsSettings({
                 Installed Hymn Library
               </div>
               <div className={`text-[11px] ${textSub}`}>
-                Offline Presby/Methodist hymnal content available to the playlist & playback
+                Offline Presby/Methodist hymnal content available to the
+                playlist & playback
               </div>
             </div>
-            <span className="text-[10px] px-2 py-0.5 rounded bg-[#D4A94A]/20 text-[#D4A94A] font-bold">
+            <span className="text-[10px] px-2 py-0.5 rounded bg-accent/20 text-accent font-bold">
               {hymnsCount > 0 ? `${hymnsCount} hymns loaded` : "Loading…"}
             </span>
           </div>
@@ -137,7 +145,8 @@ export default function SongsSettings({
                   Import Hymns JSON Batch
                 </div>
                 <div className={`text-[11px] ${textSub}`}>
-                  Select a church-presenter JSON collection to merge into the offline hymnal library
+                  Select a church-presenter JSON collection to merge into the
+                  offline hymnal library
                 </div>
               </div>
               <button
@@ -149,7 +158,7 @@ export default function SongsSettings({
                     }
                   }
                 }}
-                className="px-3 py-1.5 bg-[#D4A94A] hover:bg-[#D4A94A]/90 text-[#0B0C0E] font-bold rounded text-xs transition shadow cursor-pointer"
+                className="px-3 py-1.5 bg-accent hover:bg-accent/90 text-bg font-bold rounded text-xs transition shadow cursor-pointer"
               >
                 Select JSON File
               </button>

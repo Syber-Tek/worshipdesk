@@ -14,7 +14,7 @@ export default function GeneralSettings({
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="text-sm font-bold text-[#D4A94A] flex items-center gap-2">
+        <h3 className="text-sm font-bold text-accent flex items-center gap-2">
           <FaSliders /> General System Preferences
         </h3>
         <p className={`text-xs mt-1 ${textSub}`}>
@@ -30,9 +30,7 @@ export default function GeneralSettings({
             <div className={`font-semibold text-xs ${textTitle}`}>
               Application Name
             </div>
-            <div className={`text-[11px] ${textSub}`}>
-              Church Presenter Ghana Edition
-            </div>
+            <div className={`text-[11px] ${textSub}`}>WorshipDesk</div>
           </div>
           <span
             className={`text-xs font-mono ${
@@ -50,7 +48,9 @@ export default function GeneralSettings({
             <div className={`font-semibold text-xs ${textTitle}`}>
               Default Startup Screen
             </div>
-            <div className={`text-[11px] ${textSub}`}>Choose view on launch</div>
+            <div className={`text-[11px] ${textSub}`}>
+              Choose view on launch
+            </div>
           </div>
           <select
             className={`text-xs rounded px-2.5 py-1 outline-none border ${selectClass}`}
@@ -78,7 +78,7 @@ export default function GeneralSettings({
           <input
             type="checkbox"
             defaultChecked
-            className="accent-[#D4A94A] w-4 h-4 cursor-pointer"
+            className="accent-accent w-4 h-4 cursor-pointer"
           />
         </div>
 
@@ -95,7 +95,7 @@ export default function GeneralSettings({
           </div>
           <input
             type="checkbox"
-            className="accent-[#D4A94A] w-4 h-4 cursor-pointer"
+            className="accent-accent w-4 h-4 cursor-pointer"
           />
         </div>
       </div>

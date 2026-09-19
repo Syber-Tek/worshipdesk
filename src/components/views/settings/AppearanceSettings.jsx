@@ -16,11 +16,11 @@ export default function AppearanceSettings({
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="text-sm font-bold text-[#D4A94A] flex items-center gap-2">
-          <FaPalette /> Visual Appearance & Design Tokens
+        <h3 className="text-sm font-bold text-accent flex items-center gap-2">
+          <FaPalette /> Visual Appearance
         </h3>
         <p className={`text-xs mt-1 ${textSub}`}>
-          Cluely design language palette, theme modes, interface density, and
+          Modern design language palette, theme modes, interface density, and
           text sizing settings.
         </p>
       </div>
@@ -36,10 +36,10 @@ export default function AppearanceSettings({
               onClick={() => setThemeMode && setThemeMode("system")}
               className={`p-3 rounded border flex items-center gap-3 transition cursor-pointer ${
                 themeMode === "system"
-                  ? "bg-[#24262B] border-[#D4A94A] text-[#D4A94A] shadow font-semibold"
+                  ? "bg-[#24262B] border-accent text-accent shadow font-semibold"
                   : isLight
                     ? "bg-[#E5E7EB] border-[#D1D5DB] text-[#4B5563] hover:text-[#111827]"
-                    : "bg-[#151619] border-[#2A2C31] text-[#9B9CA3] hover:text-[#EDEDEE]"
+                    : "bg-[#151619] border-[#2A2C31] text-[#9B9CA3] hover:text-text-primary"
               }`}
             >
               <svg
@@ -51,7 +51,7 @@ export default function AppearanceSettings({
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="shrink-0 text-[#D4A94A]"
+                className="shrink-0 text-accent"
               >
                 <rect width="20" height="14" x="2" y="3" rx="2" />
                 <path d="M12 17v4M8 21h8" />
@@ -66,10 +66,10 @@ export default function AppearanceSettings({
               onClick={() => setThemeMode && setThemeMode("dark")}
               className={`p-3 rounded border flex items-center gap-3 transition cursor-pointer ${
                 themeMode === "dark"
-                  ? "bg-[#24262B] border-[#D4A94A] text-[#D4A94A] shadow font-semibold"
+                  ? "bg-[#24262B] border-accent text-accent shadow font-semibold"
                   : isLight
                     ? "bg-[#E5E7EB] border-[#D1D5DB] text-[#4B5563] hover:text-[#111827]"
-                    : "bg-[#151619] border-[#2A2C31] text-[#9B9CA3] hover:text-[#EDEDEE]"
+                    : "bg-[#151619] border-[#2A2C31] text-[#9B9CA3] hover:text-text-primary"
               }`}
             >
               <svg
@@ -81,7 +81,7 @@ export default function AppearanceSettings({
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="shrink-0 text-[#D4A94A]"
+                className="shrink-0 text-accent"
               >
                 <circle cx="12" cy="12" r="5" />
                 <line x1="12" y1="1" x2="12" y2="3" />
@@ -95,9 +95,7 @@ export default function AppearanceSettings({
               </svg>
               <div className="text-left">
                 <div className="font-bold text-xs">Dark Obsidian</div>
-                <div className="text-[10px] opacity-70">
-                  #0B0C0E Deep Canvas
-                </div>
+                <div className="text-[10px] opacity-70">Dark Mode</div>
               </div>
             </button>
 
@@ -106,11 +104,11 @@ export default function AppearanceSettings({
               className={`p-3 rounded border flex items-center gap-3 transition cursor-pointer ${
                 themeMode === "light"
                   ? isLight
-                    ? "bg-[#FFFFFF] border-[#D4A94A] text-[#D4A94A] shadow font-semibold"
-                    : "bg-[#24262B] border-[#D4A94A] text-[#D4A94A] shadow font-semibold"
+                    ? "bg-[#FFFFFF] border-accent text-accent shadow font-semibold"
+                    : "bg-[#24262B] border-accent text-accent shadow font-semibold"
                   : isLight
                     ? "bg-[#E5E7EB] border-[#D1D5DB] text-[#4B5563] hover:text-[#111827]"
-                    : "bg-[#151619] border-[#2A2C31] text-[#9B9CA3] hover:text-[#EDEDEE]"
+                    : "bg-[#151619] border-[#2A2C31] text-[#9B9CA3] hover:text-text-primary"
               }`}
             >
               <svg
@@ -122,91 +120,15 @@ export default function AppearanceSettings({
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="shrink-0 text-[#D4A94A]"
+                className="shrink-0 text-accent"
               >
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
               </svg>
               <div className="text-left">
                 <div className="font-bold text-xs">Light Clean</div>
-                <div className="text-[10px] opacity-70">
-                  #F4F5F7 Daylight Canvas
-                </div>
+                <div className="text-[10px] opacity-70">Light Mode</div>
               </div>
             </button>
-          </div>
-        </div>
-
-        <div className={`p-4 rounded border space-y-3 ${cardClass}`}>
-          <div className={`font-semibold text-xs ${textTitle}`}>
-            Color System Tokens
-          </div>
-          <div className="grid grid-cols-2 gap-3 text-xs">
-            <div
-              className={`flex items-center gap-2.5 p-2 rounded border ${
-                isLight
-                  ? "bg-[#FFFFFF] border-[#D1D5DB]"
-                  : "bg-[#0B0C0E] border-[#2A2C31]"
-              }`}
-            >
-              <span className="w-4 h-4 rounded bg-[#0B0C0E] border border-white/20" />
-              <div>
-                <div className={`font-mono text-[10px] ${textTitle}`}>
-                  #0B0C0E
-                </div>
-                <div className={`text-[10px] ${textSub}`}>
-                  Canvas Background
-                </div>
-              </div>
-            </div>
-            <div
-              className={`flex items-center gap-2.5 p-2 rounded border ${
-                isLight
-                  ? "bg-[#FFFFFF] border-[#D1D5DB]"
-                  : "bg-[#151619] border-[#2A2C31]"
-              }`}
-            >
-              <span className="w-4 h-4 rounded bg-[#151619] border border-white/20" />
-              <div>
-                <div className={`font-mono text-[10px] ${textTitle}`}>
-                  #151619
-                </div>
-                <div className={`text-[10px] ${textSub}`}>Panel Surface</div>
-              </div>
-            </div>
-            <div
-              className={`flex items-center gap-2.5 p-2 rounded border ${
-                isLight
-                  ? "bg-[#FFFFFF] border-[#D1D5DB]"
-                  : "bg-[#1C1D21] border-[#2A2C31]"
-              }`}
-            >
-              <span className="w-4 h-4 rounded bg-[#D4A94A]" />
-              <div>
-                <div className="font-mono text-[10px] text-[#D4A94A] font-bold">
-                  #D4A94A
-                </div>
-                <div className={`text-[10px] ${textSub}`}>
-                  Primary Gold Accent
-                </div>
-              </div>
-            </div>
-            <div
-              className={`flex items-center gap-2.5 p-2 rounded border ${
-                isLight
-                  ? "bg-[#FFFFFF] border-[#D1D5DB]"
-                  : "bg-[#1C1D21] border-[#2A2C31]"
-              }`}
-            >
-              <span className="w-4 h-4 rounded bg-[#E5484D]" />
-              <div>
-                <div className="font-mono text-[10px] text-[#E5484D] font-bold">
-                  #E5484D
-                </div>
-                <div className={`text-[10px] ${textSub}`}>
-                  Live / On-Air Red
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -226,9 +148,9 @@ export default function AppearanceSettings({
             onChange={(e) => setUiScale && setUiScale(e.target.value)}
             className={`text-xs rounded px-2.5 py-1 outline-none border ${selectClass}`}
           >
-            <option value="compact">Compact (12px)</option>
-            <option value="normal">Standard (13px)</option>
-            <option value="large">Large (14px)</option>
+            <option value="compact">Compact </option>
+            <option value="normal">Standard </option>
+            <option value="large">Large </option>
           </select>
         </div>
       </div>

@@ -11,7 +11,7 @@ export default function LanguageSettings({
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="text-sm font-bold text-[#D4A94A] flex items-center gap-2">
+        <h3 className="text-sm font-bold text-accent flex items-center gap-2">
           <FaLanguage /> Languages & Translations
         </h3>
         <p className={`text-xs mt-1 ${textSub}`}>
@@ -34,11 +34,7 @@ export default function LanguageSettings({
           <select
             className={`text-xs rounded px-2.5 py-1 outline-none border ${selectClass}`}
           >
-            <option value="en-GH">English (Ghana)</option>
-            <option value="twi">Twi / Asante</option>
-            <option value="fante">Fante</option>
-            <option value="ga">Ga</option>
-            <option value="ewe">Ewe</option>
+            <option value="en-GH">English (Default)</option>
           </select>
         </div>
       </div>

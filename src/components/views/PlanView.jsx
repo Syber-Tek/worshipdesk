@@ -22,7 +22,7 @@ export default function PlanView({
           isLight ? 'border-[#E5E7EB]' : 'border-[#2A2C31]'
         }`}>
           <div>
-            <h2 className="text-sm font-bold text-[#D4A94A] flex items-center gap-2">
+            <h2 className="text-sm font-bold text-accent flex items-center gap-2">
               <TickSquare set="bold" primaryColor="#D4A94A" size="small" /> Sunday Service Order Playlist
             </h2>
             <p className={`text-[11px] mt-0.5 ${isLight ? 'text-[#6B7280]' : 'text-[#9B9CA3]'}`}>
@@ -31,7 +31,7 @@ export default function PlanView({
           </div>
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-[#D4A94A] hover:bg-[#D4A94A]/90 text-[#0B0C0E] rounded font-semibold text-xs transition shadow cursor-pointer w-full sm:w-auto"
+            className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-accent hover:bg-accent/90 text-text-primary rounded font-semibold text-xs transition shadow cursor-pointer w-full sm:w-auto"
           >
             <Plus set="bold" primaryColor="#0B0C0E" size="small" /> Add Service Item
           </button>
@@ -44,13 +44,13 @@ export default function PlanView({
             <div className="flex justify-center">
               <TickSquare set="light" primaryColor={isLight ? '#9CA3AF' : '#6B6C73'} size="large" />
             </div>
-            <h3 className={`text-sm font-bold ${isLight ? 'text-[#111827]' : 'text-[#EDEDEE]'}`}>No Items in Service Playlist</h3>
+            <h3 className={`text-sm font-bold ${isLight ? 'text-[#111827]' : 'text-text-primary'}`}>No Items in Service Playlist</h3>
             <p className={`text-xs max-w-sm mx-auto ${isLight ? 'text-[#4B5563]' : 'text-[#9B9CA3]'}`}>
               Your service order is currently empty. Add scripture readings, hymns, or sermon slides to build your Sunday worship plan.
             </p>
             <button
               onClick={() => setShowAddModal(true)}
-              className="px-4 py-2 bg-[#D4A94A] text-[#0B0C0E] font-semibold text-xs rounded shadow hover:bg-[#D4A94A]/90 transition cursor-pointer"
+              className="px-4 py-2 bg-accent text-text-primary font-semibold text-xs rounded shadow hover:bg-accent/90 transition cursor-pointer"
             >
               + Add First Service Item
             </button>
@@ -62,11 +62,11 @@ export default function PlanView({
                 key={item.id}
                 className={`p-3 rounded-lg border flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 transition ${
                   item.status === 'live'
-                    ? 'bg-[#E5484D]/10 border-[#E5484D]'
+                    ? 'bg-live/10 border-live'
                     : item.status === 'next'
                     ? isLight
-                      ? 'bg-[#F3F4F6] border-[#D4A94A]'
-                      : 'bg-[#1C1D21] border-[#D4A94A]/50'
+                      ? 'bg-[#F3F4F6] border-accent'
+                      : 'bg-[#1C1D21] border-accent/50'
                     : isLight
                     ? 'bg-[#F9FAFB] border-[#E5E7EB] hover:border-[#D1D5DB]'
                     : 'bg-[#1C1D21] border-[#2A2C31] hover:border-[#3A3B40]'
@@ -90,7 +90,7 @@ export default function PlanView({
 
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <h4 className={`font-bold text-xs truncate ${isLight ? 'text-[#111827]' : 'text-[#EDEDEE]'}`}>
+                      <h4 className={`font-bold text-xs truncate ${isLight ? 'text-[#111827]' : 'text-text-primary'}`}>
                         {item.title}
                       </h4>
                       <span className={`text-[9px] uppercase font-mono px-1.5 py-0.5 rounded border ${
@@ -113,8 +113,8 @@ export default function PlanView({
                     title="Stage as Next"
                     className={`p-1 border rounded transition cursor-pointer ${
                       isLight
-                        ? 'bg-[#E5E7EB] hover:bg-[#D1D5DB] text-[#D4A94A] border-[#D1D5DB]'
-                        : 'bg-[#24262B] hover:bg-[#2A2C31] text-[#D4A94A] border-[#2A2C31]'
+                        ? 'bg-[#E5E7EB] hover:bg-[#D1D5DB] text-accent border-[#D1D5DB]'
+                        : 'bg-[#24262B] hover:bg-[#2A2C31] text-accent border-[#2A2C31]'
                     }`}
                   >
                     <Show set="bold" primaryColor="#D4A94A" size="small" />
@@ -122,7 +122,7 @@ export default function PlanView({
                   <button
                     onClick={() => handlePresentItemNow(item)}
                     title="Present Live Now"
-                    className="p-1 bg-[#D4A94A] hover:bg-[#D4A94A]/90 text-[#0B0C0E] rounded transition shadow cursor-pointer"
+                    className="p-1 bg-accent hover:bg-accent/90 text-text-primary rounded transition shadow cursor-pointer"
                   >
                     <Send set="bold" primaryColor="#0B0C0E" size="small" />
                   </button>
@@ -155,8 +155,8 @@ export default function PlanView({
                     title="Delete Item"
                     className={`p-1 border rounded transition cursor-pointer ${
                       isLight
-                        ? 'bg-[#E5E7EB] hover:bg-[#E5484D]/20 text-[#6B7280] hover:text-[#E5484D] border-[#D1D5DB]'
-                        : 'bg-[#24262B] hover:bg-[#E5484D]/20 text-[#6B6C73] hover:text-[#E5484D] border-[#2A2C31]'
+                        ? 'bg-[#E5E7EB] hover:bg-live/20 text-[#6B7280] hover:text-live border-[#D1D5DB]'
+                        : 'bg-[#24262B] hover:bg-live/20 text-[#6B6C73] hover:text-live border-[#2A2C31]'
                     }`}
                   >
                     <Delete set="light" primaryColor="#E5484D" size="small" />
