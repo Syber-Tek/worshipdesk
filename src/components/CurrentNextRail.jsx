@@ -9,7 +9,7 @@ import {
   Activity,
   Video
 } from 'react-iconly'
-import { FaEraser, FaEyeSlash, FaLock, FaLockOpen } from 'react-icons/fa6'
+import { FaDisplay, FaEraser, FaEyeSlash, FaLock, FaLockOpen } from 'react-icons/fa6'
 
 export default function CurrentNextRail({
   currentSlide,
@@ -186,7 +186,7 @@ export default function CurrentNextRail({
         {/* Multi-Display Projection Targets */}
         <div className="space-y-1">
           <div className={`text-[10px] uppercase font-bold tracking-wider flex items-center gap-1 ${isLight ? 'text-[#6B7280]' : 'text-[#9B9CA3]'}`}>
-            <Video set="bold" primaryColor="#D4A94A" size="small" /> Projection Displays
+            <FaDisplay set="bold" primaryColor="#D4A94A" size="14" /> Projection Displays
           </div>
           {displays.length > 1 ? (
             <div className="space-y-1">
@@ -240,7 +240,7 @@ export default function CurrentNextRail({
             </div>
           ) : (
             <div className={`text-[10px] italic px-1 ${isLight ? 'text-[#9CA3AF]' : 'text-[#6B6C73]'}`}>
-              Only one display detected. Connect a second monitor to project.
+              Only the main display is detected. Connect a second monitor to project.
             </div>
           )}
         </div>

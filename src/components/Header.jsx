@@ -34,7 +34,12 @@ export default function Header({
 
   const currentTheme = effectiveTheme || themeMode;
   const isLight = currentTheme === "light";
-  const date = Date();
+  const date = new Date();
+  const formattedDate = date.toDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+
   const handleCycleTheme = () => {
     setThemeMode((prev) => (prev === "dark" ? "light" : "dark"));
   };
@@ -53,7 +58,7 @@ export default function Header({
             isLight ? "text-[#111827]" : "text-text-primary"
           }`}
         >
-          Sunday Service Order — Sep 17
+          {formattedDate}
         </span>
         <span
           className={`hidden sm:inline ${isLight ? "text-[#D1D5DB]" : "text-[#6B6C73]"}`}

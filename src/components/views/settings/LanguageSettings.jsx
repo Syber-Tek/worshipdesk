@@ -15,7 +15,7 @@ export default function LanguageSettings({
           <FaLanguage /> Languages & Translations
         </h3>
         <p className={`text-xs mt-1 ${textSub}`}>
-          Interface locale and Ghanaian local language scripture support.
+          Interface language  support.
         </p>
       </div>
 
@@ -34,7 +34,7 @@ export default function LanguageSettings({
           <select
             className={`text-xs rounded px-2.5 py-1 outline-none border ${selectClass}`}
           >
-            <option value="en-GH">English (Default)</option>
+            <option value="en-US">English (Default)</option>
           </select>
         </div>
       </div>
