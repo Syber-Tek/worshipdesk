@@ -7,10 +7,12 @@
   "private": true,
   "scripts": {
     "start": "electron-forge start",
+    "build": "vite build --config vite.renderer.config.mjs",
     "renderer:dev": "vite --config vite.renderer.config.mjs",
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
+    "test": "echo \"No test specified\"",
     "lint": "echo \"No linting configured\""
   },
   "keywords": [],
