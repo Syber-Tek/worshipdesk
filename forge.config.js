@@ -5,6 +5,9 @@ const { AutoUnpackNativesPlugin } = require('@electron-forge/plugin-auto-unpack-
 module.exports = {
   packagerConfig: {
     asar: true,
+    name: 'WorshipDesk',
+    executableName: 'WorshipDesk',
+    icon: './src/assets/app-icon-dark',
   },
   rebuildConfig: {
     onlyModules: [],
@@ -12,7 +15,13 @@ module.exports = {
   makers: [
     {
       name: '@electron-forge/maker-squirrel',
-      config: {},
+      config: {
+        name: 'WorshipDesk',
+        authors: 'Syber-Tek',
+        description: 'WorshipDesk - Offline-First Church Worship Presentation System',
+        setupExe: 'WorshipDeskSetup.exe',
+        setupIcon: './src/assets/app-icon-dark.ico',
+      },
     },
     {
       name: '@electron-forge/maker-zip',

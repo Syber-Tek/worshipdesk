@@ -1,8 +1,8 @@
 {
-  "name": "church-presenter",
-  "productName": "church-presenter",
+  "name": "worshipdesk",
+  "productName": "WorshipDesk",
   "version": "1.0.0",
-  "description": "My Electron application description",
+  "description": "Offline-First Church Worship Presentation System",
   "main": ".vite/build/main.js",
   "private": true,
   "scripts": {
