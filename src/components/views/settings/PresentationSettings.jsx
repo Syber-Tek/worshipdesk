@@ -18,33 +18,27 @@ export default function PresentationSettings({
   outputFontSize = "normal",
   setOutputFontSize,
   showVerseQuotes = true,
-  cardClass,
-  selectClass,
-  textTitle,
-  textSub,
-  borderDivider,
-  isLight,
 }) {
   return (
     <div className="space-y-5">
       <div>
         <h3 className="text-sm font-bold text-accent flex items-center gap-2">
-          <FaTv /> Presentation Output & Slide Themes
+          <FaTv /> Presentation Output &amp; Slide Themes
         </h3>
-        <p className={`text-xs mt-1 ${textSub}`}>
+        <p className="text-xs mt-1 text-text-secondary">
           Configure Projector typography, background theme (Dark, Light, or
           Custom Image), and presentation overlays.
         </p>
       </div>
 
-      <div className={`space-y-4 pt-2 border-t ${borderDivider}`}>
+      <div className="space-y-4 pt-2 border-t border-border">
         {/* Output Theme Selection */}
-        <div className={`p-4 rounded border ${cardClass} space-y-3`}>
+        <div className="p-4 rounded border border-border bg-surface space-y-3">
           <div>
-            <div className={`font-semibold text-xs ${textTitle}`}>
+            <div className="font-semibold text-xs text-text-primary">
               Output Display Background Theme
             </div>
-            <div className={`text-[11px] ${textSub}`}>
+            <div className="text-[11px] text-text-secondary">
               Choose the visual theme for your live projector/presenter screen
             </div>
           </div>
@@ -56,12 +50,10 @@ export default function PresentationSettings({
               className={`p-3 rounded-lg border flex flex-col items-center gap-2 transition cursor-pointer ${
                 outputTheme === "dark"
                   ? "border-accent bg-accent/10 text-accent"
-                  : isLight
-                    ? "border-[#E5E7EB] bg-[#F9FAFB] text-[#4B5563] hover:border-[#D1D5DB]"
-                    : "border-border bg-panel text-[#9B9CA3] hover:border-[#2A2C31]"
+                  : "border-border bg-panel text-text-secondary hover:border-border-strong hover:text-text-primary"
               }`}
             >
-              <div className="w-full h-10 rounded bg-bg border border-[#2A2C31] flex items-center justify-center text-[10px] text-white font-semibold">
+              <div className="w-full h-10 rounded bg-[#0B0C0E] border border-[#2A2C31] flex items-center justify-center text-[10px] text-white font-semibold">
                 DARK MODE
               </div>
               <span className="text-xs font-bold">Dark Obsidian</span>
@@ -73,9 +65,7 @@ export default function PresentationSettings({
               className={`p-3 rounded-lg border flex flex-col items-center gap-2 transition cursor-pointer ${
                 outputTheme === "light"
                   ? "border-accent bg-accent/10 text-accent"
-                  : isLight
-                    ? "border-[#E5E7EB] bg-[#F9FAFB] text-[#4B5563] hover:border-[#D1D5DB]"
-                    : "border-border bg-panel text-[#9B9CA3] hover:border-[#2A2C31]"
+                  : "border-border bg-panel text-text-secondary hover:border-border-strong hover:text-text-primary"
               }`}
             >
               <div className="w-full h-10 rounded bg-[#FFFFFF] border border-[#E5E7EB] flex items-center justify-center text-[10px] text-[#111827] font-semibold">
@@ -90,9 +80,7 @@ export default function PresentationSettings({
               className={`p-3 rounded-lg border flex flex-col items-center gap-2 transition cursor-pointer ${
                 outputTheme === "image"
                   ? "border-accent bg-accent/10 text-accent"
-                  : isLight
-                    ? "border-[#E5E7EB] bg-[#F9FAFB] text-[#4B5563] hover:border-[#D1D5DB]"
-                    : "border-border bg-panel text-[#9B9CA3] hover:border-[#2A2C31]"
+                  : "border-border bg-panel text-text-secondary hover:border-border-strong hover:text-text-primary"
               }`}
             >
               <div className="w-full h-10 rounded bg-linear-to-r from-blue-900 to-indigo-900 border border-blue-700 flex items-center justify-center text-[10px] text-white font-semibold">
@@ -104,12 +92,12 @@ export default function PresentationSettings({
         </div>
 
         {/* Background Image Configuration */}
-        <div className={`p-4 rounded border ${cardClass} space-y-3`}>
+        <div className="p-4 rounded border border-border bg-surface space-y-3">
           <div>
-            <div className={`font-semibold text-xs ${textTitle}`}>
+            <div className="font-semibold text-xs text-text-primary">
               Background Wallpaper Image
             </div>
-            <div className={`text-[11px] ${textSub}`}>
+            <div className="text-[11px] text-text-secondary">
               Provide an image URL or choose a worship preset wallpaper
             </div>
           </div>
@@ -123,7 +111,7 @@ export default function PresentationSettings({
                 onChange={(e) =>
                   setOutputBgImage && setOutputBgImage(e.target.value)
                 }
-                className={`flex-1 text-xs rounded px-3 py-1.5 outline-none border ${selectClass}`}
+                className="flex-1 text-xs rounded px-3 py-1.5 outline-none border border-border bg-raised text-text-primary placeholder:text-text-muted"
               />
               <label className="px-3 py-1.5 bg-accent hover:bg-accent/90 text-bg font-bold rounded text-xs cursor-pointer flex items-center">
                 Browse File
@@ -149,9 +137,7 @@ export default function PresentationSettings({
 
             {/* Wallpaper Presets */}
             <div className="pt-2">
-              <div
-                className={`text-[10px] uppercase font-bold tracking-wider mb-2 ${textSub}`}
-              >
+              <div className="text-[10px] uppercase font-bold tracking-wider mb-2 text-text-secondary">
                 Recommended Worship Presets:
               </div>
               <div className="grid grid-cols-4 gap-2">
@@ -221,12 +207,12 @@ export default function PresentationSettings({
         </div>
 
         {/* App Name Display & Branding Position Settings */}
-        <div className={`p-4 rounded border ${cardClass} space-y-3`}>
+        <div className="p-4 rounded border border-border bg-surface space-y-3">
           <div>
-            <div className={`font-semibold text-xs ${textTitle}`}>
-              App Name & Branding Position on Projector
+            <div className="font-semibold text-xs text-text-primary">
+              App Name &amp; Branding Position on Projector
             </div>
-            <div className={`text-[11px] ${textSub}`}>
+            <div className="text-[11px] text-text-secondary">
               Configure where and how the app title is displayed on the live
               presentation window
             </div>
@@ -234,9 +220,7 @@ export default function PresentationSettings({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label
-                className={`block text-[11px] font-semibold mb-1 ${textTitle}`}
-              >
+              <label className="block text-[11px] font-semibold mb-1 text-text-primary">
                 Branding Display Location
               </label>
               <select
@@ -244,7 +228,7 @@ export default function PresentationSettings({
                 onChange={(e) =>
                   setAppNamePosition && setAppNamePosition(e.target.value)
                 }
-                className={`w-full text-xs rounded px-2.5 py-1.5 outline-none border ${selectClass}`}
+                className="w-full text-xs rounded px-2.5 py-1.5 outline-none border border-border bg-raised text-text-primary"
               >
                 <option value="top-left">Top Header Left (Default)</option>
                 <option value="top-right">Top Header Right</option>
@@ -255,9 +239,7 @@ export default function PresentationSettings({
             </div>
 
             <div>
-              <label
-                className={`block text-[11px] font-semibold mb-1 ${textTitle}`}
-              >
+              <label className="block text-[11px] font-semibold mb-1 text-text-primary">
                 Header Branding Text
               </label>
               <input
@@ -267,24 +249,24 @@ export default function PresentationSettings({
                 onChange={(e) =>
                   setCustomHeaderTitle && setCustomHeaderTitle(e.target.value)
                 }
-                className={`w-full text-xs rounded px-2.5 py-1.5 outline-none border ${selectClass}`}
+                className="w-full text-xs rounded px-2.5 py-1.5 outline-none border border-border bg-raised text-text-primary placeholder:text-text-muted"
               />
             </div>
           </div>
         </div>
 
         {/* Projector Mini Preview */}
-        <div className={`p-4 rounded border ${cardClass} space-y-2`}>
-          <div className={`font-semibold text-xs ${textTitle}`}>
+        <div className="p-4 rounded border border-border bg-surface space-y-2">
+          <div className="font-semibold text-xs text-text-primary">
             Live Projector Output Preview
           </div>
           <div
-            className={`w-full aspect-video rounded-lg overflow-hidden border border-[#2A2C31] relative flex flex-col justify-between shadow-inner ${
+            className={`w-full aspect-video rounded-lg overflow-hidden border border-border-strong relative flex flex-col justify-between shadow-inner ${
               outputTheme === "light"
                 ? "bg-[#FFFFFF] text-[#111827]"
                 : outputTheme === "dark"
-                  ? "bg-bg text-text-primary"
-                  : "text-text-primary"
+                  ? "bg-[#0B0C0E] text-white"
+                  : "text-white"
             }`}
             style={{
               padding:
@@ -392,21 +374,19 @@ export default function PresentationSettings({
           </div>
         </div>
 
-        <div
-          className={`flex items-center justify-between p-3.5 rounded border ${cardClass}`}
-        >
+        <div className="flex items-center justify-between p-3.5 rounded border border-border bg-surface">
           <div>
-            <div className={`font-semibold text-xs ${textTitle}`}>
+            <div className="font-semibold text-xs text-text-primary">
               Slide Margin Padding
             </div>
-            <div className={`text-[11px] ${textSub}`}>
+            <div className="text-[11px] text-text-secondary">
               Safe viewport distance for projector projection
             </div>
           </div>
           <select
             value={slideMargin || "4rem"}
             onChange={(e) => setSlideMargin && setSlideMargin(e.target.value)}
-            className={`text-xs rounded px-2.5 py-1 outline-none border ${selectClass}`}
+            className="text-xs rounded px-2.5 py-1 outline-none border border-border bg-raised text-text-primary"
           >
             <option value="2rem">Compact </option>
             <option value="4rem">Standard </option>
@@ -414,15 +394,13 @@ export default function PresentationSettings({
           </select>
         </div>
 
-        <div
-          className={`flex items-center justify-between p-3.5 rounded border ${cardClass}`}
-        >
+        <div className="flex items-center justify-between p-3.5 rounded border border-border bg-surface">
           <div>
-            <div className={`font-semibold text-xs ${textTitle}`}>
+            <div className="font-semibold text-xs text-text-primary">
               Attribution Line Position
             </div>
-            <div className={`text-[11px] ${textSub}`}>
-              Scripture & hymn reference text alignment
+            <div className="text-[11px] text-text-secondary">
+              Scripture &amp; hymn reference text alignment
             </div>
           </div>
           <select
@@ -430,7 +408,7 @@ export default function PresentationSettings({
             onChange={(e) =>
               setAttributionPosition && setAttributionPosition(e.target.value)
             }
-            className={`text-xs rounded px-2.5 py-1 outline-none border ${selectClass}`}
+            className="text-xs rounded px-2.5 py-1 outline-none border border-border bg-raised text-text-primary"
           >
             <option value="bottom">Bottom Centered</option>
             <option value="bottom-right">Bottom Right</option>
@@ -438,15 +416,13 @@ export default function PresentationSettings({
           </select>
         </div>
 
-        <div
-          className={`flex items-center justify-between p-3.5 rounded border ${cardClass}`}
-        >
+        <div className="flex items-center justify-between p-3.5 rounded border border-border bg-surface">
           <div>
-            <div className={`font-semibold text-xs ${textTitle}`}>
+            <div className="font-semibold text-xs text-text-primary">
               Projector Text Scale
             </div>
-            <div className={`text-[11px] ${textSub}`}>
-              Font size for scripture & hymn content on the live output
+            <div className="text-[11px] text-text-secondary">
+              Font size for scripture &amp; hymn content on the live output
             </div>
           </div>
           <select
@@ -454,7 +430,7 @@ export default function PresentationSettings({
             onChange={(e) =>
               setOutputFontSize && setOutputFontSize(e.target.value)
             }
-            className={`text-xs rounded px-2.5 py-1 outline-none border ${selectClass}`}
+            className="text-xs rounded px-2.5 py-1 outline-none border border-border bg-raised text-text-primary"
           >
             <option value="small">Small </option>
             <option value="normal">Standard </option>

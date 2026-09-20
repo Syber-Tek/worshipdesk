@@ -10,7 +10,7 @@ import PlanView from "./components/views/PlanView";
 import SettingsView from "./components/views/SettingsView";
 import AddItemModal from "./components/modals/AddItemModal";
 import SplashScreen from "./components/SplashScreen";
-import { Toaster } from "sonner";
+import { Toaster, toast } from "sonner";
 import { mapBookToTranslation, normalizeBookName } from "./bibleBooks.js";
 
 // Split a hymn's lyrics at blank lines into separate stanza slides so hymns can
@@ -549,7 +549,7 @@ export default function App() {
       ...prev,
       { ...slide, id: `item-${Date.now()}`, status: "pending" },
     ]);
-    toast.success(`Added "${slide.title}" to Service Plan`);
+    toast.success(`Added "${slide.title || "item"}" to Service Plan`);
   };
 
   const handleKeyDown = (e) => {
@@ -598,6 +598,7 @@ export default function App() {
         return i;
       }),
     );
+    toast.info(`Staged "${item.title || "item"}" as Next`);
   };
 
   const handlePresentItemNow = (item) => {
@@ -639,6 +640,7 @@ export default function App() {
         return i;
       }),
     );
+    toast.success(`Broadcasting "${updatedSlide.title || "slide"}" Live`);
   };
 
   const handleMoveUp = (index) => {
@@ -648,6 +650,7 @@ export default function App() {
     updated[index - 1] = updated[index];
     updated[index] = temp;
     setPlaylist(updated);
+    toast.info("Reordered Service Plan item");
   };
 
   const handleMoveDown = (index) => {
@@ -657,13 +660,14 @@ export default function App() {
     updated[index + 1] = updated[index];
     updated[index] = temp;
     setPlaylist(updated);
+    toast.info("Reordered Service Plan item");
   };
 
   const handleDeleteItem = (id) => {
     setPlaylist((prev) => {
       const target = prev.find((i) => i.id === id);
       if (target) {
-        toast.info(`Removed "${target.title}" from Service Plan`);
+        toast.info(`Removed "${target.title || "item"}" from Service Plan`);
       }
       return prev.filter((i) => i.id !== id);
     });
@@ -685,7 +689,7 @@ export default function App() {
     setNewItemTitle("");
     setNewItemContent("");
     setShowAddModal(false);
-    toast.success(`Added "${newItem.title}" to Service Plan`);
+    toast.success(`Added "${newItem.title || "item"}" to Service Plan`);
   };
 
   // Scripture Transport Handlers
@@ -693,6 +697,7 @@ export default function App() {
     const slide = normalizeSlide(item);
     if (!slide) return;
     setNextSlide({ id: `item-${Date.now()}`, ...slide });
+    toast.info(`Staged "${slide.title || "item"}" as Next`);
   };
 
   const handlePresentNow = (item) => {
@@ -729,6 +734,7 @@ export default function App() {
       isBlack: false,
       isBlank: false,
     });
+    toast.success(`Broadcasting "${updated.title || "slide"}" Live`);
   };
 
   const handleTransportPresent = () => {
@@ -753,12 +759,14 @@ export default function App() {
         isBlack: false,
         isBlank: false,
       });
+      toast.success(`Broadcasting "${toPresent.title || "slide"}" Live`);
     }
   };
 
   const handleTransportStop = () => {
     setIsLive(false);
     broadcastToPresentation({ isLive: false });
+    toast.info("Presentation output in Standby mode");
   };
 
   const handleToggleBlack = () => {
@@ -793,6 +801,7 @@ export default function App() {
         content: prevVerse.text,
         type: "Bible Verse",
       });
+      toast.info(`Staged ${prevVerse.ref || "verse"} as Next`);
     }
   };
 
@@ -806,6 +815,7 @@ export default function App() {
         content: nextV.text,
         type: "Bible Verse",
       });
+      toast.info(`Staged ${nextV.ref || "verse"} as Next`);
     }
   };
 
@@ -828,6 +838,7 @@ export default function App() {
           isBlack: false,
           isBlank: false,
         });
+        toast.success(`Broadcasting "${slide.title || "slide"}" Live`);
       }
     } else if (selectedVerseIndex < filteredVerses.length - 1) {
       const nextV = filteredVerses[selectedVerseIndex + 1];
@@ -850,6 +861,7 @@ export default function App() {
         isBlack: false,
         isBlank: false,
       });
+      toast.success(`Broadcasting "${updated.title || "slide"}" Live`);
     }
   };
 
@@ -1219,10 +1231,12 @@ export default function App() {
         theme={effectiveTheme === "light" ? "light" : "dark"}
         richColors
         closeButton
-        offset={14}
+        offset={16}
+        containerStyle={{ zIndex: 99999 }}
         toastOptions={{
           style: {
             fontFamily: "'Plus Jakarta Sans', ui-sans-serif, sans-serif",
+            zIndex: 99999,
           },
         }}
       />
