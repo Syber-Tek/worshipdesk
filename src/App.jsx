@@ -11,6 +11,7 @@ import SettingsView from "./components/views/SettingsView";
 import AddItemModal from "./components/modals/AddItemModal";
 import SplashScreen from "./components/SplashScreen";
 import { Toaster, toast } from "sonner";
+
 import { mapBookToTranslation, normalizeBookName } from "./bibleBooks.js";
 
 // Split a hymn's lyrics at blank lines into separate stanza slides so hymns can
@@ -25,11 +26,15 @@ const splitHymnStanzas = (lyrics) => {
 
 const buildHymnDeck = (item) => {
   const stanzas = splitHymnStanzas(item.content || item.lyrics);
+  const hymnLabel = item.hymn_number
+    ? `${String(item.category || "").includes("Methodist") ? "MH" : "PH"} ${item.hymn_number}`
+    : "";
   return stanzas.map((s) => ({
     id: `hymn-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     title: item.title || "Untitled",
     content: s,
     type: "Hymn",
+    hymnLabel,
   }));
 };
 
@@ -479,6 +484,7 @@ export default function App() {
           title: currentSlide?.title || currentSlide?.ref || "",
           content: currentSlide?.content || currentSlide?.text || "",
           type: currentSlide?.type || "Bible Verse",
+          hymnLabel: currentSlide?.hymnLabel || "",
           isLive,
           isBlank,
           isBlack,
@@ -536,7 +542,13 @@ export default function App() {
     const content =
       item.content || item.text || item.lyrics || item.verse_text || "";
     const type = item.type || (isVerse ? "Bible Verse" : "Custom Slide");
-    return { title, content, type };
+    return {
+      title,
+      content,
+      type,
+      hymn_number: item.hymn_number,
+      category: item.category,
+    };
   };
 
   const handleAddToPlaylist = (item) => {
@@ -1228,6 +1240,7 @@ export default function App() {
 
       <Toaster
         position="top-center"
+        visibleToasts={1}
         theme={effectiveTheme === "light" ? "light" : "dark"}
         richColors
         closeButton

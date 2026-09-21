@@ -330,6 +330,8 @@ export default function SongsView({
                       title: selectedHymn.title,
                       content: selectedLyrics || selectedHymn.lyrics || "",
                       type: "Hymn",
+                      hymn_number: selectedHymn.hymn_number,
+                      category: selectedHymn.category,
                     })
                   }
                   className={`py-2.5 px-3 border rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer ${
@@ -348,6 +350,8 @@ export default function SongsView({
                       title: selectedHymn.title,
                       content: selectedLyrics || selectedHymn.lyrics || "",
                       type: "Hymn",
+                      hymn_number: selectedHymn.hymn_number,
+                      category: selectedHymn.category,
                     })
                   }
                   className={`py-2.5 px-3 border rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer ${
@@ -366,6 +370,8 @@ export default function SongsView({
                       title: selectedHymn.title,
                       content: selectedLyrics || selectedHymn.lyrics || "",
                       type: "Hymn",
+                      hymn_number: selectedHymn.hymn_number,
+                      category: selectedHymn.category,
                     })
                   }
                   className="py-2.5 px-3 bg-accent hover:bg-accent-hover text-bg rounded-lg text-xs font-bold flex items-center justify-center gap-2 shadow transition cursor-pointer"

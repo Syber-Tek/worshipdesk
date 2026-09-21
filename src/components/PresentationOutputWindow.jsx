@@ -136,7 +136,7 @@ export default function PresentationOutputWindow() {
 
   const slideTypeNode = slideData.isBlank ? null : (
     <span className="flex items-center gap-2">
-      {slideData.type}
+      {slideData.hymnLabel || slideData.type}
       {deckChip}
     </span>
   );
