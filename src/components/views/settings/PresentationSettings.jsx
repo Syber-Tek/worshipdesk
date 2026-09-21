@@ -9,7 +9,7 @@ export default function PresentationSettings({
   setOutputBgImage,
   appNamePosition = "top-left",
   setAppNamePosition,
-  customHeaderTitle = "Church Presenter",
+  customHeaderTitle = "WorshipDesk",
   setCustomHeaderTitle,
   slideMargin = "4rem",
   setSlideMargin,
@@ -244,8 +244,8 @@ export default function PresentationSettings({
               </label>
               <input
                 type="text"
-                placeholder="Church Presenter"
-                value={customHeaderTitle ?? "Church Presenter"}
+                placeholder="WorshipDesk"
+                value={customHeaderTitle ?? "WorshipDesk"}
                 onChange={(e) =>
                   setCustomHeaderTitle && setCustomHeaderTitle(e.target.value)
                 }
