@@ -16,3 +16,8 @@
    - Keep changes scoped, minimal, and optimized.
    - Preserve 100% offline desktop resilience for Windows.
    - Verify every change with build commands before concluding.
+
+5. **GITHUB PULL REQUEST & BRANCHING WORKFLOW**:
+   - Never push directly to `main`.
+   - Always create a dedicated feature branch (e.g. `feat/feature-name`).
+   - Push to origin on the feature branch, and remind/guide the user to open and merge a Pull Request on GitHub to level up GitHub Badges (Pull Shark, Pair Extraordinaire, etc.).
