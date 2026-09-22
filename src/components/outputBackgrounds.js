@@ -3,6 +3,11 @@ import worshipLight from "../assets/backgrounds/worship-light.jpg";
 import starryNight from "../assets/backgrounds/starry-night.jpg";
 import natureFog from "../assets/backgrounds/nature-fog.jpg";
 
+import goldenParticlesVideo from "../assets/backgrounds/golden-particles.mp4";
+import blueFluidVideo from "../assets/backgrounds/blue-fluid.mp4";
+import auroraLightsVideo from "../assets/backgrounds/aurora-lights.mp4";
+import cinematicCloudsVideo from "../assets/backgrounds/cinematic-clouds.mp4";
+
 export const OUTPUT_BACKGROUNDS = {
   "dark-horizon": { label: "Dark Horizon", url: darkHorizon },
   "worship-light": { label: "Worship Light", url: worshipLight },
@@ -13,19 +18,19 @@ export const OUTPUT_BACKGROUNDS = {
 export const OUTPUT_VIDEOS = {
   "golden-particles": {
     label: "Golden Particles",
-    url: "https://assets.mixkit.co/videos/preview/mixkit-abstract-golden-particles-in-motion-41551-large.mp4",
+    url: goldenParticlesVideo,
   },
   "blue-fluid": {
     label: "Blue Fluid",
-    url: "https://assets.mixkit.co/videos/preview/mixkit-abstract-blue-and-purple-ink-in-water-43399-large.mp4",
+    url: blueFluidVideo,
   },
   "aurora-lights": {
     label: "Aurora Lights",
-    url: "https://assets.mixkit.co/videos/preview/mixkit-green-and-blue-lights-in-the-night-sky-41554-large.mp4",
+    url: auroraLightsVideo,
   },
   "cinematic-clouds": {
     label: "Cinematic Clouds",
-    url: "https://assets.mixkit.co/videos/preview/mixkit-clouds-and-blue-sky-2408-large.mp4",
+    url: cinematicCloudsVideo,
   },
 };
 
@@ -48,7 +53,7 @@ export function resolveBackground(value) {
 }
 
 export function resolveVideo(value) {
-  if (!value) return OUTPUT_VIDEOS["golden-particles"].url;
+  if (!value) return goldenParticlesVideo;
   if (OUTPUT_VIDEOS[value]) return OUTPUT_VIDEOS[value].url;
   return value; // custom video URL, data: URI, or file path
 }
