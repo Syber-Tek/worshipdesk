@@ -134,6 +134,12 @@ export default function App() {
   const [outputBgImage, setOutputBgImage] = useState(() => {
     return localStorage.getItem("church_presenter_output_bg_image") || "";
   });
+  const [outputBgVideo, setOutputBgVideo] = useState(() => {
+    return (
+      localStorage.getItem("church_presenter_output_bg_video") ||
+      "golden-particles"
+    );
+  });
 
   const [showVerseQuotes, setShowVerseQuotes] = useState(() => {
     return localStorage.getItem("church_presenter_show_quotes") !== "false";
@@ -204,6 +210,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem("church_presenter_output_bg_image", outputBgImage);
   }, [outputBgImage]);
+
+  useEffect(() => {
+    localStorage.setItem("church_presenter_output_bg_video", outputBgVideo);
+  }, [outputBgVideo]);
 
   useEffect(() => {
     localStorage.setItem(
@@ -278,6 +288,83 @@ export default function App() {
 
   // Service Playlist State
   const [playlist, setPlaylist] = useState([]);
+  const [recentPlans, setRecentPlans] = useState(() => {
+    try {
+      const saved = localStorage.getItem("worshipdesk_recent_plans");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const addRecentPlan = (entry) => {
+    setRecentPlans((prev) => {
+      const filtered = prev.filter((p) => p.filePath !== entry.filePath);
+      const updated = [entry, ...filtered].slice(0, 10);
+      localStorage.setItem("worshipdesk_recent_plans", JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const handleSavePlanToFile = async () => {
+    if (!playlist || playlist.length === 0) {
+      alert("Your Service Order is empty. Add items to your playlist before saving.");
+      return;
+    }
+    if (!window.api || !window.api.savePlanFile) return;
+    const planPayload = {
+      title: `Sunday Service Plan (${new Date().toLocaleDateString()})`,
+      createdAt: new Date().toISOString(),
+      itemsCount: playlist.length,
+      playlist,
+    };
+    const res = await window.api.savePlanFile(planPayload);
+    if (res && res.success) {
+      addRecentPlan({
+        filePath: res.filePath,
+        fileName: res.fileName,
+        title: planPayload.title,
+        itemsCount: playlist.length,
+        savedAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        planPayload,
+      });
+      alert(`Service Plan saved successfully to ${res.fileName}`);
+    }
+  };
+
+  const handleOpenPlanFromFile = async () => {
+    if (!window.api || !window.api.openPlanFile) return;
+    const res = await window.api.openPlanFile();
+    if (res && res.success && res.plan) {
+      const loadedPlaylist = res.plan.playlist || (Array.isArray(res.plan) ? res.plan : []);
+      setPlaylist(loadedPlaylist);
+      addRecentPlan({
+        filePath: res.filePath,
+        fileName: res.fileName,
+        title: res.plan.title || res.fileName,
+        itemsCount: loadedPlaylist.length,
+        savedAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        planPayload: res.plan,
+      });
+      alert(`Loaded "${res.fileName}" (${loadedPlaylist.length} items) into Service Order.`);
+    }
+  };
+
+  const handleLoadRecentPlan = (recentEntry) => {
+    if (!recentEntry || !recentEntry.planPayload) return;
+    const loadedPlaylist =
+      recentEntry.planPayload.playlist ||
+      (Array.isArray(recentEntry.planPayload) ? recentEntry.planPayload : []);
+    setPlaylist(loadedPlaylist);
+    alert(`Loaded recent plan "${recentEntry.fileName || recentEntry.title}" into Service Order.`);
+  };
+
+  const handleClearPlan = () => {
+    if (playlist.length === 0) return;
+    if (window.confirm("Are you sure you want to clear your current Service Order?")) {
+      setPlaylist([]);
+    }
+  };
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [newItemTitle, setNewItemTitle] = useState("");
@@ -490,6 +577,7 @@ export default function App() {
           isBlack,
           outputTheme,
           outputBgImage,
+          outputBgVideo,
           showVerseQuotes,
           appNamePosition,
           customHeaderTitle,
@@ -517,6 +605,7 @@ export default function App() {
       isBlack,
       outputTheme,
       outputBgImage,
+      outputBgVideo,
       showVerseQuotes,
       appNamePosition,
       customHeaderTitle,
@@ -1136,6 +1225,11 @@ export default function App() {
               handleMoveUp={handleMoveUp}
               handleMoveDown={handleMoveDown}
               handleDeleteItem={handleDeleteItem}
+              recentPlans={recentPlans}
+              handleSavePlanToFile={handleSavePlanToFile}
+              handleOpenPlanFromFile={handleOpenPlanFromFile}
+              handleLoadRecentPlan={handleLoadRecentPlan}
+              handleClearPlan={handleClearPlan}
               themeMode={effectiveTheme}
             />
           )}
@@ -1163,6 +1257,8 @@ export default function App() {
               setOutputTheme={setOutputTheme}
               outputBgImage={outputBgImage}
               setOutputBgImage={setOutputBgImage}
+              outputBgVideo={outputBgVideo}
+              setOutputBgVideo={setOutputBgVideo}
               showVerseQuotes={showVerseQuotes}
               setShowVerseQuotes={setShowVerseQuotes}
               appNamePosition={appNamePosition}

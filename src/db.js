@@ -222,14 +222,16 @@ function processImportedTables() {
 // Known bundled XML Bibles — stable codes + display names.
 // TWI = Twerɛ Kronkron (Bible Society of Ghana) so Genesis 1:1 etc. import cleanly.
 const XML_BIBLE_FILE_DEFS = {
-  'TwiKronkronBible.xml': { code: 'TWI', name: 'Twerɛ Kronkron (Asante-Twi Bible — Bible Society of Ghana, 2017)', twi: true },
-  'TwiAsanteBible.xml': { code: 'ASNA', name: 'Asante Twi — Nkwa Asɛm (Biblica, 1996/2020)', twi: true },
-  'TwiAkuapemBible.xml': { code: 'AKUA', name: 'Akuapem Twi — Nkwa Asɛm (2020)', twi: true },
-  'TwiDCBible.xml': { code: 'TWIDC', name: 'Twerɛ Kronkron DC — Asante-Twi with Deutero-Canons (BSG, 2017)', twi: true },
-  'TwiRevisedBible.xml': { code: 'TWIRV', name: 'New Revised Asante Twi Bible (2012)', twi: true },
-  'EnglishNIVBible.xml': { code: 'NIV', name: 'New International Version (NIV)', twi: false },
-  'EnglishNKJBible.xml': { code: 'NKJV', name: 'New King James Version (NKJV)', twi: false },
-  'EnglishKJBible.xml': { code: 'KJV', name: 'King James Version (KJV)', twi: false },
+  'TwiKronkronBible.xml': { code: 'TWI', name: 'Twerɛ Kronkron (Asante-Twi Bible — Bible Society of Ghana, 2017)', twi: true, language: 'Twi' },
+  'TwiAsanteBible.xml': { code: 'ASNA', name: 'Asante Twi — Nkwa Asɛm (Biblica, 1996/2020)', twi: true, language: 'Twi' },
+  'TwiAkuapemBible.xml': { code: 'AKUA', name: 'Akuapem Twi — Nkwa Asɛm (2020)', twi: true, language: 'Twi' },
+  'TwiDCBible.xml': { code: 'TWIDC', name: 'Twerɛ Kronkron DC — Asante-Twi with Deutero-Canons (BSG, 2017)', twi: true, language: 'Twi' },
+  'TwiRevisedBible.xml': { code: 'TWIRV', name: 'New Revised Asante Twi Bible (2012)', twi: true, language: 'Twi' },
+  'EnglishGNTBible.xml': { code: 'GNT', name: 'Good News Translation (GNT)', twi: false, language: 'English' },
+  'EnglishNIVBible.xml': { code: 'NIV', name: 'New International Version (NIV)', twi: false, language: 'English' },
+  'EnglishNKJBible.xml': { code: 'NKJV', name: 'New King James Version (NKJV)', twi: false, language: 'English' },
+  'EnglishKJBible.xml': { code: 'KJV', name: 'King James Version (KJV)', twi: false, language: 'English' },
+  'Ewe2020Bible.xml': { code: 'EWE', name: 'Agbenya La (Ewe Bible - Biblica 2020)', twi: false, language: 'Ewe' },
 }
 
 function decodeXmlEntities(text) {
@@ -264,7 +266,7 @@ export function importXmlBibleFile(filePath) {
 
     const code = xmlFileDef ? xmlFileDef.code : fileName.toUpperCase().replace(/[^A-Z0-9]/g, '_')
     const name = xmlFileDef ? xmlFileDef.name : (isTwi ? `${xmlTitle} (Twi)` : xmlTitle)
-    const language = isTwi ? 'Twi' : 'English'
+    const language = xmlFileDef && xmlFileDef.language ? xmlFileDef.language : (isTwi ? 'Twi' : 'English')
 
     let bible = db.prepare('SELECT id FROM bibles WHERE code = ?').get(code)
     if (!bible) {

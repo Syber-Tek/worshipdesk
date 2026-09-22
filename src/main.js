@@ -187,6 +187,46 @@ ipcMain.handle('backup-database', async () => {
   }
 });
 
+// Save Service Plan File (*.worship / *.json)
+ipcMain.handle('save-plan-file', async (_e, planData) => {
+  try {
+    const defaultName = `WorshipPlan-${new Date().toISOString().slice(0, 10)}.worship`;
+    const { canceled, filePath } = await dialog.showSaveDialog({
+      title: 'Save WorshipDesk Service Plan',
+      defaultPath: defaultName,
+      filters: [
+        { name: 'WorshipDesk Plan (*.worship)', extensions: ['worship'] },
+        { name: 'JSON Plan (*.json)', extensions: ['json'] },
+      ],
+    });
+    if (canceled || !filePath) return { success: false, message: 'Cancelled' };
+    await fs.promises.writeFile(filePath, JSON.stringify(planData, null, 2), 'utf-8');
+    return { success: true, filePath, fileName: path.basename(filePath) };
+  } catch (err) {
+    return { success: false, message: String((err && err.message) || err) };
+  }
+});
+
+// Open Service Plan File (*.worship / *.json)
+ipcMain.handle('open-plan-file', async () => {
+  try {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      title: 'Open WorshipDesk Service Plan File',
+      properties: ['openFile'],
+      filters: [
+        { name: 'WorshipDesk Plan (*.worship, *.json)', extensions: ['worship', 'json'] },
+      ],
+    });
+    if (canceled || filePaths.length === 0) return { success: false, message: 'Cancelled' };
+    const filePath = filePaths[0];
+    const raw = await fs.promises.readFile(filePath, 'utf-8');
+    const plan = JSON.parse(raw);
+    return { success: true, filePath, fileName: path.basename(filePath), plan };
+  } catch (err) {
+    return { success: false, message: String((err && err.message) || err) };
+  }
+});
+
 // Native OS notification (Windows toast / tray balloon) fired from the renderer.
 ipcMain.on('native-notification', (_event, { title, body } = {}) => {
   if (!Notification.isSupported()) return;

@@ -48,6 +48,8 @@ export default function SettingsView({
   setOutputTheme,
   outputBgImage,
   setOutputBgImage,
+  outputBgVideo,
+  setOutputBgVideo,
   showVerseQuotes = true,
   setShowVerseQuotes,
   appNamePosition = "top-left",
@@ -180,6 +182,8 @@ export default function SettingsView({
             setOutputTheme={setOutputTheme}
             outputBgImage={outputBgImage}
             setOutputBgImage={setOutputBgImage}
+            outputBgVideo={outputBgVideo}
+            setOutputBgVideo={setOutputBgVideo}
             appNamePosition={appNamePosition}
             setAppNamePosition={setAppNamePosition}
             customHeaderTitle={customHeaderTitle}

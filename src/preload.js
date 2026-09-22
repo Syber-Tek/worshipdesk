@@ -21,6 +21,8 @@ contextBridge.exposeInMainWorld('api', {
   removeBible: (bibleId) => ipcRenderer.invoke('remove-bible', bibleId),
   rescanBibles: () => ipcRenderer.invoke('rescan-bibles'),
   backupDatabase: () => ipcRenderer.invoke('backup-database'),
+  savePlanFile: (planData) => ipcRenderer.invoke('save-plan-file', planData),
+  openPlanFile: () => ipcRenderer.invoke('open-plan-file'),
   notifyNative: (payload) => ipcRenderer.send('native-notification', payload),
   setPresentationFullscreen: (fullscreen) =>
     ipcRenderer.invoke('set-presentation-fullscreen', Boolean(fullscreen)),

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { resolveBackground } from "./outputBackgrounds";
+import { resolveBackground, resolveVideo } from "./outputBackgrounds";
 
 export default function PresentationOutputWindow() {
   const [slideData, setSlideData] = useState({});
@@ -64,7 +64,9 @@ export default function PresentationOutputWindow() {
   const theme = slideData.outputTheme || "dark";
   const isLight = theme === "light";
   const isImage = theme === "image";
+  const isVideo = theme === "video";
   const bgImg = resolveBackground(slideData.outputBgImage || "dark-horizon");
+  const bgVideo = resolveVideo(slideData.outputBgVideo || "golden-particles");
 
   const isHymn = slideData.type === "Hymn";
   // Quotes only make sense around scripture verses, never around hymns/sermons.
@@ -168,12 +170,22 @@ export default function PresentationOutputWindow() {
       </span>
     ) : null;
 
-  if (isImage) {
+  if (isImage || isVideo) {
     return (
       <div
         className={`h-screen w-screen relative flex flex-col justify-between ${marginClass} select-none overflow-hidden font-sans bg-cover bg-center bg-no-repeat`}
-        style={{ backgroundImage: `url("${bgImg}")` }}
+        style={isImage ? { backgroundImage: `url("${bgImg}")` } : {}}
       >
+        {isVideo && (
+          <video
+            src={bgVideo}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        )}
         {/* Dark overlay for contrast */}
         <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px]" />
 
