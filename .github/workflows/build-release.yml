@@ -40,7 +40,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libfakeroot rpm dpkg
+          sudo apt-get install -y libfakeroot rpm dpkg build-essential
 
       - name: Install Dependencies
         run: npm ci
@@ -80,3 +80,4 @@ jobs:
             - 🐧 **Linux**: `.deb`, `.rpm`, `.AppImage` & `WorshipDesk-linux-x64.zip`
           draft: false
           prerelease: false
+          overwrite: true
