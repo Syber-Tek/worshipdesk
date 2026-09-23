@@ -21,7 +21,8 @@ import {
   rescanBiblesFolder,
   importSngFile,
   importSngFolder,
-  getHymnsCount
+  getHymnsCount,
+  getHymnCategories
 } from './db.js';
 
 if (started) {
@@ -30,6 +31,7 @@ if (started) {
 
 let dbPath = '';
 let mainWindow = null;
+let stageWindow = null;
 const presentationWindows = new Map(); // displayId -> BrowserWindow
 
 function getDisplayDetails() {
@@ -78,6 +80,7 @@ ipcMain.handle('search-verses', (_e, query, bibleId) => searchVerses(query, bibl
 // Hymns IPC Handlers
 ipcMain.handle('get-hymns', () => getHymns());
 ipcMain.handle('get-hymns-count', () => getHymnsCount());
+ipcMain.handle('get-hymn-categories', () => getHymnCategories());
 ipcMain.handle('search-hymns', (_e, query, category) => searchHymns(query, category));
 ipcMain.handle('list-hymns', (_e, query, category) => listHymns(query, category));
 ipcMain.handle('get-hymn-lyrics', (_e, id) => getHymnLyrics(id));
@@ -305,6 +308,9 @@ ipcMain.on('send-live-slide', (_event, slideData) => {
       win.webContents.send('update-presentation-slide', slideData);
     }
   }
+  if (stageWindow && !stageWindow.isDestroyed()) {
+    stageWindow.webContents.send('update-presentation-slide', slideData);
+  }
 });
 
 // Deck navigation sent from any projector window (arrow keys) back to the control window.
@@ -335,6 +341,57 @@ ipcMain.handle('open-presentation-windows', (_event, displayIds) => {
   }
 
   return { ok: true, active: Array.from(presentationWindows.keys()).map(Number) };
+});
+
+const createStageWindow = () => {
+  if (stageWindow && !stageWindow.isDestroyed()) {
+    stageWindow.focus();
+    return;
+  }
+
+  const appIcon = getAppIcon();
+  const displays = screen.getAllDisplays();
+  const targetDisplay = displays.length > 1 ? displays[1] : displays[0];
+  const bounds = targetDisplay.bounds;
+
+  stageWindow = new BrowserWindow({
+    x: bounds.x,
+    y: bounds.y,
+    width: bounds.width,
+    height: bounds.height,
+    title: 'WorshipDesk - Stage Display / Confidence Monitor',
+    icon: appIcon,
+    autoHideMenuBar: true,
+    backgroundColor: '#0C0D0E',
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: false,
+      contextIsolation: true,
+      webSecurity: true,
+    },
+  });
+
+  if (appIcon && !appIcon.isEmpty()) {
+    stageWindow.setIcon(appIcon);
+  }
+
+  stageWindow.on('closed', () => {
+    stageWindow = null;
+  });
+
+  const baseUrl = MAIN_WINDOW_VITE_DEV_SERVER_URL || `file://${path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`)}`;
+  const stageUrl = `${baseUrl}?window=stage`;
+
+  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+    stageWindow.loadURL(stageUrl);
+  } else {
+    stageWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`), { query: { window: 'stage' } });
+  }
+};
+
+ipcMain.handle('open-stage-window', () => {
+  createStageWindow();
+  return { success: true };
 });
 
 function getAppIcon(themeMode = 'dark') {

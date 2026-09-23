@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import {
-  Voice2,
   Search,
   Show,
   Send,
@@ -45,8 +44,7 @@ export default function SongsView({
   const labelClass = isLight ? "text-[#6B7280]" : "text-text-secondary";
   const headingClass = isLight ? "text-[#111827]" : "text-text-primary";
 
-  const categories = [
-    "All",
+  const DEFAULT_CATEGORIES = [
     "Presby Hymns (Twi)",
     "Presby Hymns (Eng)",
     "Methodist Hymns (Twi)",
@@ -54,6 +52,28 @@ export default function SongsView({
     "Presby Liturgy",
     "Methodist Liturgy",
   ];
+
+  const [categories, setCategories] = useState(["All", ...DEFAULT_CATEGORIES]);
+
+  const loadCategories = async () => {
+    if (window.api && window.api.getHymnCategories) {
+      try {
+        const dbCats = await window.api.getHymnCategories();
+        if (Array.isArray(dbCats) && dbCats.length > 0) {
+          setCategories(["All", ...dbCats]);
+          return;
+        }
+      } catch (err) {
+        console.warn("Main process getHymnCategories IPC pending restart, using default categories:", err);
+      }
+    }
+    setCategories(["All", ...DEFAULT_CATEGORIES]);
+  };
+
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
 
   const hymnLabel = (hymn) => {
     if (!showHymnNumbers) return "Hymn";
@@ -179,7 +199,7 @@ export default function SongsView({
         </div>
 
         {/* Category Pills */}
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5 pt-1">
           <span
             className={`text-[11px] font-bold uppercase tracking-wider shrink-0 mr-1 ${labelClass}`}
           >
@@ -189,12 +209,12 @@ export default function SongsView({
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-2.5 py-1.5 rounded-md text-[11px] font-semibold transition flex-1 min-w-16 text-center shrink-0 cursor-pointer ${
+              className={`px-3 py-1 rounded-md text-[11px] font-semibold transition cursor-pointer shrink-0 ${
                 selectedCategory === cat
-                  ? "bg-accent text-bg shadow"
+                  ? "bg-accent text-bg shadow-sm font-bold"
                   : isLight
-                    ? "bg-[#F3F4F6] text-[#4B5563] hover:text-[#111827]"
-                    : "bg-raised text-text-secondary hover:text-text-primary"
+                    ? "bg-[#F3F4F6] text-[#4B5563] hover:bg-[#E5E7EB] hover:text-[#111827]"
+                    : "bg-raised text-text-secondary hover:bg-[#25262B] hover:text-text-primary"
               }`}
             >
               {cat}
@@ -219,10 +239,10 @@ export default function SongsView({
               <div
                 className={`p-6 rounded-lg border text-center space-y-2 mt-4 ${innerCardClass}`}
               >
-                <Voice2
-                  set="light"
-                  primaryColor={isLight ? "#9CA0AC" : "#696C75"}
-                  size="medium"
+                <FaMusic
+                  className={`text-xl mx-auto ${
+                    isLight ? "text-[#9CA0AC]" : "text-[#696C75]"
+                  }`}
                 />
                 <p className={`text-xs ${labelClass}`}>
                   No hymns match your query "{searchQuery}"
@@ -383,10 +403,10 @@ export default function SongsView({
             </div>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-2">
-              <Voice2
-                set="light"
-                primaryColor={isLight ? "#9CA0AC" : "#696C75"}
-                size="large"
+              <FaMusic
+                className={`text-4xl mx-auto mb-1 ${
+                  isLight ? "text-[#9CA0AC]" : "text-[#696C75]"
+                }`}
               />
               <p className={`text-sm font-bold ${headingClass}`}>
                 Select a Hymn to View Lyrics

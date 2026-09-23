@@ -71,6 +71,18 @@ export function initDatabase() {
   // translations (AKUA / TWIRV), so drop the orphan (cascades to books/verses).
   db.prepare('DELETE FROM bibles WHERE code = ?').run('TWI_XML')
 
+  // Deduplicate any duplicate Bible codes in SQLite table
+  try {
+    db.exec(`
+      DELETE FROM bibles WHERE id NOT IN (
+        SELECT MIN(id) FROM bibles GROUP BY code
+      );
+      DELETE FROM bibles WHERE code IN ('ENGLISHGNTBIBLE', 'EWE2020BIBLE', 'ENGLISHKJBIBLE', 'ENGLISHNIVBIBLE', 'ENGLISHNKJBIBLE');
+    `)
+  } catch {
+    // Ignore
+  }
+
   // Create Hymns & Songs Schema tables
   db.exec(`
     CREATE TABLE IF NOT EXISTS hymns (
@@ -258,7 +270,15 @@ export function importXmlBibleFile(filePath) {
     content = content.replace(/^\uFEFF/, '')
 
     const fileName = path.basename(filePath, path.extname(filePath))
-    const xmlFileDef = XML_BIBLE_FILE_DEFS[path.basename(filePath)]
+    let xmlFileDef = XML_BIBLE_FILE_DEFS[path.basename(filePath)]
+    if (!xmlFileDef) {
+      const fn = fileName.toLowerCase()
+      if (fn.includes('gnt')) xmlFileDef = XML_BIBLE_FILE_DEFS['EnglishGNTBible.xml']
+      else if (fn.includes('ewe')) xmlFileDef = XML_BIBLE_FILE_DEFS['Ewe2020Bible.xml']
+      else if (fn.includes('nkjv')) xmlFileDef = XML_BIBLE_FILE_DEFS['EnglishNKJBible.xml']
+      else if (fn.includes('niv')) xmlFileDef = XML_BIBLE_FILE_DEFS['EnglishNIVBible.xml']
+      else if (fn.includes('kjv')) xmlFileDef = XML_BIBLE_FILE_DEFS['EnglishKJBible.xml']
+    }
     const isTwi = xmlFileDef ? xmlFileDef.twi : (fileName.toLowerCase().includes('twi') || content.toLowerCase().includes('twi'))
 
     const transMatch = content.match(/translation=["']([^"']+)["']/i) || content.match(/biblename=["']([^"']+)["']/i) || content.match(/<title>([^<]+)<\/title>/i)
@@ -479,12 +499,10 @@ function parseHymnNumber(...candidates) {
 
 // Map a hymns/ sub-folder name to the category + author used across the app
 export function deriveCategoryAndAuthor(folderName) {
-  const name = String(folderName || '').toLowerCase()
-  const methodist = name.includes('methodist')
-  const twi = name.includes('twi')
-  const liturgy = name.includes('liturgy')
-  const denom = methodist ? 'Methodist' : 'Presby'
-  const category = liturgy ? `${denom} Liturgy` : `${denom} Hymns (${twi ? 'Twi' : 'Eng'})`
+  const category = String(folderName || '').trim() || 'General Hymns'
+  const lower = category.toLowerCase()
+  const methodist = lower.includes('methodist')
+  const twi = lower.includes('twi')
   const author = methodist ? 'Methodist Church Ghana' : 'Presbyterian Church of Ghana'
   return { category, author, isTwi: twi }
 }
@@ -844,4 +862,16 @@ export function getHymnsCount() {
     return 0
   }
 }
+
+export function getHymnCategories() {
+  if (!db) return []
+  try {
+    const rows = db.prepare('SELECT DISTINCT category FROM hymns WHERE category IS NOT NULL AND category != "" ORDER BY category ASC').all()
+    return rows.map((r) => r.category)
+  } catch (err) {
+    console.error('Error fetching hymn categories:', err)
+    return []
+  }
+}
+
 

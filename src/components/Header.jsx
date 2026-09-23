@@ -2,7 +2,7 @@ import React from "react";
 
 import { Video, Category, Activity } from "react-iconly";
 import appNotify from "../lib/notify";
-import { FaDisplay } from "react-icons/fa6";
+import { FaDisplay, FaTv } from "react-icons/fa6";
 
 export default function Header({
   displays = [],
@@ -136,6 +136,26 @@ export default function Header({
               <span>Dark</span>
             </>
           )}
+        </button>
+
+        {/* Stage Display Launcher Button */}
+        <button
+          onClick={() => {
+            if (window.api && window.api.openStageWindow) {
+              window.api.openStageWindow();
+            } else {
+              window.open("?window=stage", "_blank", "width=1024,height=600");
+            }
+          }}
+          title="Open Stage Display / Confidence Monitor Output"
+          className={`px-2.5 py-1 rounded text-[11px] font-semibold flex items-center gap-1.5 transition cursor-pointer border ${
+            isLight
+              ? "bg-[#F3F4F6] border-[#E5E7EB] text-[#4B5563] hover:text-[#111827]"
+              : "bg-[#24262B] border-[#2A2C31] text-[#D4A94A] hover:bg-[#2A2C31]"
+          }`}
+        >
+          <FaTv className="text-xs text-[#D4A94A]" />
+          <span className="hidden sm:inline">Stage Display</span>
         </button>
 
         <button
