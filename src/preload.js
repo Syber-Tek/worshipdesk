@@ -8,6 +8,14 @@ contextBridge.exposeInMainWorld('api', {
   setWindowIcon: (themeMode) => ipcRenderer.invoke('set-window-icon', themeMode),
   openPresentationWindows: (displayIds) => ipcRenderer.invoke('open-presentation-windows', displayIds),
   openStageWindow: () => ipcRenderer.invoke('open-stage-window'),
+  closeStageWindow: () => ipcRenderer.invoke('close-stage-window'),
+  toggleStageWindow: () => ipcRenderer.invoke('toggle-stage-window'),
+  getStageWindowStatus: () => ipcRenderer.invoke('get-stage-window-status'),
+  onStageStatusChanged: (callback) => {
+    const subscription = (_event, active) => callback(active)
+    ipcRenderer.on('stage-window-status-changed', subscription)
+    return () => ipcRenderer.removeListener('stage-window-status-changed', subscription)
+  },
   onDisplaysChanged: (callback) => {
     const subscription = (_event, displays) => callback(displays)
     ipcRenderer.on('displays-changed', subscription)

@@ -5,14 +5,16 @@ import {
   FaSliders,
   FaForward,
   FaBackward,
-  FaTv,
+  FaHouse,
+  FaBookBible,
+  FaMusic,
   FaEyeSlash,
   FaEraser,
   FaListOl,
   FaMagnifyingGlass,
   FaGear,
-  FaBolt,
 } from "react-icons/fa6";
+
 
 export default function ShortcutsSettings({
   cardClass,
@@ -72,7 +74,7 @@ export default function ShortcutsSettings({
   const navigationShortcuts = [
     {
       id: "nav-1",
-      icon: FaGear,
+      icon: FaHouse,
       label: "Switch to Dashboard Home",
       description: "Navigate to service station overview & metric cards",
       keys: [["1"]],
@@ -86,21 +88,21 @@ export default function ShortcutsSettings({
     },
     {
       id: "nav-3",
-      icon: FaKeyboard,
+      icon: FaBookBible,
       label: "Switch to Bible Scripture",
       description: "Open scripture lookup & multi-translation reader",
       keys: [["3"]],
     },
     {
       id: "nav-4",
-      icon: FaTv,
+      icon: FaMusic,
       label: "Switch to Songs & Hymns",
-      description: "Open Presbyterian & Methodist hymnal library",
+      description: "Open the hymn, song, and local-language music library",
       keys: [["4"]],
     },
     {
       id: "nav-5",
-      icon: FaSliders,
+      icon: FaGear,
       label: "Switch to App Settings",
       description: "Open display, presentation, and system configuration",
       keys: [["5"]],
@@ -111,7 +113,7 @@ export default function ShortcutsSettings({
     <div className="space-y-5">
       {/* Standardized Header */}
       <div>
-        <h3 className="text-sm font-bold text-accent flex items-center gap-2">
+        <h3 className="text-sm font-semibold text-accent flex items-center gap-2">
           <FaKeyboard /> Keyboard Shortcuts
         </h3>
         <p className={`text-xs mt-1 ${textSub}`}>
@@ -124,7 +126,7 @@ export default function ShortcutsSettings({
         {/* Section 1: Presentation & Transport Controls */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-accent flex items-center gap-2">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-accent flex items-center gap-2">
               <FaPlay /> Live Transport & Presentation Controls
             </h4>
             <span className={`text-[10px] ${textSub}`}>
@@ -174,7 +176,7 @@ export default function ShortcutsSettings({
                           {group.map((k, kIdx) => (
                             <kbd
                               key={kIdx}
-                              className={`px-2.5 py-1 rounded border font-mono text-xs font-bold shadow-xs transition ${
+                              className={`px-2.5 py-1 rounded border font-mono text-xs font-semibold shadow-xs transition ${
                                 isLight
                                   ? "bg-[#FFFFFF] border-[#D1D5DB] text-[#111827]"
                                   : "bg-[#24262B] border-[#3A3B40] text-text-primary"
@@ -196,7 +198,7 @@ export default function ShortcutsSettings({
         {/* Section 2: Quick View Navigation */}
         <div className="space-y-3 pt-2">
           <div className="flex items-center justify-between">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-accent flex items-center gap-2">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-accent flex items-center gap-2">
               <FaSliders /> Quick View Navigation (Hotkeys 1-5)
             </h4>
             <span className={`text-[10px] ${textSub}`}>
@@ -236,7 +238,7 @@ export default function ShortcutsSettings({
 
                   <div className="flex items-center gap-1.5 shrink-0">
                     <kbd
-                      className={`px-3 py-1 rounded border font-mono text-xs font-extrabold shadow-xs ${
+                      className={`px-3 py-1 rounded border font-mono text-xs font-semibold shadow-xs ${
                         isLight
                           ? "bg-[#FFFFFF] border-[#D1D5DB] text-[#111827]"
                           : "bg-[#24262B] border-[#3A3B40] text-accent"

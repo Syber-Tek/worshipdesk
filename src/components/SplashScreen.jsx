@@ -5,7 +5,9 @@ import appIconLight from "../assets/app-icon-light.png";
 export default function SplashScreen({ onFinished, themeMode = "dark" }) {
   const isLight = themeMode === "light";
   const [progress, setProgress] = useState(0);
-  const [statusMessage, setStatusMessage] = useState("Initializing local database...");
+  const [statusMessage, setStatusMessage] = useState(
+    "Initializing local database...",
+  );
   const [isFadingOut, setIsFadingOut] = useState(false);
 
   useEffect(() => {
@@ -56,7 +58,7 @@ export default function SplashScreen({ onFinished, themeMode = "dark" }) {
       {/* Centered Desktop Composition */}
       <div className="flex flex-col items-center justify-center max-w-sm w-full space-y-6 text-center">
         {/* WD App Icon Emblem */}
-        <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center p-0.5">
+        <div className="w-20 h-20  overflow-hidden flex items-center justify-center p-0.5">
           <img
             src={isLight ? appIconDark : appIconLight}
             alt="WorshipDesk Logo"
@@ -85,7 +87,7 @@ export default function SplashScreen({ onFinished, themeMode = "dark" }) {
         {/* Minimal Gold Progress Line Loading Indicator */}
         <div className="w-48 h-0.75 bg-black/30 rounded-full overflow-hidden relative">
           <div
-            className="h-full bg-[#D4A94A] transition-all duration-300 ease-out rounded-full shadow-[0_0_8px_rgba(212,169,74,0.4)]"
+            className="h-full bg-accent transition-all duration-300 ease-out rounded-full shadow-[0_0_8px_rgba(212,169,74,0.4)]"
             style={{ width: `${progress}%` }}
           />
         </div>

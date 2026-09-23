@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { FaBookOpen, FaDatabase } from "react-icons/fa6";
+import { FaBookBible, FaDatabase } from "react-icons/fa6";
 
 export default function BibleSettings({
   selectedTranslation,
@@ -39,7 +39,7 @@ export default function BibleSettings({
     <div className="space-y-5">
       <div>
         <h3 className="text-sm font-bold text-accent flex items-center gap-2">
-          <FaBookOpen /> Bible & Scripture Preferences
+          <FaBookBible /> Bible & Scripture Preferences
         </h3>
         <p className={`text-xs mt-1 ${textSub}`}>
           Default translations, text formatting, and offline scripture
