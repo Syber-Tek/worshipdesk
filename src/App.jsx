@@ -600,6 +600,8 @@ export default function App() {
         window.api.sendLiveSlide({
           title: currentSlide?.title || currentSlide?.ref || "",
           content: currentSlide?.content || currentSlide?.text || "",
+          secondaryText: currentSlide?.secondaryText || "",
+          secondaryTranslation: currentSlide?.secondaryTranslation || "",
           type: currentSlide?.type || "Bible Verse",
           hymnLabel: currentSlide?.hymnLabel || "",
           nextSlideTitle,
@@ -658,7 +660,7 @@ export default function App() {
   const normalizeSlide = (item) => {
     if (!item || typeof item !== "object") return null;
     const isVerse = !!(item.ref || item.book || item.type === "Bible Verse");
-    const refTitle = item.ref ? `${item.ref} (${selectedTranslation})` : "";
+    const refTitle = item.ref ? item.ref : "";
     const title = item.title || refTitle || "Untitled Slide";
     const content =
       item.content || item.text || item.lyrics || item.verse_text || "";
@@ -666,6 +668,8 @@ export default function App() {
     return {
       title,
       content,
+      secondaryText: item.secondaryText || "",
+      secondaryTranslation: item.secondaryTranslation || "",
       type,
       hymn_number: item.hymn_number,
       category: item.category,
@@ -847,10 +851,12 @@ export default function App() {
       setHymnDeckIndex(0);
       updated = {
         id: item.id ? `verse-${item.id}` : `present-${Date.now()}`,
-        title: isVerse
-          ? `${item.ref} (${selectedTranslation})`
+        title: item.ref
+          ? item.ref
           : item.title || "",
-        content: isVerse ? item.text : item.content || "",
+        content: item.content || item.text || "",
+        secondaryText: item.secondaryText || "",
+        secondaryTranslation: item.secondaryTranslation || "",
         type: item.type || "Bible Verse",
       };
     }
@@ -862,6 +868,8 @@ export default function App() {
     broadcastToPresentation({
       title: updated.title,
       content: updated.content,
+      secondaryText: updated.secondaryText,
+      secondaryTranslation: updated.secondaryTranslation,
       type: updated.type,
       isLive: true,
       isBlack: false,

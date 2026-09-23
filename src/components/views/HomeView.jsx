@@ -133,7 +133,7 @@ export default function HomeView({
             <span className={`text-xs font-semibold ${labelClass}`}>
               Bible Engine
             </span>
-            <FaBookBible className="text-emerald-400 text-sm" />
+            <FaBookBible className=" text-sm" />
           </div>
           <div>
             <div
