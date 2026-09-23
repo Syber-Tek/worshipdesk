@@ -31,10 +31,12 @@ export default function BibleView({
   const isTwi = isTwiCode(selectedTranslation);
   const [viewMode, setViewMode] = useState("grid"); // 'grid' | 'reader'
 
-  const translations =
+  const rawCodes =
     biblesList && biblesList.length > 0
       ? biblesList.map((b) => b.code)
       : ["NIV", "NKJV", "KJV", "TWI"];
+
+  const translations = Array.from(new Set(rawCodes));
 
   // Use the live SQLite book list when available, otherwise fall back to the
   // canonical per-translation preset list so both English & Twi always render.

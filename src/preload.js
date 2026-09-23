@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('api', {
   getDisplays: () => ipcRenderer.invoke('get-displays'),
   setWindowIcon: (themeMode) => ipcRenderer.invoke('set-window-icon', themeMode),
   openPresentationWindows: (displayIds) => ipcRenderer.invoke('open-presentation-windows', displayIds),
+  openStageWindow: () => ipcRenderer.invoke('open-stage-window'),
   onDisplaysChanged: (callback) => {
     const subscription = (_event, displays) => callback(displays)
     ipcRenderer.on('displays-changed', subscription)
@@ -33,6 +34,7 @@ contextBridge.exposeInMainWorld('api', {
   // Hymn API Methods
   getHymns: () => ipcRenderer.invoke('get-hymns'),
   getHymnsCount: () => ipcRenderer.invoke('get-hymns-count'),
+  getHymnCategories: () => ipcRenderer.invoke('get-hymn-categories'),
   searchHymns: (query, category) => ipcRenderer.invoke('search-hymns', query, category),
   listHymns: (query, category) => ipcRenderer.invoke('list-hymns', query, category),
   getHymnLyrics: (id) => ipcRenderer.invoke('get-hymn-lyrics', id),
