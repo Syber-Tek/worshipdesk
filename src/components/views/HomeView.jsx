@@ -62,8 +62,8 @@ export default function HomeView({
             WorshipDesk Dashboard
           </h1>
           <p className={`text-xs ${labelClass}`}>
-            Offline worship presentation engine with multi-translation Twi &
-            English Bibles and Presby/Methodist Hymns.
+            Offline worship presentation engine with multi-translation Twi , Ewe
+            & English Bibles and Presby/Methodist Hymns.
           </p>
         </div>
 
@@ -145,7 +145,7 @@ export default function HomeView({
               </span>
             </div>
             <p className={`text-[11px] mt-0.5 ${labelClass}`}>
-              5 Twi XML versions + KJV, NIV, NKJV
+              5 Twi XML versions + EWE, KJV, NIV, GNT
             </p>
           </div>
           <div className="pt-2 border-t border-border flex justify-between items-center text-[10px]">
@@ -410,7 +410,11 @@ export default function HomeView({
             <div
               className={`p-3 rounded-lg border min-h-22.5 flex flex-col justify-center ${innerCardClass}`}
             >
-              {currentSlide && (currentSlide.title || currentSlide.ref || currentSlide.content || currentSlide.text) ? (
+              {currentSlide &&
+              (currentSlide.title ||
+                currentSlide.ref ||
+                currentSlide.content ||
+                currentSlide.text) ? (
                 <div>
                   <h4 className={`text-xs font-bold ${headingClass}`}>
                     {currentSlide.title || currentSlide.ref}

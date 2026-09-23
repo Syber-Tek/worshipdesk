@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import PresentationOutputWindow from "./components/PresentationOutputWindow";
+import StageDisplayWindow from "./components/StageDisplayWindow";
 import IconRail from "./components/IconRail";
 import Header from "./components/Header";
 import CurrentNextRail from "./components/CurrentNextRail";
@@ -44,8 +45,17 @@ export default function App() {
     (window.location.search.includes("window=presentation") ||
       window.location.href.includes("window=presentation"));
 
+  const isStageMode =
+    typeof window !== "undefined" &&
+    (window.location.search.includes("window=stage") ||
+      window.location.href.includes("window=stage"));
+
   if (isPresentationMode) {
     return <PresentationOutputWindow />;
+  }
+
+  if (isStageMode) {
+    return <StageDisplayWindow />;
   }
 
   const [showSplash, setShowSplash] = useState(true);
@@ -567,11 +577,33 @@ export default function App() {
         const isVerseDeck =
           (currentSlide?.type || "Bible Verse") === "Bible Verse";
         const isHymnDeckActive = !isVerseDeck && hymnDeck.length > 1;
+
+        let nextSlideTitle = "";
+        let nextSlideContent = "";
+
+        if (isVerseDeck && Array.isArray(filteredVerses)) {
+          const nextVerse = filteredVerses[selectedVerseIndex + 1];
+          if (nextVerse) {
+            nextSlideTitle = nextVerse.ref || `Verse ${selectedVerseIndex + 2}`;
+            nextSlideContent = nextVerse.text || "";
+          }
+        } else if (isHymnDeckActive && Array.isArray(hymnDeck)) {
+          const nextHymnSlide = hymnDeck[hymnDeckIndex + 1];
+          if (nextHymnSlide) {
+            nextSlideTitle = nextHymnSlide.hymnLabel
+              ? `${nextHymnSlide.hymnLabel} — ${nextHymnSlide.title}`
+              : nextHymnSlide.title;
+            nextSlideContent = nextHymnSlide.content || "";
+          }
+        }
+
         window.api.sendLiveSlide({
           title: currentSlide?.title || currentSlide?.ref || "",
           content: currentSlide?.content || currentSlide?.text || "",
           type: currentSlide?.type || "Bible Verse",
           hymnLabel: currentSlide?.hymnLabel || "",
+          nextSlideTitle,
+          nextSlideContent,
           isLive,
           isBlank,
           isBlack,

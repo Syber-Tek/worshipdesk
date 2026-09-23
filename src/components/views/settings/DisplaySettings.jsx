@@ -238,6 +238,35 @@ export default function DisplaySettings({
             className="accent-accent w-4 h-4 cursor-pointer"
           />
         </div>
+
+        {/* Dedicated Stage Display / Confidence Monitor Card */}
+        <div
+          className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-lg border ${cardClass}`}
+        >
+          <div>
+            <div className={`font-bold text-xs flex items-center gap-1.5 ${textTitle}`}>
+              <FaTv className="text-[#D4A94A]" /> Stage Display / Confidence Monitor Output
+            </div>
+            <div className={`text-[11px] mt-0.5 ${textSub}`}>
+              Opens a dedicated output window for singers, choir, and pastors on stage with a Live Clock and Next Slide Preview. (Off by default — click to open when needed).
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              if (window.api && window.api.openStageWindow) {
+                window.api.openStageWindow();
+                toast.success("Opened Stage Display / Confidence Monitor");
+              } else {
+                window.open("?window=stage", "_blank", "width=1024,height=600");
+                toast.info("Opened Stage Display window preview");
+              }
+            }}
+            className="px-3 py-1.5 bg-[#24262B] border border-[#2A2C31] text-[#D4A94A] hover:bg-[#2A2C31] text-xs font-semibold rounded transition cursor-pointer shrink-0 self-start sm:self-auto"
+          >
+            Launch Stage Display
+          </button>
+        </div>
       </div>
     </div>
   );
