@@ -136,12 +136,12 @@ export default function DisplaySettings({
                     setProjectionDisplays((prev) =>
                       isSelected
                         ? (prev || []).filter((id) => id !== numericId)
-                        : [...(prev || []), numericId]
+                        : [...(prev || []), numericId],
                     );
                     toast.info(
                       nextSelected
                         ? `Display #${d.id} assigned for presentation`
-                        : `Display #${d.id} removed from presentation`
+                        : `Display #${d.id} removed from presentation`,
                     );
                   }}
                   className={`w-full p-3 border rounded flex items-center justify-between text-xs transition text-left ${
@@ -219,19 +219,23 @@ export default function DisplaySettings({
                 const res = await window.api.setPresentationFullscreen(next);
                 if (res && res.windows > 0) {
                   toast.success(
-                    next ? "Fullscreen on for projection windows" : "Fullscreen off"
+                    next
+                      ? "Fullscreen on for projection windows"
+                      : "Fullscreen off",
                   );
                 } else if (res && res.error) {
                   if (setFullscreenActive) setFullscreenActive(!next);
                   toast.error(`Fullscreen error: ${res.error}`);
                 } else {
                   toast.success(
-                    next ? "Fullscreen mode enabled" : "Fullscreen mode disabled"
+                    next
+                      ? "Fullscreen mode enabled"
+                      : "Fullscreen mode disabled",
                   );
                 }
               } else {
                 toast.success(
-                  next ? "Fullscreen mode enabled" : "Fullscreen mode disabled"
+                  next ? "Fullscreen mode enabled" : "Fullscreen mode disabled",
                 );
               }
             }}
@@ -244,11 +248,16 @@ export default function DisplaySettings({
           className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-lg border ${cardClass}`}
         >
           <div>
-            <div className={`font-bold text-xs flex items-center gap-1.5 ${textTitle}`}>
-              <FaTv className="text-[#D4A94A]" /> Stage Display / Confidence Monitor Output
+            <div
+              className={`font-bold text-xs flex items-center gap-1.5 ${textTitle}`}
+            >
+              <FaTv className="text-accent" /> Stage Display / Confidence
+              Monitor Output
             </div>
             <div className={`text-[11px] mt-0.5 ${textSub}`}>
-              Opens a dedicated output window for singers, choir, and pastors on stage with a Live Clock and Next Slide Preview. (Off by default — click to open when needed).
+              Opens a dedicated output window for singers, choir, and pastors on
+              stage with a Live Clock and Next Slide Preview. (Off by default —
+              click to open when needed).
             </div>
           </div>
           <button
@@ -262,7 +271,7 @@ export default function DisplaySettings({
                 toast.info("Opened Stage Display window preview");
               }
             }}
-            className="px-3 py-1.5 bg-[#24262B] border border-[#2A2C31] text-[#D4A94A] hover:bg-[#2A2C31] text-xs font-semibold rounded transition cursor-pointer shrink-0 self-start sm:self-auto"
+            className="px-3 py-1.5 bg-[#24262B] border border-[#2A2C31] text-accent hover:bg-[#2A2C31] text-xs font-semibold rounded transition cursor-pointer shrink-0 self-start sm:self-auto"
           >
             Launch Stage Display
           </button>
