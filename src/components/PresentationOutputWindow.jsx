@@ -66,7 +66,7 @@ export default function PresentationOutputWindow() {
   const isImage = theme === "image";
   const isVideo = theme === "video";
   const bgImg = resolveBackground(slideData.outputBgImage || "dark-horizon");
-  const bgVideo = resolveVideo(slideData.outputBgVideo || "golden-particles");
+  const bgVideo = resolveVideo(slideData.outputBgVideo || "galaxy-stars");
 
   const isHymn = slideData.type === "Hymn";
   // Quotes only make sense around scripture verses, never around hymns/sermons.

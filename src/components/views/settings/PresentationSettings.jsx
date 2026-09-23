@@ -255,7 +255,7 @@ export default function PresentationSettings({
                   }
                   className="flex-1 text-xs rounded px-3 py-1.5 outline-none border border-border bg-raised text-text-primary placeholder:text-text-muted"
                 />
-                <label className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-black font-bold rounded text-xs cursor-pointer flex items-center gap-1 shadow">
+                <label className="px-3 py-1.5 bg-accent hover:bg-accent/90 text-bg font-bold rounded text-xs cursor-pointer flex items-center gap-1 transition shadow-xs">
                   <FaFilm size={12} /> Browse Video File
                   <input
                     type="file"
@@ -286,17 +286,17 @@ export default function PresentationSettings({
                   <button
                     type="button"
                     onClick={() => {
-                      if (setOutputBgVideo) setOutputBgVideo("golden-particles");
+                      if (setOutputBgVideo) setOutputBgVideo("galaxy-stars");
                       if (setOutputTheme) setOutputTheme("video");
                     }}
                     className={`h-14 rounded border relative overflow-hidden flex items-end p-1.5 transition hover:opacity-95 cursor-pointer ${
-                      outputBgVideo === "golden-particles"
+                      outputBgVideo === "galaxy-stars"
                         ? "border-amber-400 ring-2 ring-amber-400/40"
                         : "border-white/20"
                     }`}
                   >
                     <video
-                      src={OUTPUT_VIDEOS["golden-particles"].url}
+                      src={OUTPUT_VIDEOS["galaxy-stars"].url}
                       autoPlay
                       loop
                       muted
@@ -304,24 +304,24 @@ export default function PresentationSettings({
                       className="absolute inset-0 w-full h-full object-cover opacity-80"
                     />
                     <span className="relative z-10 text-[9px] font-bold text-white bg-black/70 px-1.5 py-0.5 rounded">
-                      Golden Particles
+                      Galaxy Stars
                     </span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => {
-                      if (setOutputBgVideo) setOutputBgVideo("blue-fluid");
+                      if (setOutputBgVideo) setOutputBgVideo("earth-night");
                       if (setOutputTheme) setOutputTheme("video");
                     }}
                     className={`h-14 rounded border relative overflow-hidden flex items-end p-1.5 transition hover:opacity-95 cursor-pointer ${
-                      outputBgVideo === "blue-fluid"
+                      outputBgVideo === "earth-night"
                         ? "border-amber-400 ring-2 ring-amber-400/40"
                         : "border-white/20"
                     }`}
                   >
                     <video
-                      src={OUTPUT_VIDEOS["blue-fluid"].url}
+                      src={OUTPUT_VIDEOS["earth-night"]?.url}
                       autoPlay
                       loop
                       muted
@@ -329,7 +329,7 @@ export default function PresentationSettings({
                       className="absolute inset-0 w-full h-full object-cover opacity-80"
                     />
                     <span className="relative z-10 text-[9px] font-bold text-white bg-black/70 px-1.5 py-0.5 rounded">
-                      Blue Fluid
+                      Earth Night
                     </span>
                   </button>
 
@@ -475,7 +475,7 @@ export default function PresentationSettings({
             {outputTheme === "video" ? (
               <div className="absolute inset-0 overflow-hidden">
                 <video
-                  src={resolveVideo(outputBgVideo || "golden-particles")}
+                  src={resolveVideo(outputBgVideo || "galaxy-stars")}
                   autoPlay
                   loop
                   muted

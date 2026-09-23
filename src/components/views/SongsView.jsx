@@ -45,12 +45,14 @@ export default function SongsView({
   const headingClass = isLight ? "text-[#111827]" : "text-text-primary";
 
   const DEFAULT_CATEGORIES = [
-    "Presby Hymns (Twi)",
-    "Presby Hymns (Eng)",
-    "Methodist Hymns (Twi)",
-    "Methodist Hymns (Eng)",
-    "Presby Liturgy",
-    "Methodist Liturgy",
+    "Presby Hymns -Twi",
+    "Presby Hymns -Eng",
+    "Methodist Hymns -Twi",
+    "Methodist Hymns -Eng",
+    "Presby Liturgy -Twi",
+    "Presby Liturgy -Eng",
+    "Methodist Liturgy -Twi",
+    "Methodist Liturgy -Eng",
   ];
 
   const [categories, setCategories] = useState(["All", ...DEFAULT_CATEGORIES]);

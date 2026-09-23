@@ -15,7 +15,7 @@ import {
 } from "react-iconly";
 import {
   FaB,
-  FaBookOpen,
+  FaBookBible,
   FaDesktop,
   FaMusic,
   FaSliders,
@@ -83,7 +83,7 @@ export default function HomeView({
                 : "bg-raised hover:bg-hover border-border text-text-primary"
             }`}
           >
-            <FaBookOpen set="light" primaryColor="currentColor" size="14" />
+            <FaBookBible className="text-sm" />
             <span>Bible Lookup</span>
           </button>
         </div>
@@ -133,7 +133,7 @@ export default function HomeView({
             <span className={`text-xs font-semibold ${labelClass}`}>
               Bible Engine
             </span>
-            <FaBookOpen set="bold" primaryColor="#6FCF97" size="14" />
+            <FaBookBible className="text-emerald-400 text-sm" />
           </div>
           <div>
             <div
@@ -437,7 +437,7 @@ export default function HomeView({
                 onClick={() => setActiveTab("bible")}
                 className="flex-1 py-2 bg-raised hover:bg-hover border border-border text-text-primary font-semibold text-xs rounded-lg transition flex items-center justify-center gap-1 cursor-pointer"
               >
-                <FaBookOpen set="light" primaryColor="currentColor" size="14" />
+                <FaBookBible className="text-sm" />
                 <span>Scripture</span>
               </button>
               <button

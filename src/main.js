@@ -343,9 +343,17 @@ ipcMain.handle('open-presentation-windows', (_event, displayIds) => {
   return { ok: true, active: Array.from(presentationWindows.keys()).map(Number) };
 });
 
+function notifyStageStatusChange() {
+  const active = Boolean(stageWindow && !stageWindow.isDestroyed());
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('stage-window-status-changed', active);
+  }
+}
+
 const createStageWindow = () => {
   if (stageWindow && !stageWindow.isDestroyed()) {
     stageWindow.focus();
+    notifyStageStatusChange();
     return;
   }
 
@@ -377,6 +385,7 @@ const createStageWindow = () => {
 
   stageWindow.on('closed', () => {
     stageWindow = null;
+    notifyStageStatusChange();
   });
 
   const baseUrl = MAIN_WINDOW_VITE_DEV_SERVER_URL || `file://${path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`)}`;
@@ -387,11 +396,40 @@ const createStageWindow = () => {
   } else {
     stageWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`), { query: { window: 'stage' } });
   }
+
+  notifyStageStatusChange();
+};
+
+const closeStageWindow = () => {
+  if (stageWindow && !stageWindow.isDestroyed()) {
+    stageWindow.destroy();
+    stageWindow = null;
+  }
+  notifyStageStatusChange();
 };
 
 ipcMain.handle('open-stage-window', () => {
   createStageWindow();
-  return { success: true };
+  return { success: true, active: true };
+});
+
+ipcMain.handle('close-stage-window', () => {
+  closeStageWindow();
+  return { success: true, active: false };
+});
+
+ipcMain.handle('toggle-stage-window', () => {
+  if (stageWindow && !stageWindow.isDestroyed()) {
+    closeStageWindow();
+    return { success: true, active: false };
+  } else {
+    createStageWindow();
+    return { success: true, active: true };
+  }
+});
+
+ipcMain.handle('get-stage-window-status', () => {
+  return { active: Boolean(stageWindow && !stageWindow.isDestroyed()) };
 });
 
 function getAppIcon(themeMode = 'dark') {
@@ -414,8 +452,18 @@ function getAppIcon(themeMode = 'dark') {
 
 ipcMain.handle('set-window-icon', (_e, themeMode) => {
   const icon = getAppIcon(themeMode);
-  if (icon && mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.setIcon(icon);
+  if (icon && !icon.isEmpty()) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.setIcon(icon);
+    }
+    for (const win of presentationWindows.values()) {
+      if (win && !win.isDestroyed()) {
+        win.setIcon(icon);
+      }
+    }
+    if (stageWindow && !stageWindow.isDestroyed()) {
+      stageWindow.setIcon(icon);
+    }
   }
   return { success: true };
 });
@@ -480,6 +528,20 @@ const createWindow = () => {
   if (appIcon && !appIcon.isEmpty()) {
     mainWindow.setIcon(appIcon);
   }
+
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+    for (const win of presentationWindows.values()) {
+      if (win && !win.isDestroyed()) {
+        win.destroy();
+      }
+    }
+    presentationWindows.clear();
+    if (stageWindow && !stageWindow.isDestroyed()) {
+      stageWindow.destroy();
+      stageWindow = null;
+    }
+  });
 
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);

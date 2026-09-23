@@ -9,13 +9,13 @@ import {
   Setting,
   ShieldDone,
 } from "react-iconly";
-import { FaBookOpen, FaMusic, FaSliders } from "react-icons/fa6";
+import { FaBookBible, FaMusic, FaSliders } from "react-icons/fa6";
 
 export default function IconRail({ activeTab, setActiveTab, themeMode }) {
   const navItems = [
     { id: "home", icon: Home, label: "Dashboard Home" },
     { id: "plan", icon: FaSliders, label: "Service Planner" },
-    { id: "bible", icon: FaBookOpen, label: "Bible & Scripture" },
+    { id: "bible", icon: FaBookBible, label: "Bible & Scripture" },
     { id: "songs", icon: FaMusic, label: "Songs & Hymns" },
     { id: "settings", icon: Setting, label: "Settings" },
   ];

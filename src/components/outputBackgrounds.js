@@ -3,8 +3,8 @@ import worshipLight from "../assets/backgrounds/worship-light.jpg";
 import starryNight from "../assets/backgrounds/starry-night.jpg";
 import natureFog from "../assets/backgrounds/nature-fog.jpg";
 
-import goldenParticlesVideo from "../assets/backgrounds/golden-particles.mp4";
-import blueFluidVideo from "../assets/backgrounds/blue-fluid.mp4";
+import galaxyStarsVideo from "../assets/backgrounds/galaxy-stars.mp4";
+import earthNightVideo from "../assets/backgrounds/earth-night.mp4";
 import auroraLightsVideo from "../assets/backgrounds/aurora-lights.mp4";
 import cinematicCloudsVideo from "../assets/backgrounds/cinematic-clouds.mp4";
 
@@ -16,13 +16,13 @@ export const OUTPUT_BACKGROUNDS = {
 };
 
 export const OUTPUT_VIDEOS = {
-  "golden-particles": {
-    label: "Golden Particles",
-    url: goldenParticlesVideo,
+  "galaxy-stars": {
+    label: "Galaxy Stars",
+    url: galaxyStarsVideo,
   },
-  "blue-fluid": {
-    label: "Blue Fluid",
-    url: blueFluidVideo,
+  "earth-night": {
+    label: "Earth Night",
+    url: earthNightVideo,
   },
   "aurora-lights": {
     label: "Aurora Lights",
@@ -53,7 +53,7 @@ export function resolveBackground(value) {
 }
 
 export function resolveVideo(value) {
-  if (!value) return goldenParticlesVideo;
+  if (!value) return galaxyStarsVideo;
   if (OUTPUT_VIDEOS[value]) return OUTPUT_VIDEOS[value].url;
   return value; // custom video URL, data: URI, or file path
 }
