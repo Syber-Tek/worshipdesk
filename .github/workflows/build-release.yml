@@ -45,6 +45,11 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
+      - name: Generate macOS ICNS Icon
+        if: runner.os == 'macOS'
+        run: |
+          sips -s format icns src/assets/app-icon-dark.png --out src/assets/app-icon-dark.icns
+
       - name: Build, Package and Create Executables
         run: npm run make
 
@@ -57,12 +62,11 @@ jobs:
             Compress-Archive -Path "$($_.FullName)/*" -DestinationPath $zipPath -Force
           }
 
-      - name: Create or Update GitHub Release
-        uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
         with:
-          tag_name: ${{ inputs.tag_name || (github.ref_type == 'tag' && github.ref_name || 'v1.0.0') }}
-          files: |
+          name: worshipdesk-${{ matrix.os }}
+          path: |
             out/WorshipDesk-*.zip
             out/make/**/*.exe
             out/make/**/*.dmg
@@ -70,10 +74,29 @@ jobs:
             out/make/**/*.deb
             out/make/**/*.rpm
             out/make/**/*.AppImage
-          name: WorshipDesk Release ${{ inputs.tag_name || (github.ref_type == 'tag' && github.ref_name || 'v1.0.0') }}
+          if-no-files-found: warn
+
+  release:
+    name: Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Download All Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create or Update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag_name || (github.ref_type == 'tag' && github.ref_name || 'v1.0.0') }}
+          files: artifacts/**/*
+          name: WorshipDesk Release ${{ github.event.inputs.tag_name || (github.ref_type == 'tag' && github.ref_name || 'v1.0.0') }}
           body: |
             ## 🚀 WorshipDesk Cross-Platform Release
-            
+
             Download standalone app archives & offline setup installers:
             - 🪟 **Windows**: `.exe Setup Installer` & `WorshipDesk-win32-x64.zip`
             - 🍎 **macOS**: `.dmg Installer` & `WorshipDesk-darwin-*.zip`
