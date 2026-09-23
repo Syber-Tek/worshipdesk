@@ -535,7 +535,7 @@ export function importSngFile(filePath, defaultCategory, defaultAuthor, isTwi) {
 
     const hymnNumber = parseHymnNumber(meta.userinfo1, meta.cclinum, meta.number, baseName, title)
     const author = meta.wordsby || meta.musicby || defaultAuthor || 'Church Library'
-    const category = defaultCategory || meta.category || 'General Hymn'
+    const category = defaultCategory ? defaultCategory : (meta.category || 'General Hymn')
 
     let lyrics = ''
     const rtfStart = content.search(/\{\\rtf/i)
@@ -591,16 +591,14 @@ export function autoScanHymnsFolder() {
       return
     }
 
-    // Folder imports are re-imported from scratch so fixes/re-scans never duplicate.
-    // Manual imports (JSON / single files) have no source_file and are preserved.
-    db.prepare('DELETE FROM hymns WHERE source_file IS NOT NULL').run()
+    // Clean scan of hymns folder to populate SQLite directly from subfolders
+    db.prepare('DELETE FROM hymns').run()
 
     const subdirs = fs.readdirSync(hymnsDir).filter((f) => fs.statSync(path.join(hymnsDir, f)).isDirectory())
     for (const sub of subdirs) {
       const { category, author, isTwi } = deriveCategoryAndAuthor(sub)
       importSngFolder(path.join(hymnsDir, sub), category, author, isTwi)
     }
-    importSngFolder(hymnsDir, 'General Hymn', 'Church Library', false)
   } catch (err) {
     console.warn('Auto scan hymns folder notice:', err.message)
   }
@@ -869,6 +867,24 @@ export function getHymnsCount() {
 }
 
 export function getHymnCategories() {
+  try {
+    const hymnsDir = path.join(process.cwd(), 'hymns')
+    if (fs.existsSync(hymnsDir)) {
+      const subdirs = fs.readdirSync(hymnsDir).filter((f) => {
+        try {
+          return fs.statSync(path.join(hymnsDir, f)).isDirectory()
+        } catch {
+          return false
+        }
+      })
+      if (subdirs.length > 0) {
+        return subdirs.sort()
+      }
+    }
+  } catch (err) {
+    console.error('Error scanning hymns folder for categories:', err)
+  }
+
   if (!db) return []
   try {
     const rows = db.prepare(`
@@ -876,11 +892,6 @@ export function getHymnCategories() {
       WHERE category IS NOT NULL 
         AND category != '' 
         AND length(trim(category)) > 0 
-        AND category NOT LIKE '%Liturgy%' 
-        AND category NOT LIKE '%General%' 
-        AND category NOT LIKE '%Worship%' 
-        AND category NOT LIKE '%Imported%' 
-        AND category NOT LIKE '%Custom%' 
       ORDER BY category ASC
     `).all()
     return rows.map((r) => r.category)

@@ -45,23 +45,15 @@ export default function SongsView({
   const headingClass = isLight ? "text-[#111827]" : "text-text-primary";
 
   const DEFAULT_CATEGORIES = [
-    "Presby Hymns (Twi)",
-    "Presby Hymns (Eng)",
-    "Methodist Hymns (Twi)",
-    "Methodist Hymns (Eng)",
+    "Presby Hymns -Twi",
+    "Presby Hymns -Eng",
+    "Methodist Hymns -Twi",
+    "Methodist Hymns -Eng",
+    "Presby Liturgy -Twi",
+    "Presby Liturgy -Eng",
+    "Methodist Liturgy -Twi",
+    "Methodist Liturgy -Eng",
   ];
-
-  const isUnwantedCategory = (cat) => {
-    if (!cat) return true;
-    const lower = String(cat).toLowerCase().trim();
-    return (
-      lower.includes("liturgy") ||
-      lower.includes("general") ||
-      lower.includes("worship") ||
-      lower.includes("imported") ||
-      lower.includes("custom")
-    );
-  };
 
   const [categories, setCategories] = useState(["All", ...DEFAULT_CATEGORIES]);
 
@@ -70,15 +62,14 @@ export default function SongsView({
       try {
         const dbCats = await window.api.getHymnCategories();
         if (Array.isArray(dbCats) && dbCats.length > 0) {
-          const filteredCats = dbCats.filter((c) => !isUnwantedCategory(c));
-          setCategories(["All", ...filteredCats]);
+          setCategories(["All", ...dbCats]);
           return;
         }
       } catch (err) {
         console.warn("Main process getHymnCategories IPC pending restart, using default categories:", err);
       }
     }
-    setCategories(["All", ...DEFAULT_CATEGORIES.filter((c) => !isUnwantedCategory(c))]);
+    setCategories(["All", ...DEFAULT_CATEGORIES]);
   };
 
   useEffect(() => {
