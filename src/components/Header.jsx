@@ -17,8 +17,8 @@ export default function Header({
 
   React.useEffect(() => {
     if (window.api && window.api.getStageWindowStatus) {
-      window.api.getStageWindowStatus().then((active) => {
-        setIsStageActive(Boolean(active));
+      window.api.getStageWindowStatus().then((res) => {
+        setIsStageActive(Boolean(res && res.active));
       });
     }
     if (window.api && window.api.onStageStatusChanged) {
