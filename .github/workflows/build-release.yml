@@ -1,4 +1,4 @@
-name: Build and Release WorshipDesk Executable
+name: Build and Release WorshipDesk Cross-Platform Executables
 
 on:
   push:
@@ -18,7 +18,13 @@ permissions:
 
 jobs:
   build:
-    runs-on: windows-2022
+    name: Build on ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, macos-latest, ubuntu-latest]
+
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout Repository
@@ -30,31 +36,47 @@ jobs:
           node-version: 22
           cache: 'npm'
 
+      - name: Install Linux Build Dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libfakeroot rpm dpkg
+
       - name: Install Dependencies
         run: npm ci
 
-      - name: Build, Package and Create Windows Installer
+      - name: Build, Package and Create Executables
         run: npm run make
 
-      - name: Zip Packaged Application Folder
+      - name: Create Release Zip Archives
+        shell: pwsh
         run: |
-          $pkg = Get-ChildItem out -Directory | Where-Object { $_.Name -like '*-win32-x64' } | Select-Object -First 1
-          Compress-Archive -Path "$($pkg.FullName)/*" -DestinationPath out/WorshipDesk-Windows-x64.zip -Force
+          Get-ChildItem out -Directory | ForEach-Object {
+            $dirName = $_.Name
+            $zipPath = "out/WorshipDesk-$dirName.zip"
+            Compress-Archive -Path "$($_.FullName)/*" -DestinationPath $zipPath -Force
+          }
 
-      - name: Create GitHub Release and Upload Binaries
+      - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
         with:
           tag_name: ${{ inputs.tag_name || (github.ref_type == 'tag' && github.ref_name || 'v1.0.0') }}
           files: |
-            out/WorshipDesk-Windows-x64.zip
-            out/make/squirrel.windows/x64/*.exe
-          name: WorshipDesk Release ${{ inputs.tag_name || github.ref_name }}
+            out/WorshipDesk-*.zip
+            out/make/**/*.exe
+            out/make/**/*.dmg
+            out/make/**/*.zip
+            out/make/**/*.deb
+            out/make/**/*.rpm
+            out/make/**/*.AppImage
+          name: WorshipDesk Release ${{ inputs.tag_name || (github.ref_type == 'tag' && github.ref_name || 'v1.0.0') }}
           body: |
-            ## 🚀 WorshipDesk Desktop Release
+            ## 🚀 WorshipDesk Cross-Platform Release
             
-            Download offline Windows installer or standalone zip archive:
-            - **`WorshipDesk-Windows-x64.zip`**: Portable standalone application archive.
-            - **`.exe Setup Installer`**: Automatic Windows installer.
+            Download standalone app archives & offline setup installers:
+            - 🪟 **Windows**: `.exe Setup Installer` & `WorshipDesk-win32-x64.zip`
+            - 🍎 **macOS**: `.dmg Installer` & `WorshipDesk-darwin-*.zip`
+            - 🐧 **Linux**: `.deb`, `.rpm`, `.AppImage` & `WorshipDesk-linux-x64.zip`
           draft: false
           prerelease: false
