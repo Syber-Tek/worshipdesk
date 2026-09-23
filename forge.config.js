@@ -6,7 +6,7 @@ module.exports = {
   packagerConfig: {
     asar: true,
     name: 'WorshipDesk',
-    executableName: 'WorshipDesk',
+    executableName: 'worshipdesk',
     icon: './src/assets/app-icon-dark',
   },
   rebuildConfig: {
@@ -25,7 +25,7 @@ module.exports = {
     },
     {
       name: '@electron-forge/maker-zip',
-      platforms: ['darwin'],
+      platforms: ['darwin', 'linux', 'win32'],
     },
     {
       name: '@electron-forge/maker-deb',
