@@ -90,21 +90,11 @@ jobs:
       - name: Build, Package and Create Executables
         run: npm run make
 
-      - name: Create Release Zip Archives
-        shell: pwsh
-        run: |
-          Get-ChildItem out -Directory | ForEach-Object {
-            $dirName = $_.Name
-            $zipPath = "out/WorshipDesk-$dirName.zip"
-            Compress-Archive -Path "$($_.FullName)/*" -DestinationPath $zipPath -Force
-          }
-
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: worshipdesk-${{ matrix.os }}
           path: |
-            out/WorshipDesk-*.zip
             out/make/**/*.exe
             out/make/**/*.dmg
             out/make/**/*.zip
