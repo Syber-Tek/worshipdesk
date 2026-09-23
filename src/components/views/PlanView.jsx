@@ -249,32 +249,44 @@ export default function PlanView({
             {playlist.map((item, index) => (
               <div
                 key={item.id || index}
-                className={`p-3 rounded-lg border flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors duration-150 ${
-                  isLight
-                    ? "bg-[#F9FAFB] hover:bg-[#F3F4F6] border-[#E5E7EB]"
-                    : "bg-[#1C1D21] hover:bg-[#24262B] border-[#2A2C31]"
+                className={`p-3 rounded-lg border flex items-center justify-between gap-3 transition-colors duration-150 ${
+                  item.status === "live"
+                    ? "bg-live/10 border-live"
+                    : item.status === "next"
+                      ? isLight
+                        ? "bg-[#F3F4F6] border-accent"
+                        : "bg-surface border-accent/40"
+                      : isLight
+                        ? "bg-[#F9FAFB] hover:bg-[#F3F4F6] border-[#E5E7EB]"
+                        : "bg-[#1C1D21] hover:bg-[#24262B] border-[#2A2C31]"
                 }`}
               >
-                <div className="flex items-start gap-3 min-w-0 flex-1">
-                  <div className="w-6 h-6 rounded bg-accent/10 border border-accent/30 text-accent font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
-                    {index + 1}
-                  </div>
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                  <span className="font-mono text-[10px] text-accent font-bold shrink-0">
+                    #{index + 1}
+                  </span>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-accent/20 text-accent uppercase tracking-wider">
-                        {item.type || "Slide"}
-                      </span>
+                    <div className="flex items-center gap-2">
                       <h4
-                        className={`font-bold text-xs truncate ${
+                        className={`text-xs font-bold truncate ${
                           isLight ? "text-[#111827]" : "text-text-primary"
                         }`}
                       >
                         {item.title}
                       </h4>
+                      <span
+                        className={`text-[9px] uppercase font-mono px-1.5 py-0.5 rounded border shrink-0 ${
+                          isLight
+                            ? "bg-[#E5E7EB] text-[#4B5563] border-[#D1D5DB]"
+                            : "bg-raised text-text-secondary border-border"
+                        }`}
+                      >
+                        {item.type || "Slide"}
+                      </span>
                     </div>
                     <p
-                      className={`text-[11px] line-clamp-2 mt-1 leading-relaxed ${
-                        isLight ? "text-[#4B5563]" : "text-[#9B9CA3]"
+                      className={`text-[11px] truncate mt-0.5 ${
+                        isLight ? "text-[#6B7280]" : "text-[#9B9CA3]"
                       }`}
                     >
                       {item.content}
@@ -282,32 +294,29 @@ export default function PlanView({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 self-end sm:self-center shrink-0 border-t sm:border-t-0 pt-2 sm:pt-0 w-full sm:w-auto justify-end border-border">
+                <div className="flex items-center gap-1.5 shrink-0">
                   <button
                     onClick={() => handleSelectItem && handleSelectItem(item)}
-                    className={`px-2.5 py-1.5 border rounded text-xs font-semibold flex items-center gap-1 transition cursor-pointer ${
+                    title="Stage as Next"
+                    className={`p-1.5 border rounded transition cursor-pointer ${
                       isLight
-                        ? "bg-[#FFFFFF] hover:bg-[#F3F4F6] border-[#E5E7EB] text-[#111827]"
-                        : "bg-raised hover:bg-hover border-border text-text-primary"
+                        ? "bg-[#FFFFFF] hover:bg-[#F3F4F6] border-[#E5E7EB]"
+                        : "bg-raised hover:bg-hover border-border"
                     }`}
-                    title="Stage into Next Slide Buffer"
                   >
-                    <Show set="bold" primaryColor="#D4A94A" size="small" />{" "}
-                    Stage
+                    <Show set="bold" primaryColor="#D4A94A" size="small" />
                   </button>
-
                   <button
                     onClick={() =>
                       handlePresentItemNow && handlePresentItemNow(item)
                     }
-                    className="px-2.5 py-1.5 bg-accent hover:bg-accent/90 text-text-primary font-bold rounded text-xs flex items-center gap-1 shadow transition cursor-pointer"
-                    title="Present Live on Projector"
+                    title="Present Live"
+                    className="p-1.5 bg-accent text-bg rounded font-bold hover:bg-accent/90 transition shadow cursor-pointer"
                   >
-                    <Send set="bold" primaryColor="#0B0C0E" size="small" />{" "}
-                    Present
+                    <Send set="bold" primaryColor="#0B0C0E" size="small" />
                   </button>
 
-                  <div className="h-4 w-px bg-border mx-1" />
+                  <div className="h-4 w-px bg-border mx-0.5" />
 
                   <button
                     onClick={() => handleMoveUp && handleMoveUp(index)}

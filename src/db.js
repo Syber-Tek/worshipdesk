@@ -760,7 +760,7 @@ export function getHymns() {
 export function listHymns(searchQuery, activeCategory) {
   if (!db) return []
   const query = searchQuery && String(searchQuery).trim()
-  const cat = activeCategory && activeCategory !== 'All' ? activeCategory : null
+  const cat = activeCategory && activeCategory !== 'All' ? String(activeCategory).trim() : null
   const select = (whereClause, params) =>
     db.prepare(`
       SELECT id, hymn_number, title, category, author,
@@ -770,19 +770,19 @@ export function listHymns(searchQuery, activeCategory) {
     `).all(...params)
 
   if (!query) {
-    if (cat) return select('WHERE category = ?', [cat])
+    if (cat) return select('WHERE (category = ? OR category LIKE ?)', [cat, `%${cat}%`])
     return select('', [])
   }
 
   const escaped = query.replace(/[\\%_]/g, (m) => `\\${m}`)
   const pattern = `%${escaped}%`
-  const catClause = cat ? ' AND category = ?' : ''
-  const catParams = cat ? [cat] : []
-  const isNumber = !isNaN(query)
+  const catClause = cat ? ' AND (category = ? OR category LIKE ?)' : ''
+  const catParams = cat ? [cat, `%${cat}%`] : []
+  const isNumber = !isNaN(query) && query !== ''
   if (isNumber) {
     return select(
       `WHERE (hymn_number = ? OR title LIKE ? ESCAPE '\\' OR lyrics LIKE ? ESCAPE '\\')${catClause}`,
-      [parseInt(query), pattern, pattern, ...catParams]
+      [parseInt(query, 10), pattern, pattern, ...catParams]
     )
   }
   return select(
@@ -798,21 +798,26 @@ export function getHymnLyrics(id) {
 
 export function searchHymns(query, category) {
   if (!db) return []
-  const activeCategory = category && category !== 'All' ? category : null
-  if (!query) {
+  const activeCategory = category && category !== 'All' ? String(category).trim() : null
+  const qStr = String(query || '').trim()
+
+  if (!qStr) {
     if (activeCategory) {
-      return db.prepare('SELECT * FROM hymns WHERE category = ? ORDER BY hymn_number ASC').all(activeCategory)
+      return db.prepare('SELECT * FROM hymns WHERE category = ? OR category LIKE ? ORDER BY hymn_number ASC')
+        .all(activeCategory, `%${activeCategory}%`)
     }
     return getHymns()
   }
-  const escaped = String(query).replace(/[\\%_]/g, (m) => `\\${m}`)
+
+  const escaped = qStr.replace(/[\\%_]/g, (m) => `\\${m}`)
   const pattern = `%${escaped}%`
-  const catClause = activeCategory ? ' AND category = ?' : ''
-  const catParams = activeCategory ? [activeCategory] : []
-  const isNumber = !isNaN(query)
+  const catClause = activeCategory ? ' AND (category = ? OR category LIKE ?)' : ''
+  const catParams = activeCategory ? [activeCategory, `%${activeCategory}%`] : []
+  const isNumber = !isNaN(qStr) && qStr !== ''
+
   if (isNumber) {
     return db.prepare(`SELECT * FROM hymns WHERE (hymn_number = ? OR title LIKE ? ESCAPE ? OR lyrics LIKE ? ESCAPE ?)${catClause} ORDER BY hymn_number ASC`)
-      .all(parseInt(query), pattern, '\\', pattern, '\\', ...catParams)
+      .all(parseInt(qStr, 10), pattern, '\\', pattern, '\\', ...catParams)
   }
   return db.prepare(`SELECT * FROM hymns WHERE (title LIKE ? ESCAPE ? OR lyrics LIKE ? ESCAPE ?)${catClause} ORDER BY hymn_number ASC`)
     .all(pattern, '\\', pattern, '\\', ...catParams)
@@ -866,7 +871,18 @@ export function getHymnsCount() {
 export function getHymnCategories() {
   if (!db) return []
   try {
-    const rows = db.prepare('SELECT DISTINCT category FROM hymns WHERE category IS NOT NULL AND category != "" ORDER BY category ASC').all()
+    const rows = db.prepare(`
+      SELECT DISTINCT category FROM hymns 
+      WHERE category IS NOT NULL 
+        AND category != '' 
+        AND length(trim(category)) > 0 
+        AND category NOT LIKE '%Liturgy%' 
+        AND category NOT LIKE '%General%' 
+        AND category NOT LIKE '%Worship%' 
+        AND category NOT LIKE '%Imported%' 
+        AND category NOT LIKE '%Custom%' 
+      ORDER BY category ASC
+    `).all()
     return rows.map((r) => r.category)
   } catch (err) {
     console.error('Error fetching hymn categories:', err)

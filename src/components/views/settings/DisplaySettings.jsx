@@ -16,6 +16,24 @@ export default function DisplaySettings({
   borderDivider,
   isLight,
 }) {
+  const [isStageActive, setIsStageActive] = React.useState(false);
+
+  React.useEffect(() => {
+    if (window.api && window.api.getStageWindowStatus) {
+      window.api.getStageWindowStatus().then((active) => {
+        setIsStageActive(Boolean(active));
+      });
+    }
+    if (window.api && window.api.onStageStatusChanged) {
+      const unsub = window.api.onStageStatusChanged((active) => {
+        setIsStageActive(Boolean(active));
+      });
+      return () => {
+        if (typeof unsub === "function") unsub();
+      };
+    }
+  }, []);
+
   return (
     <div className="space-y-5">
       <div>
@@ -253,27 +271,48 @@ export default function DisplaySettings({
             >
               <FaTv className="text-accent" /> Stage Display / Confidence
               Monitor Output
+              <span
+                className={`text-[10px] font-mono px-1.5 py-0.5 rounded ml-1.5 ${
+                  isStageActive
+                    ? "bg-amber-500/20 text-[#D4A94A] border border-amber-500/30 font-bold"
+                    : isLight
+                      ? "bg-[#E5E7EB] text-[#6B7280]"
+                      : "bg-[#24262B] text-[#9B9CA3]"
+                }`}
+              >
+                {isStageActive ? "Active ON" : "Inactive OFF"}
+              </span>
             </div>
             <div className={`text-[11px] mt-0.5 ${textSub}`}>
               Opens a dedicated output window for singers, choir, and pastors on
-              stage with a Live Clock and Next Slide Preview. (Off by default —
-              click to open when needed).
+              stage with a Live Clock and Next Slide Preview.
             </div>
           </div>
           <button
             type="button"
-            onClick={() => {
-              if (window.api && window.api.openStageWindow) {
-                window.api.openStageWindow();
-                toast.success("Opened Stage Display / Confidence Monitor");
+            onClick={async () => {
+              if (window.api && window.api.toggleStageWindow) {
+                const res = await window.api.toggleStageWindow();
+                if (res && res.active !== undefined) {
+                  setIsStageActive(res.active);
+                  if (res.active) {
+                    toast.success("Stage Display Turned ON");
+                  } else {
+                    toast.info("Stage Display Turned OFF");
+                  }
+                }
               } else {
                 window.open("?window=stage", "_blank", "width=1024,height=600");
                 toast.info("Opened Stage Display window preview");
               }
             }}
-            className="px-3 py-1.5 bg-[#24262B] border border-[#2A2C31] text-accent hover:bg-[#2A2C31] text-xs font-semibold rounded transition cursor-pointer shrink-0 self-start sm:self-auto"
+            className={`px-3 py-1.5 text-xs font-semibold rounded transition cursor-pointer shrink-0 self-start sm:self-auto border ${
+              isStageActive
+                ? "bg-amber-500/20 text-[#D4A94A] border-amber-500/50 hover:bg-amber-500/30"
+                : "bg-[#24262B] border-[#2A2C31] text-accent hover:bg-[#2A2C31]"
+            }`}
           >
-            Launch Stage Display
+            {isStageActive ? "Turn OFF Stage Display" : "Turn ON Stage Display"}
           </button>
         </div>
       </div>
