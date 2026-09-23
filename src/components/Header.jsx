@@ -156,32 +156,35 @@ export default function Header({
           )}
         </button>
 
-        {/* Stage Display ON / OFF Toggle Button */}
-        <button
-          onClick={async () => {
-            if (window.api && window.api.toggleStageWindow) {
-              const res = await window.api.toggleStageWindow();
-              if (res && res.active !== undefined) {
-                setIsStageActive(res.active);
+        {/* Stage Display ON / OFF Toggle Button (only visible once the stage
+            display is turned on from Display Settings) */}
+        {isStageActive && (
+          <button
+            onClick={async () => {
+              if (window.api && window.api.toggleStageWindow) {
+                const res = await window.api.toggleStageWindow();
+                if (res && res.active !== undefined) {
+                  setIsStageActive(res.active);
+                }
+              } else {
+                window.open("?window=stage", "_blank", "width=1024,height=600");
               }
-            } else {
-              window.open("?window=stage", "_blank", "width=1024,height=600");
-            }
-          }}
-          title={isStageActive ? "Turn OFF Stage Display" : "Turn ON Stage Display"}
-          className={`px-2.5 py-1 rounded text-[11px] font-semibold flex items-center gap-1.5 transition cursor-pointer border ${
-            isStageActive
-              ? "bg-[#24262B] border-amber-500/50 text-[#D4A94A] shadow-[0_0_8px_rgba(212,169,74,0.3)]"
-              : isLight
-                ? "bg-[#F3F4F6] border-[#E5E7EB] text-[#4B5563] hover:text-[#111827]"
-                : "bg-[#24262B] border-[#2A2C31] text-[#9B9CA3] hover:text-text-primary hover:bg-[#2A2C31]"
-          }`}
-        >
-          <FaTv className={`text-xs ${isStageActive ? "text-[#D4A94A]" : isLight ? "text-[#4B5563]" : "text-[#9B9CA3]"}`} />
-          <span className="hidden sm:inline">
-            Stage Display {isStageActive ? "ON" : "OFF"}
-          </span>
-        </button>
+            }}
+            title={isStageActive ? "Turn OFF Stage Display" : "Turn ON Stage Display"}
+            className={`px-2.5 py-1 rounded text-[11px] font-semibold flex items-center gap-1.5 transition cursor-pointer border ${
+              isStageActive
+                ? "bg-[#24262B] border-amber-500/50 text-[#D4A94A] shadow-[0_0_8px_rgba(212,169,74,0.3)]"
+                : isLight
+                  ? "bg-[#F3F4F6] border-[#E5E7EB] text-[#4B5563] hover:text-[#111827]"
+                  : "bg-[#24262B] border-[#2A2C31] text-[#9B9CA3] hover:text-text-primary hover:bg-[#2A2C31]"
+            }`}
+          >
+            <FaTv className={`text-xs ${isStageActive ? "text-[#D4A94A]" : isLight ? "text-[#4B5563]" : "text-[#9B9CA3]"}`} />
+            <span className="hidden sm:inline">
+              Stage Display {isStageActive ? "ON" : "OFF"}
+            </span>
+          </button>
+        )}
 
         <button
           onClick={toggleLiveStatus}
