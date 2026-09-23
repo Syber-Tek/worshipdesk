@@ -30,6 +30,8 @@ export default function BibleView({
   const isLight = themeMode === "light";
   const isTwi = isTwiCode(selectedTranslation);
   const [viewMode, setViewMode] = useState("grid"); // 'grid' | 'reader'
+  const [secondaryTranslation, setSecondaryTranslation] = useState("None");
+  const [secondaryVerses, setSecondaryVerses] = useState([]);
 
   const rawCodes =
     biblesList && biblesList.length > 0
@@ -37,6 +39,46 @@ export default function BibleView({
       : ["NIV", "NKJV", "KJV", "TWI"];
 
   const translations = Array.from(new Set(rawCodes));
+
+  // Fetch secondary parallel translation verses when selection changes
+  React.useEffect(() => {
+    if (!secondaryTranslation || secondaryTranslation === "None" || !window.api) {
+      setSecondaryVerses([]);
+      return;
+    }
+    const secBible = biblesList.find((b) => b.code === secondaryTranslation);
+    if (!secBible) return;
+
+    window.api.getBooks(secBible.id).then((books) => {
+      if (!books || books.length === 0) return;
+      const normalized = normalizeBookName(selectedBook);
+      const targetBook =
+        books.find((b) => normalizeBookName(b.name) === normalized) ||
+        books[0];
+
+      if (targetBook) {
+        window.api.getVerses(targetBook.id, selectedChapter).then((verses) => {
+          if (Array.isArray(verses)) {
+            setSecondaryVerses(verses);
+          }
+        });
+      }
+    });
+  }, [secondaryTranslation, selectedBook, selectedChapter, biblesList]);
+
+  const getVerseWithSecondary = (verse) => {
+    if (!verse || secondaryTranslation === "None") return verse;
+    const secMatch = secondaryVerses.find((v) => v.verse === verse.verse);
+    if (secMatch && secMatch.text) {
+      return {
+        ...verse,
+        secondaryText: secMatch.text,
+        secondaryTranslation: secondaryTranslation,
+        ref: `${verse.ref || `${selectedBook} ${selectedChapter}:${verse.verse}`} (${selectedTranslation} / ${secondaryTranslation})`,
+      };
+    }
+    return verse;
+  };
 
   // Use the live SQLite book list when available, otherwise fall back to the
   // canonical per-translation preset list so both English & Twi always render.
@@ -58,16 +100,20 @@ export default function BibleView({
   const otHeading = isTwi ? "Apam Dedaw — Old Testament" : "Old Testament";
   const ntHeading = isTwi ? "Apam Foforo — New Testament" : "New Testament";
 
-  // Highlight the search term inside verse text (case-insensitive, safe regex)
+  // Highlight the search terms inside verse text (case-insensitive, safe regex)
   const highlightText = (text, query) => {
     const q = String(query || "").trim();
     if (!q || !text) return text;
-    const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const lowerQ = q.toLowerCase();
+    const tokens = q
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+    if (tokens.length === 0) return text;
+    const lowerParts = new Set(tokens.map((t) => t.toLowerCase()));
     return String(text)
-      .split(new RegExp(`(${escaped})`, "ig"))
+      .split(new RegExp(`(${tokens.join("|")})`, "ig"))
       .map((part, idx) =>
-        part.toLowerCase() === lowerQ ? (
+        lowerParts.has(part.toLowerCase()) ? (
           <span
             key={idx}
             className="bg-accent/25 text-accent font-semibold rounded-sm px-0.5"
@@ -90,37 +136,70 @@ export default function BibleView({
             : "bg-[#151619] border-[#2A2C31]"
         }`}
       >
-        <div className="flex items-center gap-3">
-          <span
-            className={`text-xs font-bold uppercase tracking-wider ${isLight ? "text-[#6B7280]" : "text-[#6B6C73]"}`}
-          >
-            Translation:
-          </span>
-          <div
-            className={`flex items-center gap-1 p-1 rounded border ${
-              isLight
-                ? "bg-[#F3F4F6] border-[#E5E7EB]"
-                : "bg-[#1C1D21] border-[#2A2C31]"
-            }`}
-          >
-            {translations.map((tr) => (
-              <button
-                key={tr}
-                onClick={() => {
-                  setSelectedTranslation(tr);
-                  setSelectedVerseIndex(0);
-                }}
-                className={`px-3 py-1 rounded text-[11px] font-semibold transition cursor-pointer ${
-                  selectedTranslation === tr
-                    ? "bg-accent text-bg shadow"
-                    : isLight
-                      ? "text-[#4B5563] hover:text-[#111827]"
-                      : "text-[#9B9CA3] hover:text-text-primary"
-                }`}
-              >
-                {tr}
-              </button>
-            ))}
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span
+              className={`text-xs font-bold uppercase tracking-wider ${isLight ? "text-[#6B7280]" : "text-[#6B6C73]"}`}
+            >
+              Primary:
+            </span>
+            <div
+              className={`flex items-center gap-1 p-1 rounded border ${
+                isLight
+                  ? "bg-[#F3F4F6] border-[#E5E7EB]"
+                  : "bg-[#1C1D21] border-[#2A2C31]"
+              }`}
+            >
+              {translations.map((tr) => (
+                <button
+                  key={tr}
+                  onClick={() => {
+                    setSelectedTranslation(tr);
+                    setSelectedVerseIndex(0);
+                  }}
+                  className={`px-2.5 py-1 rounded text-[11px] font-semibold transition cursor-pointer ${
+                    selectedTranslation === tr
+                      ? "bg-accent text-bg shadow"
+                      : isLight
+                        ? "text-[#4B5563] hover:text-[#111827]"
+                        : "text-[#9B9CA3] hover:text-text-primary"
+                  }`}
+                >
+                  {tr}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span
+              className={`text-xs font-bold uppercase tracking-wider ${isLight ? "text-[#6B7280]" : "text-[#6B6C73]"}`}
+            >
+              Parallel:
+            </span>
+            <div
+              className={`flex items-center gap-1 p-1 rounded border ${
+                isLight
+                  ? "bg-[#F3F4F6] border-[#E5E7EB]"
+                  : "bg-[#1C1D21] border-[#2A2C31]"
+              }`}
+            >
+              {["None", ...translations.filter((tr) => tr !== selectedTranslation)].map((tr) => (
+                <button
+                  key={tr}
+                  onClick={() => setSecondaryTranslation(tr)}
+                  className={`px-2.5 py-1 rounded text-[11px] font-semibold transition cursor-pointer ${
+                    secondaryTranslation === tr
+                      ? "bg-amber-500/20 text-[#D4A94A] border border-amber-500/40 font-bold"
+                      : isLight
+                        ? "text-[#4B5563] hover:text-[#111827]"
+                        : "text-[#9B9CA3] hover:text-text-primary"
+                  }`}
+                >
+                  {tr}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -435,15 +514,29 @@ export default function BibleView({
                   >
                     {activeSelectedVerse.ref}
                   </h3>
-                  <p
-                    className={`text-xs p-4 rounded-lg border leading-relaxed ${
+                  <div
+                    className={`text-xs p-4 rounded-lg border leading-relaxed space-y-2.5 ${
                       isLight
                         ? "bg-[#F3F4F6] border-[#E5E7EB] text-[#111827]"
                         : "bg-[#1C1D21] border-[#2A2C31] text-text-primary"
                     }`}
                   >
-                    {highlightText(activeSelectedVerse.text, searchQuery)}
-                  </p>
+                    <div>{highlightText(activeSelectedVerse.text, searchQuery)}</div>
+                    {secondaryTranslation !== "None" && (() => {
+                      const secMatch = secondaryVerses.find((v) => v.verse === activeSelectedVerse.verse);
+                      if (secMatch && secMatch.text) {
+                        return (
+                          <div className="pt-2 border-t border-accent/30 text-accent font-medium italic">
+                            <span className="text-[10px] font-mono uppercase font-bold not-italic mr-1.5 opacity-80">
+                              [{secondaryTranslation}]
+                            </span>
+                            {highlightText(secMatch.text, searchQuery)}
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+                  </div>
                 </div>
               )}
             </div>
@@ -452,7 +545,7 @@ export default function BibleView({
               className={`space-y-2.5 pt-5 border-t ${isLight ? "border-[#E5E7EB]" : "border-[#2A2C31]"}`}
             >
               <button
-                onClick={() => handleStageNext(activeSelectedVerse)}
+                onClick={() => handleStageNext(getVerseWithSecondary(activeSelectedVerse))}
                 className={`w-full py-2.5 px-3 border hover:border-accent/50 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer ${
                   isLight
                     ? "bg-[#F3F4F6] hover:bg-[#E5E7EB] border-[#E5E7EB] text-[#111827]"
@@ -465,7 +558,7 @@ export default function BibleView({
               <button
                 onClick={() =>
                   handleAddToPlaylist &&
-                  handleAddToPlaylist(activeSelectedVerse)
+                  handleAddToPlaylist(getVerseWithSecondary(activeSelectedVerse))
                 }
                 className={`w-full py-2.5 px-3 border hover:border-accent/50 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer ${
                   isLight
@@ -477,7 +570,7 @@ export default function BibleView({
                 Service Playlist
               </button>
               <button
-                onClick={() => handlePresentNow(activeSelectedVerse)}
+                onClick={() => handlePresentNow(getVerseWithSecondary(activeSelectedVerse))}
                 className="w-full py-3 px-3 bg-accent hover:bg-accent/90 text-bg rounded-lg text-xs font-bold flex items-center justify-center gap-2 shadow-lg transition cursor-pointer"
               >
                 <Send set="bold" primaryColor="#0B0C0E" size="small" /> Present

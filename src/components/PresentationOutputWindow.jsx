@@ -90,6 +90,20 @@ export default function PresentationOutputWindow() {
     xlarge: "text-4xl md:text-6xl",
     xxlarge: "text-5xl md:text-7xl",
   };
+  const dualVerseSizes = {
+    small: "text-lg md:text-2xl",
+    normal: "text-xl md:text-3xl",
+    large: "text-2xl md:text-4xl",
+    xlarge: "text-3xl md:text-5xl",
+    xxlarge: "text-4xl md:text-6xl",
+  };
+  const dualHymnSizes = {
+    small: "text-base md:text-xl",
+    normal: "text-lg md:text-2xl",
+    large: "text-xl md:text-3xl",
+    xlarge: "text-2xl md:text-4xl",
+    xxlarge: "text-3xl md:text-5xl",
+  };
   const attributionSizes = {
     small: "text-base md:text-lg",
     normal: "text-xl md:text-2xl",
@@ -107,6 +121,17 @@ export default function PresentationOutputWindow() {
   const bodyClasses = isHymn
     ? `whitespace-pre-line ${hymnSizes[fontScale] || hymnSizes.normal} font-normal leading-normal tracking-normal`
     : `whitespace-pre-line ${verseSizes[fontScale] || verseSizes.normal} font-bold leading-relaxed tracking-wide`;
+
+  const dualBodyClasses = isHymn
+    ? `whitespace-pre-line ${dualHymnSizes[fontScale] || dualHymnSizes.normal} font-normal leading-relaxed`
+    : `whitespace-pre-line ${dualVerseSizes[fontScale] || dualVerseSizes.normal} font-bold leading-relaxed`;
+
+  const primaryLabel =
+    slideData.primaryTranslation ||
+    (slideData.title ? slideData.title.match(/\(([^)]+)\)/) : null)?.[1]
+      ?.split("/")[0]
+      ?.trim() ||
+    "Primary";
 
   const marginClass =
     slideData.slideMargin === "2rem"
@@ -201,12 +226,36 @@ export default function PresentationOutputWindow() {
 
           {/* Main Centered Text Block */}
           {!slideData.isBlank && (
-            <div className="my-auto max-w-5xl mx-auto text-center px-8">
-              <p
-                className={`${bodyClasses} text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]`}
-              >
-                {displayContent}
-              </p>
+            <div className="my-auto max-w-6xl mx-auto w-full px-4">
+              {slideData.secondaryText ? (
+                <div className="grid grid-cols-2 divide-x divide-white/20 gap-6 md:gap-10 items-stretch">
+                  {/* Primary Translation */}
+                  <div className="flex flex-col justify-center text-center space-y-3">
+                    <span className="inline-block self-center text-xs font-mono font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-white/10 text-accent border border-accent/30">
+                      {primaryLabel}
+                    </span>
+                    <p className={`${dualBodyClasses} text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]`}>
+                      {displayContent}
+                    </p>
+                  </div>
+
+                  {/* Secondary Parallel Translation */}
+                  <div className="flex flex-col justify-center text-center space-y-3">
+                    <span className="inline-block self-center text-xs font-mono font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-accent/20 text-accent border border-accent/40">
+                      {slideData.secondaryTranslation || "Parallel"}
+                    </span>
+                    <p className={`${dualBodyClasses} text-accent/95 italic font-medium drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]`}>
+                      {showQuotes ? `"${slideData.secondaryText}"` : slideData.secondaryText}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <p className={`${bodyClasses} text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]`}>
+                    {displayContent}
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -247,8 +296,34 @@ export default function PresentationOutputWindow() {
 
         {/* Main Centered Text Block */}
         {!slideData.isBlank && (
-          <div className="my-auto max-w-5xl mx-auto text-center px-8">
-            <p className={`${bodyClasses} text-[#111827]`}>{displayContent}</p>
+          <div className="my-auto max-w-6xl mx-auto w-full px-4">
+            {slideData.secondaryText ? (
+              <div className="grid grid-cols-2 divide-x divide-[#E5E7EB] gap-6 md:gap-10 items-stretch">
+                {/* Primary Translation */}
+                <div className="flex flex-col justify-center text-center space-y-3">
+                  <span className="inline-block self-center text-xs font-mono font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-[#E5E7EB] text-[#4B5563]">
+                    {primaryLabel}
+                  </span>
+                  <p className={`${dualBodyClasses} text-[#111827]`}>
+                    {displayContent}
+                  </p>
+                </div>
+
+                {/* Secondary Parallel Translation */}
+                <div className="flex flex-col justify-center text-center space-y-3">
+                  <span className="inline-block self-center text-xs font-mono font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-[#B4821E]/20 text-[#B4821E]">
+                    {slideData.secondaryTranslation || "Parallel"}
+                  </span>
+                  <p className={`${dualBodyClasses} text-[#B4821E] italic font-medium`}>
+                    {showQuotes ? `"${slideData.secondaryText}"` : slideData.secondaryText}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center">
+                <p className={`${bodyClasses} text-[#111827]`}>{displayContent}</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -288,8 +363,34 @@ export default function PresentationOutputWindow() {
 
       {/* Main Centered Text Block */}
       {!slideData.isBlank && (
-        <div className="my-auto max-w-5xl mx-auto text-center px-8">
-          <p className={`${bodyClasses} text-text-primary`}>{displayContent}</p>
+        <div className="my-auto max-w-6xl mx-auto w-full px-4">
+          {slideData.secondaryText ? (
+            <div className="grid grid-cols-2 divide-x divide-[#2A2C31]/40 gap-6 md:gap-10 items-stretch">
+              {/* Primary Translation */}
+              <div className="flex flex-col justify-center text-center space-y-3">
+                <span className="inline-block self-center text-xs font-mono font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-[#24262B] text-[#9B9CA3]">
+                  {primaryLabel}
+                </span>
+                <p className={`${dualBodyClasses} text-text-primary`}>
+                  {displayContent}
+                </p>
+              </div>
+
+              {/* Secondary Parallel Translation */}
+              <div className="flex flex-col justify-center text-center space-y-3">
+                <span className="inline-block self-center text-xs font-mono font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-accent/20 text-accent">
+                  {slideData.secondaryTranslation || "Parallel"}
+                </span>
+                <p className={`${dualBodyClasses} text-accent italic font-medium`}>
+                  {showQuotes ? `"${slideData.secondaryText}"` : slideData.secondaryText}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center">
+              <p className={`${bodyClasses} text-text-primary`}>{displayContent}</p>
+            </div>
+          )}
         </div>
       )}
 

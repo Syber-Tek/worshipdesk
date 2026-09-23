@@ -142,7 +142,7 @@ export default function CurrentNextRail({
             <div className={`text-[10px] uppercase font-bold tracking-wider ${isLight ? 'text-[#6B7280]' : 'text-[#9B9CA3]'}`}>
               Output Screen Theme
             </div>
-            <div className="grid grid-cols-3 gap-1">
+            <div className="grid grid-cols-2 gap-1">
               <button
                 onClick={() => setOutputTheme('dark')}
                 className={`py-1 rounded text-[10px] font-semibold transition border cursor-pointer ${
@@ -178,6 +178,18 @@ export default function CurrentNextRail({
                 }`}
               >
                 Image
+              </button>
+              <button
+                onClick={() => setOutputTheme('video')}
+                className={`py-1 rounded text-[10px] font-semibold transition border cursor-pointer ${
+                  outputTheme === 'video'
+                    ? 'bg-accent text-bg border-accent'
+                    : isLight
+                    ? 'bg-[#E5E7EB] text-[#374151] border-[#D1D5DB] hover:bg-[#D1D5DB]'
+                    : 'bg-[#24262B] text-[#9B9CA3] border-[#2A2C31] hover:text-text-primary'
+                }`}
+              >
+                Video
               </button>
             </div>
           </div>

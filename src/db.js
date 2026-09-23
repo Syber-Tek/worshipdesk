@@ -2,7 +2,7 @@ import Database from 'better-sqlite3'
 import path from 'node:path'
 import fs from 'node:fs'
 import { app } from 'electron'
-import { CANONICAL_BIBLE } from './bibleBooks.js'
+import { CANONICAL_BIBLE, normalizeBookName } from './bibleBooks.js'
 
 let db = null
 
@@ -732,20 +732,155 @@ export function getVerses(bookId, chapter) {
   return db.prepare('SELECT * FROM verses WHERE book_id = ? AND chapter = ? ORDER BY verse ASC').all(bookId, chapter)
 }
 
+// Gestalt-free keyword helpers: collapse separators so '1 Cor' == '1cor'.
+const NORM_KEY = (s) => String(s || '').toLowerCase().replace(/[\s.,'"’]+/g, '')
+
+const BOOK_ABBREVIATIONS = {
+  genesis: ['gen', 'gn'],
+  exodus: ['exo', 'exod', 'ex'],
+  leviticus: ['lev', 'lv'],
+  numbers: ['num', 'nu', 'nm'],
+  deuteronomy: ['deut', 'dt'],
+  joshua: ['josh', 'jos'],
+  judges: ['judg', 'jdg'],
+  ruth: ['rt', 'ru'],
+  '1 samuel': ['1sam', '1sm', '1samuel'],
+  '2 samuel': ['2sam', '2sm', '2samuel'],
+  '1 kings': ['1kg', '1kgs', '1k', '1kings'],
+  '2 kings': ['2kg', '2kgs', '2k', '2kings'],
+  '1 chronicles': ['1chr', '1ch', '1chronicles'],
+  '2 chronicles': ['2chr', '2ch', '2chronicles'],
+  ezra: ['ezr', 'ez'],
+  nehemiah: ['neh', 'ne'],
+  esther: ['est', 'es'],
+  job: ['jb'],
+  psalms: ['ps', 'psa', 'psalm'],
+  proverbs: ['prov', 'prv', 'pr'],
+  ecclesiastes: ['eccl', 'ecc', 'ec'],
+  'song of solomon': ['song', 'sos'],
+  isaiah: ['isa', 'is'],
+  jeremiah: ['jer', 'jr'],
+  lamentations: ['lam', 'la'],
+  ezekiel: ['ezek', 'ezk'],
+  daniel: ['dan', 'dn'],
+  hosea: ['hos', 'ho'],
+  joel: ['jl'],
+  amos: ['am'],
+  obadiah: ['obad', 'ob'],
+  jonah: ['jon', 'jh'],
+  micah: ['mic', 'mi'],
+  nahum: ['nah', 'na'],
+  habakkuk: ['hab', 'hb'],
+  zephaniah: ['zeph', 'zep'],
+  haggai: ['hag', 'hg'],
+  zechariah: ['zech', 'zec'],
+  malachi: ['mal', 'ml'],
+  matthew: ['matt', 'mt'],
+  mark: ['mr', 'mk'],
+  luke: ['lk'],
+  john: ['jn', 'jhn'],
+  acts: ['act', 'ac'],
+  romans: ['rom', 'rm', 'ro'],
+  '1 corinthians': ['1cor', '1co', '1corinthians'],
+  '2 corinthians': ['2cor', '2co', '2corinthians'],
+  galatians: ['gal', 'ga'],
+  ephesians: ['eph', 'ep'],
+  philippians: ['phil', 'php', 'ph'],
+  colossians: ['col', 'cl'],
+  '1 thessalonians': ['1thess', '1th', '1thessalonians'],
+  '2 thessalonians': ['2thess', '2th', '2thessalonians'],
+  '1 timothy': ['1tim', '1ti', '1timothy'],
+  '2 timothy': ['2tim', '2ti', '2timothy'],
+  titus: ['tit'],
+  philemon: ['philem', 'phm'],
+  hebrews: ['heb', 'he'],
+  james: ['jas', 'jm'],
+  '1 peter': ['1pet', '1pe', '1peter'],
+  '2 peter': ['2pet', '2pe', '2peter'],
+  '1 john': ['1john', '1jn', '1jhn'],
+  '2 john': ['2john', '2jn'],
+  '3 john': ['3john', '3jn'],
+  jude: ['jud'],
+  revelation: ['rev', 're'],
+}
+
+const BOOK_ALIAS_TO_NUMBER = {}
+for (const [enName, aliases] of Object.entries(BOOK_ABBREVIATIONS)) {
+  const book = CANONICAL_BIBLE.find((b) => b.en.toLowerCase() === enName)
+  if (!book) continue
+  BOOK_ALIAS_TO_NUMBER[NORM_KEY(enName)] = book.number
+  BOOK_ALIAS_TO_NUMBER[NORM_KEY(book.tw)] = book.number
+  for (const alias of aliases) BOOK_ALIAS_TO_NUMBER[NORM_KEY(alias)] = book.number
+}
+
+function resolveBookNumber(rawBookPart, books) {
+  const norm = NORM_KEY(rawBookPart)
+  if (BOOK_ALIAS_TO_NUMBER[norm] !== undefined) return BOOK_ALIAS_TO_NUMBER[norm]
+  for (const b of books) {
+    if (normalizeBookName(b.name) === norm) return b.book_number
+  }
+  return null
+}
+
+// Parses "Book Ch[:V[-V2]]" style queries (e.g. "John 3:16", "1 Cor 13:4-7").
+function parseReferenceQuery(query) {
+  const q = String(query || '').trim()
+  if (!q) return null
+  const tail = q.match(/(\d+)(?:\s*[:.-]\s*(\d+))?(?:\s*[-–]\s*(\d+))?$/)
+  if (!tail) return null
+  const bookPart = q.slice(0, tail.index).trim()
+  if (!bookPart || bookPart.length < 2) return null
+  return {
+    bookPart,
+    chapter: parseInt(tail[1], 10),
+    verseStart: tail[2] ? parseInt(tail[2], 10) : null,
+    verseEnd: tail[3] ? parseInt(tail[3], 10) : null,
+  }
+}
+
 export function searchVerses(query, bibleId) {
   if (!db || !query) return []
-  // Escape LIKE wildcards so user input (% _ \) is matched literally
-  const escaped = String(query).replace(/[\\%_]/g, (m) => `\\${m}`)
-  const pattern = `%${escaped}%`
+  const q = String(query).trim()
+  if (!q) return []
+
+  const books = getBooks(bibleId || 1)
+
+  // Reference-style search (e.g. "John 3:16") returns the exact verses.
+  const ref = parseReferenceQuery(q)
+  if (ref) {
+    const bookNumber = resolveBookNumber(ref.bookPart, books)
+    const book = bookNumber ? books.find((b) => b.book_number === bookNumber) : null
+    if (book) {
+      const verseStart = ref.verseStart || 1
+      const verseEnd = ref.verseEnd || ref.verseStart || Number.MAX_SAFE_INTEGER
+      return db.prepare(`
+        SELECT v.*, b.name as book_name
+        FROM verses v
+        JOIN books b ON v.book_id = b.id
+        WHERE v.book_id = ? AND v.chapter = ? AND v.verse BETWEEN ? AND ?
+        ORDER BY v.verse ASC
+      `).all(book.id, ref.chapter, verseStart, verseEnd)
+    }
+  }
+
+  // Keyword search: every whitespace-separated term must appear in the verse.
+  const tokens = q.split(/\s+/).filter(Boolean)
+  const conds = []
+  const params = []
+  for (const tok of tokens) {
+    const esc = tok.replace(/[\\%_]/g, (m) => `\\${m}`)
+    conds.push("(v.text LIKE ? ESCAPE '\\')")
+    params.push(`%${esc}%`)
+  }
+  const tokenWhere = conds.length ? `(${conds.join(' AND ')}) AND ` : ''
   return db.prepare(`
     SELECT v.*, b.name as book_name
     FROM verses v
     JOIN books b ON v.book_id = b.id
-    WHERE v.text LIKE ? ESCAPE '\\'
-      AND (? IS NULL OR b.bible_id = ?)
+    WHERE ${tokenWhere}(? IS NULL OR b.bible_id = ?)
     ORDER BY b.book_number ASC, v.chapter ASC, v.verse ASC
-    LIMIT 30
-  `).all(pattern, bibleId || null, bibleId || null)
+    LIMIT 50
+  `).all(...params, bibleId || null, bibleId || null)
 }
 
 export function getHymns() {
@@ -759,6 +894,7 @@ export function listHymns(searchQuery, activeCategory) {
   if (!db) return []
   const query = searchQuery && String(searchQuery).trim()
   const cat = activeCategory && activeCategory !== 'All' ? String(activeCategory).trim() : null
+
   const select = (whereClause, params) =>
     db.prepare(`
       SELECT id, hymn_number, title, category, author,
@@ -772,23 +908,28 @@ export function listHymns(searchQuery, activeCategory) {
     return select('', [])
   }
 
-  const escaped = query.replace(/[\\%_]/g, (m) => `\\${m}`)
-  const pattern = `%${escaped}%`
+  const isNumber = /^\d+$/.test(query)
+  const tokens = query.split(/\s+/).filter(Boolean)
+  const parts = []
+  const params = []
+
+  if (isNumber) {
+    parts.push("(hymn_number = ? OR title LIKE ? ESCAPE '\\' OR lyrics LIKE ? ESCAPE '\\')")
+    params.push(parseInt(query, 10), `%${query}%`, `%${query}%`)
+  } else {
+    // Token AND-search: all terms must appear in the title or lyrics.
+    for (const tok of tokens) {
+      const esc = tok.replace(/[\\%_]/g, (m) => `\\${m}`)
+      parts.push("(title LIKE ? ESCAPE '\\' OR lyrics LIKE ? ESCAPE '\\')")
+      params.push(`%${esc}%`, `%${esc}%`)
+    }
+  }
+
   const catClause = cat ? ' AND (category = ? OR category LIKE ?)' : ''
   const catParams = cat ? [cat, `%${cat}%`] : []
-  const isNumber = !isNaN(query) && query !== ''
-  if (isNumber) {
-    return select(
-      `WHERE (hymn_number = ? OR title LIKE ? ESCAPE '\\' OR lyrics LIKE ? ESCAPE '\\')${catClause}`,
-      [parseInt(query, 10), pattern, pattern, ...catParams]
-    )
-  }
-  return select(
-    `WHERE (title LIKE ? ESCAPE '\\' OR lyrics LIKE ? ESCAPE '\\')${catClause}`,
-    [pattern, pattern, ...catParams]
-  )
+  const where = parts.length ? `WHERE (${parts.join(' AND ')})` : ''
+  return select(`${where}${catClause}`, [...params, ...catParams])
 }
-
 export function getHymnLyrics(id) {
   if (!db || !id) return null
   return db.prepare('SELECT * FROM hymns WHERE id = ?').get(id) || null
