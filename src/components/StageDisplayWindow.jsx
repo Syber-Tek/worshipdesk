@@ -103,8 +103,20 @@ export default function StageDisplayWindow() {
         )}
 
         {isLive && slideData.content ? (
-          <div className="text-2xl sm:text-4xl lg:text-5xl font-extrabold leading-snug tracking-tight text-white whitespace-pre-wrap drop-shadow-sm">
-            {slideData.content}
+          <div className="space-y-4">
+            <div className="text-2xl sm:text-4xl lg:text-5xl font-extrabold leading-snug tracking-tight text-white whitespace-pre-wrap drop-shadow-sm">
+              {slideData.content}
+            </div>
+            {slideData.secondaryText && (
+              <div className="text-xl sm:text-3xl font-semibold italic text-[#D4A94A] pt-3 border-t border-[#252830]">
+                {slideData.secondaryText}
+                {slideData.secondaryTranslation && (
+                  <span className="block text-xs font-mono font-bold uppercase not-italic tracking-wider text-[#A1A1AA] mt-1">
+                    — {slideData.secondaryTranslation} —
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           <div className="text-center py-12 space-y-3 opacity-60">
