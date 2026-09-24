@@ -73,9 +73,11 @@ jobs:
         with:
           path: artifacts
 
-      - name: Create or Update GitHub Release
+      - name: Create or Update GitHub Release in Public Repo
         uses: softprops/action-gh-release@v2
         with:
+          repository: Syber-Tek/worshipdesk-releases
+          token: ${{ secrets.PUBLIC_RELEASE_TOKEN }}
           tag_name: ${{ github.event.inputs.tag_name || (github.ref_type == 'tag' && github.ref_name || 'v1.0.0') }}
           files: artifacts/**/*
           name: WorshipDesk Release ${{ github.event.inputs.tag_name || (github.ref_type == 'tag' && github.ref_name || 'v1.0.0') }}
