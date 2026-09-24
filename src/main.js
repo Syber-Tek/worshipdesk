@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, screen, dialog, Notification, nativeImage } from 'electron';
+import { app, Menu, BrowserWindow, ipcMain, screen, dialog, Notification, nativeImage } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
 import {
@@ -546,6 +546,13 @@ const createWindow = () => {
 };
 
 app.whenReady().then(() => {
+  // Remove the File/Edit/View menu bar in production builds only.
+  // Keep it while running via `npm run dev` so DevTools shortcuts & defaults
+  // stay available during development.
+  if (app.isPackaged) {
+    Menu.setApplicationMenu(null);
+  }
+
   dbPath = initDatabase();
   createWindow();
 
