@@ -26,12 +26,13 @@ export default function BibleView({
   handlePresentNow,
   handleAddToPlaylist,
   themeMode,
+  secondaryTranslation,
+  setSecondaryTranslation,
+  secondaryVerses,
 }) {
   const isLight = themeMode === "light";
   const isTwi = isTwiCode(selectedTranslation);
   const [viewMode, setViewMode] = useState("grid"); // 'grid' | 'reader'
-  const [secondaryTranslation, setSecondaryTranslation] = useState("None");
-  const [secondaryVerses, setSecondaryVerses] = useState([]);
 
   const rawCodes =
     biblesList && biblesList.length > 0
@@ -41,31 +42,6 @@ export default function BibleView({
   const translations = Array.from(new Set(rawCodes));
 
   // Fetch secondary parallel translation verses when selection changes
-  React.useEffect(() => {
-    if (!secondaryTranslation || secondaryTranslation === "None" || !window.api) {
-      setSecondaryVerses([]);
-      return;
-    }
-    const secBible = biblesList.find((b) => b.code === secondaryTranslation);
-    if (!secBible) return;
-
-    window.api.getBooks(secBible.id).then((books) => {
-      if (!books || books.length === 0) return;
-      const normalized = normalizeBookName(selectedBook);
-      const targetBook =
-        books.find((b) => normalizeBookName(b.name) === normalized) ||
-        books[0];
-
-      if (targetBook) {
-        window.api.getVerses(targetBook.id, selectedChapter).then((verses) => {
-          if (Array.isArray(verses)) {
-            setSecondaryVerses(verses);
-          }
-        });
-      }
-    });
-  }, [secondaryTranslation, selectedBook, selectedChapter, biblesList]);
-
   const getVerseWithSecondary = (verse) => {
     if (!verse || secondaryTranslation === "None") return verse;
     const secMatch = secondaryVerses.find((v) => v.verse === verse.verse);
