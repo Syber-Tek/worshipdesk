@@ -170,11 +170,10 @@ export default function SongsView({
               className={`text-base font-bold flex items-center gap-2 ${headingClass}`}
             >
               <FaMusic set="bold" primaryColor="#D4A94A" size="14" />{" "}
-              Presbyterian & Methodist Hymnal Library
+              Hymn & Song Library
             </h2>
             <p className={`text-xs ${labelClass}`}>
-              Search 855+ English & Twi hymns, liturgies, and songs by hymn
-              number or keywords.
+              Search built-in and user-uploaded hymns by number or keywords.
             </p>
           </div>
 
@@ -307,7 +306,7 @@ export default function SongsView({
                 <div className="flex justify-between items-center border-b pb-3 border-border">
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-accent">
-                      {selectedHymn.category || "Presbyterian Hymnal"}
+                      {selectedHymn.category || "General Hymn"}
                     </span>
                     <h3
                       className={`text-lg font-extrabold tracking-tight ${headingClass}`}
@@ -414,8 +413,8 @@ export default function SongsView({
                 Select a Hymn to View Lyrics
               </p>
               <p className={`text-xs ${labelClass}`}>
-                Choose any Presbyterian or Methodist hymn from the list on the
-                left to read full stanzas.
+                Choose any hymn or song from the list on the left to read full
+                stanzas.
               </p>
             </div>
           )}
