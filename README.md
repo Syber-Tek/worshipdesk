@@ -27,6 +27,8 @@ You can link your website's **Download** buttons directly to the latest GitHub r
 
 ### 🖥️ 3. Multi-Display & Stage Confidence Monitor
 - **Multi-Monitor Projection:** Independent presentation output window routed to secondary church projectors, TVs, or OBS/vMix capture windows.
+- **Parallel Present Navigation:** Present Next/Prev keeps the parallel (secondary) translation attached, so bilingual dual-view slides stream verse-by-verse seamlessly.
+- **Clear Output:** The **Clear** control empties the live projected slide and the staged next slide at once, ready to present a fresh item.
 - **Stage Display / Confidence Monitor:** Dedicated 3rd screen view (`Stage Display`) for singers, choir, and pastors featuring:
   - Large projected slide text.
   - Live Digital Clock (`HH:MM:SS AM/PM`).
@@ -76,7 +78,7 @@ npm run package
 ```
 
 ### GitHub Actions Automated Release (.exe & .zip)
-Every time a git release tag (e.g. `v1.0.0`) is pushed to GitHub, the `.github/workflows/build-release.yml` pipeline automatically builds the Windows `.exe` installer and `.zip` archive and publishes them to GitHub Releases.
+Every time a git release tag (e.g. `v1.1.0`) is pushed to GitHub, the `.github/workflows/build-release.yml` pipeline automatically builds the Windows `.exe` installer and `.zip` archive and publishes them to GitHub Releases.
 
 ---
 
