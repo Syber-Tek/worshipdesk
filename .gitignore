@@ -90,3 +90,8 @@ typings/
 
 # Electron-Forge
 out/
+
+# electron-builder
+release
+release/
+*.yaml.cache
