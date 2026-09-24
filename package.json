@@ -11,7 +11,7 @@
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "package": "electron-vite build && electron-builder --dir",
-    "make": "electron-vite build && electron-builder",
+    "make": "electron-vite build && electron-builder --publish never",
     "publish": "electron-vite build && electron-builder --publish",
     "test": "echo \"No test specified\"",
     "lint": "echo \"No linting configured\""
