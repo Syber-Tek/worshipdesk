@@ -219,7 +219,7 @@ export default function PresentationOutputWindow() {
 
           {/* Main Centered Text Block */}
           {!slideData.isBlank && (
-            <div className="my-auto max-w-7xl mx-auto w-full min-h-[72vh] px-4">
+            <div className="my-auto max-w-7xl mx-auto w-full px-4">
               {slideData.secondaryText ? (
                 <div className="grid grid-cols-2 divide-x divide-white/20 gap-8 md:gap-12 items-stretch">
                   {/* Primary Translation */}
@@ -283,7 +283,7 @@ export default function PresentationOutputWindow() {
 
         {/* Main Centered Text Block */}
         {!slideData.isBlank && (
-          <div className="my-auto max-w-7xl mx-auto w-full min-h-[72vh] px-4">
+          <div className="my-auto max-w-7xl mx-auto w-full px-4">
             {slideData.secondaryText ? (
               <div className="grid grid-cols-2 divide-x divide-[#E5E7EB] gap-8 md:gap-12 items-stretch">
                 {/* Primary Translation */}
@@ -344,7 +344,7 @@ export default function PresentationOutputWindow() {
 
       {/* Main Centered Text Block */}
       {!slideData.isBlank && (
-        <div className="my-auto max-w-7xl mx-auto w-full min-h-[72vh] px-4">
+        <div className="my-auto max-w-7xl mx-auto w-full px-4">
           {slideData.secondaryText ? (
             <div className="grid grid-cols-2 divide-x divide-[#2A2C31]/40 gap-8 md:gap-12 items-stretch">
               {/* Primary Translation */}
