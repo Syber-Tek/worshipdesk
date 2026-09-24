@@ -221,16 +221,16 @@ export default function PresentationOutputWindow() {
           {!slideData.isBlank && (
             <div className="my-auto max-w-7xl mx-auto w-full px-4">
               {slideData.secondaryText ? (
-                <div className="grid grid-cols-2 divide-x divide-white/20 gap-8 md:gap-12 items-stretch">
+                <div className="grid grid-cols-2 divide-x divide-white/20 items-stretch">
                   {/* Primary Translation */}
-                  <div className="flex flex-col justify-center text-center space-y-3">
+                  <div className="flex flex-col justify-center text-center space-y-3 pr-8 md:pr-12">
                     <p className={`${dualBodyClasses} text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]`}>
                       {displayContent}
                     </p>
                   </div>
 
                   {/* Secondary Parallel Translation */}
-                  <div className="flex flex-col justify-center text-center space-y-3">
+                  <div className="flex flex-col justify-center text-center space-y-3 pl-8 md:pl-12">
                     <p className={`${dualBodyClasses} text-accent/95 italic font-medium drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]`}>
                       {showQuotes ? `"${slideData.secondaryText}"` : slideData.secondaryText}
                     </p>
@@ -285,16 +285,16 @@ export default function PresentationOutputWindow() {
         {!slideData.isBlank && (
           <div className="my-auto max-w-7xl mx-auto w-full px-4">
             {slideData.secondaryText ? (
-              <div className="grid grid-cols-2 divide-x divide-[#E5E7EB] gap-8 md:gap-12 items-stretch">
+              <div className="grid grid-cols-2 divide-x divide-[#E5E7EB] items-stretch">
                 {/* Primary Translation */}
-                <div className="flex flex-col justify-center text-center space-y-3">
+                <div className="flex flex-col justify-center text-center space-y-3 pr-8 md:pr-12">
                   <p className={`${dualBodyClasses} text-[#111827]`}>
                     {displayContent}
                   </p>
                 </div>
 
                 {/* Secondary Parallel Translation */}
-                <div className="flex flex-col justify-center text-center space-y-3">
+                <div className="flex flex-col justify-center text-center space-y-3 pl-8 md:pl-12">
                   <p className={`${dualBodyClasses} text-[#B4821E] italic font-medium`}>
                     {showQuotes ? `"${slideData.secondaryText}"` : slideData.secondaryText}
                   </p>
@@ -346,16 +346,16 @@ export default function PresentationOutputWindow() {
       {!slideData.isBlank && (
         <div className="my-auto max-w-7xl mx-auto w-full px-4">
           {slideData.secondaryText ? (
-            <div className="grid grid-cols-2 divide-x divide-[#2A2C31]/40 gap-8 md:gap-12 items-stretch">
+            <div className="grid grid-cols-2 divide-x divide-[#2A2C31]/40 items-stretch">
               {/* Primary Translation */}
-              <div className="flex flex-col justify-center text-center space-y-3">
+              <div className="flex flex-col justify-center text-center space-y-3 pr-8 md:pr-12">
                 <p className={`${dualBodyClasses} text-text-primary`}>
                   {displayContent}
                 </p>
               </div>
 
               {/* Secondary Parallel Translation */}
-              <div className="flex flex-col justify-center text-center space-y-3">
+              <div className="flex flex-col justify-center text-center space-y-3 pl-8 md:pl-12">
                 <p className={`${dualBodyClasses} text-accent italic font-medium`}>
                   {showQuotes ? `"${slideData.secondaryText}"` : slideData.secondaryText}
                 </p>

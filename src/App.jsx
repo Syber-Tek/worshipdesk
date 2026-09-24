@@ -395,6 +395,10 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [dbVerses, setDbVerses] = useState([]);
   const [selectedVerseIndex, setSelectedVerseIndex] = useState(0);
+  // Parallel (secondary) translation for bilingual dual-view, lifted into the
+  // control window so transport Present Next/Prev keep the parallel text.
+  const [secondaryTranslation, setSecondaryTranslation] = useState("None");
+  const [secondaryVerses, setSecondaryVerses] = useState([]);
   // Hymn stanza deck (set when presenting a hymn so it navigates stanza by stanza)
   const [hymnDeck, setHymnDeck] = useState([]);
   const [hymnDeckIndex, setHymnDeckIndex] = useState(0);
@@ -541,6 +545,47 @@ export default function App() {
     selectedChapter,
     biblesList,
   ]);
+
+  // Fetch identical verses from the parallel (secondary) translation when the
+  // user enables a bilingual dual-view so transport Present Next/Prev can
+  // carry the parallel text across slides.
+  useEffect(() => {
+    if (!secondaryTranslation || secondaryTranslation === "None" || !window.api) {
+      setSecondaryVerses([]);
+      return;
+    }
+    const secBible = biblesList.find((b) => b.code === secondaryTranslation);
+    if (!secBible) return;
+    window.api.getBooks(secBible.id).then((books) => {
+      if (!books || books.length === 0) return;
+      const normalized = normalizeBookName(selectedBook);
+      const targetBook =
+        books.find((b) => normalizeBookName(b.name) === normalized) ||
+        books[0];
+      if (targetBook) {
+        window.api.getVerses(targetBook.id, selectedChapter).then((verses) => {
+          if (Array.isArray(verses)) {
+            setSecondaryVerses(verses);
+          }
+        });
+      }
+    });
+  }, [secondaryTranslation, selectedBook, selectedChapter, biblesList]);
+
+  // Attach the parallel translation text to a verse when available.
+  const getVerseWithSecondary = (verse) => {
+    if (!verse || secondaryTranslation === "None") return verse;
+    const secMatch = secondaryVerses.find((v) => v.verse === verse.verse);
+    if (secMatch && secMatch.text) {
+      return {
+        ...verse,
+        secondaryText: secMatch.text,
+        secondaryTranslation: secondaryTranslation,
+        ref: `${verse.ref || `${selectedBook} ${selectedChapter}:${verse.verse}`} (${selectedTranslation} / ${secondaryTranslation})`,
+      };
+    }
+    return verse;
+  };
 
   useEffect(() => {
     if (window.api) {
@@ -725,6 +770,8 @@ export default function App() {
       id: item.id,
       title: item.title,
       content: item.content,
+      secondaryText: item.secondaryText || "",
+      secondaryTranslation: item.secondaryTranslation || "",
       type: item.type,
     });
 
@@ -895,6 +942,8 @@ export default function App() {
       broadcastToPresentation({
         title: toPresent.title,
         content: toPresent.content,
+        secondaryText: toPresent.secondaryText || "",
+        secondaryTranslation: toPresent.secondaryTranslation || "",
         type: toPresent.type,
         isLive: true,
         isBlack: false,
@@ -922,14 +971,27 @@ export default function App() {
   };
 
   const handleToggleClear = () => {
-    const nextState = !isBlank;
-    setIsBlank(nextState);
-    broadcastToPresentation({ isBlank: nextState });
-    if (nextState) {
-      toast.info("Overlay text cleared");
-    } else {
-      toast.info("Overlay text restored");
-    }
+    setCurrentSlide({});
+    setNextSlide({});
+    setHymnDeck([]);
+    setHymnDeckIndex(0);
+    setIsLive(true);
+    setIsBlack(false);
+    setIsBlank(true);
+
+    broadcastToPresentation({
+      title: "",
+      content: "",
+      secondaryText: "",
+      secondaryTranslation: "",
+      nextSlideTitle: "",
+      nextSlideContent: "",
+      type: "Bible Verse",
+      isLive: true,
+      isBlack: false,
+      isBlank: true,
+    });
+    toast.info("Live output and staged next slide cleared");
   };
 
   const handleTransportPrev = () => {
@@ -982,11 +1044,13 @@ export default function App() {
         toast.success(`Broadcasting "${slide.title || "slide"}" Live`);
       }
     } else if (selectedVerseIndex < filteredVerses.length - 1) {
-      const nextV = filteredVerses[selectedVerseIndex + 1];
+      const nextV = getVerseWithSecondary(filteredVerses[selectedVerseIndex + 1]);
       const updated = {
         id: `verse-${nextV.id}`,
-        title: `${nextV.ref} (${selectedTranslation})`,
+        title: nextV.ref || `${nextV.ref} (${selectedTranslation})`,
         content: nextV.text,
+        secondaryText: nextV.secondaryText || "",
+        secondaryTranslation: nextV.secondaryTranslation || "",
         type: "Bible Verse",
       };
       setSelectedVerseIndex(selectedVerseIndex + 1);
@@ -1027,11 +1091,13 @@ export default function App() {
         });
       }
     } else if (selectedVerseIndex > 0) {
-      const prevV = filteredVerses[selectedVerseIndex - 1];
+      const prevV = getVerseWithSecondary(filteredVerses[selectedVerseIndex - 1]);
       const updated = {
         id: `verse-${prevV.id}`,
-        title: `${prevV.ref} (${selectedTranslation})`,
+        title: prevV.ref || `${prevV.ref} (${selectedTranslation})`,
         content: prevV.text,
+        secondaryText: prevV.secondaryText || "",
+        secondaryTranslation: prevV.secondaryTranslation || "",
         type: "Bible Verse",
       };
       setSelectedVerseIndex(selectedVerseIndex - 1);
@@ -1120,7 +1186,7 @@ export default function App() {
         if (nextSlide && nextSlide.title) {
           handleTransportPresent();
         } else if (activeSelectedVerse) {
-          handlePresentNow(activeSelectedVerse);
+          handlePresentNow(getVerseWithSecondary(activeSelectedVerse));
         }
       } else if (e.key === "ArrowDown") {
         e.preventDefault();
@@ -1147,6 +1213,8 @@ export default function App() {
     selectedVerseIndex,
     activeSelectedVerse,
     nextSlide,
+    secondaryTranslation,
+    secondaryVerses,
     handleTransportPresentNext,
     handleTransportPresentPrev,
     handleTransportPresent,
@@ -1241,6 +1309,9 @@ export default function App() {
               handlePresentNow={handlePresentNow}
               handleAddToPlaylist={handleAddToPlaylist}
               themeMode={effectiveTheme}
+              secondaryTranslation={secondaryTranslation}
+              setSecondaryTranslation={setSecondaryTranslation}
+              secondaryVerses={secondaryVerses}
             />
           )}
 

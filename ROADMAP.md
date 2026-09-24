@@ -43,9 +43,25 @@ This document tracks the major ProPresenter-tier features to build into WorshipD
 
 ---
 
+## 🚀 Auto-Update (Over-The-Air Updates)
+
+### [ ] Feature 5: 🔄 Automatic In-App Updates
+- **Description**: Deliver new versions to users automatically over-the-air via GitHub Releases.
+- **Key Capabilities**:
+  - Tracks updates from the latest GitHub release and downloads in the background.
+  - Prompts the user to restart & install when an update is ready (`electron-updater` + NSIS).
+  - Differential downloads (`.blockmap`) so only changed bytes are fetched.
+- **Status / Prerequisites**:
+  - **ON HOLD** — blocked until repo is made **public** (private repos require shipping a runtime `GH_TOKEN`, which is not acceptable).
+  - Once public: add `electron-updater` dependency + `publish` block in `electron-builder.yml` + autoUpdater wiring in `src/main.js`, then bump version per release.
+  - The existing `make` script (`--publish never`) and workflow release job already upload `release/*` artifacts, so `latest.yml` + blockmaps will be published automatically.
+
+---
+
 ## 🚀 Execution Order
 We will implement these features one-by-one upon confirmation:
 1. **Feature 1**: Stage Display / Confidence Monitor
 2. **Feature 2**: Dual-Translation Scriptures
 3. **Feature 3**: Lower-Thirds Mode for Streaming
 4. **Feature 4**: Modern Worship Songs & Chorus Editor
+5. **Feature 5**: Auto-Update (once repo is public)
