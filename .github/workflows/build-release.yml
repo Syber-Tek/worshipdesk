@@ -55,10 +55,7 @@ jobs:
           path: |
             release/*.exe
             release/*.dmg
-            release/*.zip
             release/*.deb
-            release/*.rpm
-            release/*.AppImage
           if-no-files-found: warn
 
   release:
@@ -79,15 +76,18 @@ jobs:
           repository: Syber-Tek/worshipdesk-releases
           token: ${{ secrets.PUBLIC_RELEASE_TOKEN }}
           tag_name: ${{ github.event.inputs.tag_name || (github.ref_type == 'tag' && github.ref_name || 'v1.0.0') }}
-          files: artifacts/**/*
+          files: |
+            artifacts/**/*.exe
+            artifacts/**/*.dmg
+            artifacts/**/*.deb
           name: WorshipDesk Release ${{ github.event.inputs.tag_name || (github.ref_type == 'tag' && github.ref_name || 'v1.0.0') }}
           body: |
-            ## 🚀 WorshipDesk Cross-Platform Release
+            ## 🚀 WorshipDesk Official Release
 
-            Download standalone app archives & offline setup installers:
-            - 🪟 **Windows**: `WorshipDesk Setup <version>.exe` (NSIS) & `.zip`
-            - 🍎 **macOS**: `.dmg` & `.zip`
-            - 🐧 **Linux**: `.AppImage`, `.deb` & `.rpm`
+            Download standalone offline setup installers:
+            - 🪟 **Windows**: `.exe` Installer
+            - 🍎 **macOS**: `.dmg` Disk Image
+            - 🐧 **Linux**: `.deb` Debian Package
           draft: false
           prerelease: false
           overwrite: true
