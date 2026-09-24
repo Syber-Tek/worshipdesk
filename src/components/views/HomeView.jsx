@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Document,
   Voice2,
@@ -35,6 +35,15 @@ export default function HomeView({
 }) {
   const isLight = themeMode === "light";
   const [quickQuery, setQuickQuery] = useState("");
+  const [hymnsCount, setHymnsCount] = useState(0);
+
+  useEffect(() => {
+    if (window.api && window.api.getHymnsCount) {
+      window.api.getHymnsCount().then((count) => {
+        if (typeof count === "number") setHymnsCount(count);
+      });
+    }
+  }, []);
 
   const cardClass = isLight
     ? "bg-[#FFFFFF] border-[#E5E7EB] text-[#111827] shadow-sm"
@@ -62,8 +71,8 @@ export default function HomeView({
             WorshipDesk Dashboard
           </h1>
           <p className={`text-xs ${labelClass}`}>
-            Offline worship presentation engine with multi-translation Twi , Ewe
-            & English Bibles and Presby/Methodist Hymns.
+            Offline worship presentation engine with multi-translation Twi, Ewe
+            & English Bibles and Hymns & Songs.
           </p>
         </div>
 
@@ -172,10 +181,11 @@ export default function HomeView({
             <div
               className={`text-2xl font-extrabold tracking-tight ${headingClass}`}
             >
-              855+ <span className="text-xs font-normal opacity-70">Hymns</span>
+              {hymnsCount}
+              <span className="text-xs font-normal opacity-70"> Hymns</span>
             </div>
             <p className={`text-[11px] mt-0.5 ${labelClass}`}>
-              Presby & Methodist (Twi & Eng)
+              Built-in hymns + your uploads
             </p>
           </div>
           <div className="pt-2 border-t border-border flex justify-between items-center text-[10px]">
@@ -471,9 +481,9 @@ export default function HomeView({
               <div
                 className={`p-2.5 rounded-lg border flex items-center justify-between ${innerCardClass}`}
               >
-                <span className={headingClass}>Presby & Methodist Hymnal</span>
+                <span className={headingClass}>Hymn & Song Library</span>
                 <span className="text-[10px] font-bold text-accent bg-accent/15 px-1.5 py-0.5 rounded">
-                  855 .sng
+                  {hymnsCount} songs
                 </span>
               </div>
               <div
