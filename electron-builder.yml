@@ -1,0 +1,61 @@
+appId: com.sybertek.worshipdesk
+productName: WorshipDesk
+directories:
+  buildResources: build
+  output: release
+files:
+  - "out/**/*"
+  - "package.json"
+  - "src/assets/app-icon-dark.png"
+  - "src/assets/app-icon-light.png"
+  - "bibles/**/*"
+  - "hymns/**/*"
+asar: true
+asarUnpack:
+  - "**/node_modules/better-sqlite3/**"
+electronFuses:
+  runAsNode: false
+  enableCookieEncryption: true
+  enableNodeOptionsEnvironmentVariable: false
+  enableNodeCliInspectArguments: false
+  enableEmbeddedAsarIntegrityValidation: true
+  onlyLoadAppFromAsar: true
+
+win:
+  executableName: worshipdesk
+  icon: src/assets/app-icon-dark.ico
+  target:
+    - nsis
+    - zip
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowElevation: true
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: WorshipDesk
+  uninstallDisplayName: WorshipDesk
+  installerIcon: src/assets/app-icon-dark.ico
+  uninstallerIcon: src/assets/app-icon-dark.ico
+  installerHeaderIcon: src/assets/app-icon-dark.ico
+  artifactName: ${productName} Setup ${version}.${ext}
+
+mac:
+  icon: src/assets/app-icon-dark.png
+  category: public.app-category.productivity
+  identity: null
+  target:
+    - dmg
+    - zip
+
+linux:
+  executableName: worshipdesk
+  category: Utility
+  maintainer: dellpc788@gmail.com
+  icon: src/assets/app-icon-dark.png
+  target:
+    - AppImage
+    - deb
+    - rpm
