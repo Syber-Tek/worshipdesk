@@ -55,7 +55,7 @@ jobs:
           path: |
             release/*.exe
             release/*.dmg
-            release/*.deb
+            release/*.AppImage
           if-no-files-found: warn
 
   release:
@@ -79,7 +79,7 @@ jobs:
           files: |
             artifacts/**/*.exe
             artifacts/**/*.dmg
-            artifacts/**/*.deb
+            artifacts/**/*.AppImage
           name: WorshipDesk Release ${{ github.event.inputs.tag_name || (github.ref_type == 'tag' && github.ref_name || 'v1.0.0') }}
           body: |
             ## 🚀 WorshipDesk Official Release
@@ -87,7 +87,7 @@ jobs:
             Download standalone offline setup installers:
             - 🪟 **Windows**: `.exe` Installer
             - 🍎 **macOS**: `.dmg` Disk Image
-            - 🐧 **Linux**: `.deb` Debian Package
+            - 🐧 **Linux**: `.AppImage` Universal Package (Supports all Linux distros)
           draft: false
           prerelease: false
           overwrite: true
