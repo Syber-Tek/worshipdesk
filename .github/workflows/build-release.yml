@@ -45,48 +45,6 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Generate macOS ICNS Icon
-        if: runner.os == 'macOS'
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          source="src/assets/app-icon-dark.png"
-          iconset="src/assets/app-icon-dark.iconset"
-          output="src/assets/app-icon-dark.icns"
-
-          test -f "$source"
-          rm -rf "$iconset" "$output"
-          mkdir -p "$iconset"
-
-          sips -z 16 16 "$source" \
-            --out "$iconset/icon_16x16.png"
-          sips -z 32 32 "$source" \
-            --out "$iconset/icon_16x16@2x.png"
-
-          sips -z 32 32 "$source" \
-            --out "$iconset/icon_32x32.png"
-          sips -z 64 64 "$source" \
-            --out "$iconset/icon_32x32@2x.png"
-
-          sips -z 128 128 "$source" \
-            --out "$iconset/icon_128x128.png"
-          sips -z 256 256 "$source" \
-            --out "$iconset/icon_128x128@2x.png"
-
-          sips -z 256 256 "$source" \
-            --out "$iconset/icon_256x256.png"
-          sips -z 512 512 "$source" \
-            --out "$iconset/icon_256x256@2x.png"
-
-          sips -z 512 512 "$source" \
-            --out "$iconset/icon_512x512.png"
-          sips -z 1024 1024 "$source" \
-            --out "$iconset/icon_512x512@2x.png"
-
-          iconutil --convert icns "$iconset" --output "$output"
-          test -s "$output"
-
       - name: Build, Package and Create Executables
         run: npm run make
 
@@ -95,12 +53,12 @@ jobs:
         with:
           name: worshipdesk-${{ matrix.os }}
           path: |
-            out/make/**/*.exe
-            out/make/**/*.dmg
-            out/make/**/*.zip
-            out/make/**/*.deb
-            out/make/**/*.rpm
-            out/make/**/*.AppImage
+            release/*.exe
+            release/*.dmg
+            release/*.zip
+            release/*.deb
+            release/*.rpm
+            release/*.AppImage
           if-no-files-found: warn
 
   release:
@@ -125,9 +83,9 @@ jobs:
             ## 🚀 WorshipDesk Cross-Platform Release
 
             Download standalone app archives & offline setup installers:
-            - 🪟 **Windows**: `.exe Setup Installer` & `WorshipDesk-win32-x64.zip`
-            - 🍎 **macOS**: `.dmg Installer` & `WorshipDesk-darwin-*.zip`
-            - 🐧 **Linux**: `.deb`, `.rpm`, `.AppImage` & `WorshipDesk-linux-x64.zip`
+            - 🪟 **Windows**: `WorshipDesk Setup <version>.exe` (NSIS) & `.zip`
+            - 🍎 **macOS**: `.dmg` & `.zip`
+            - 🐧 **Linux**: `.AppImage`, `.deb` & `.rpm`
           draft: false
           prerelease: false
           overwrite: true

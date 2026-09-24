@@ -1,7 +1,6 @@
 import { app, BrowserWindow, ipcMain, screen, dialog, Notification, nativeImage } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
-import started from 'electron-squirrel-startup';
 import {
   initDatabase,
   getStatusMessage,
@@ -24,10 +23,6 @@ import {
   getHymnsCount,
   getHymnCategories
 } from './db.js';
-
-if (started) {
-  app.quit();
-}
 
 let dbPath = '';
 let mainWindow = null;
@@ -372,7 +367,7 @@ const createStageWindow = () => {
     autoHideMenuBar: true,
     backgroundColor: '#0C0D0E',
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, '../preload/index.js'),
       nodeIntegration: false,
       contextIsolation: true,
       webSecurity: true,
@@ -388,13 +383,13 @@ const createStageWindow = () => {
     notifyStageStatusChange();
   });
 
-  const baseUrl = MAIN_WINDOW_VITE_DEV_SERVER_URL || `file://${path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`)}`;
+  const baseUrl = process.env.ELECTRON_RENDERER_URL || `file://${path.join(__dirname, '../renderer/index.html')}`;
   const stageUrl = `${baseUrl}?window=stage`;
 
-  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+  if (process.env.ELECTRON_RENDERER_URL) {
     stageWindow.loadURL(stageUrl);
   } else {
-    stageWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`), { query: { window: 'stage' } });
+    stageWindow.loadFile(path.join(__dirname, '../renderer/index.html'), { query: { window: 'stage' } });
   }
 
   notifyStageStatusChange();
@@ -484,7 +479,7 @@ const createPresentationWindow = (display) => {
     autoHideMenuBar: true,
     backgroundColor: '#000000',
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, '../preload/index.js'),
       nodeIntegration: false,
       contextIsolation: true,
       webSecurity: true,
@@ -500,13 +495,13 @@ const createPresentationWindow = (display) => {
     presentationWindows.delete(String(display.id));
   });
 
-  const baseUrl = MAIN_WINDOW_VITE_DEV_SERVER_URL || `file://${path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`)}`;
+  const baseUrl = process.env.ELECTRON_RENDERER_URL || `file://${path.join(__dirname, '../renderer/index.html')}`;
   const presentationUrl = `${baseUrl}?window=presentation`;
 
-  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+  if (process.env.ELECTRON_RENDERER_URL) {
     win.loadURL(presentationUrl);
   } else {
-    win.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`), { query: { window: 'presentation' } });
+    win.loadFile(path.join(__dirname, '../renderer/index.html'), { query: { window: 'presentation' } });
   }
 };
 
@@ -518,7 +513,7 @@ const createWindow = () => {
     title: 'WorshipDesk - Control Window',
     icon: appIcon,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, '../preload/index.js'),
       nodeIntegration: false,
       contextIsolation: true,
       webSecurity: true,
@@ -543,10 +538,10 @@ const createWindow = () => {
     }
   });
 
-  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-    mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+  if (process.env.ELECTRON_RENDERER_URL) {
+    mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL);
   } else {
-    mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
+    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
   }
 };
 
