@@ -4,6 +4,7 @@ import {
   FaArrowRotateRight,
   FaDownload,
   FaCircleCheck,
+  FaWifi,
 } from "react-icons/fa6";
 import appIconDark from "../../../assets/app-icon-dark.png";
 import appIconLight from "../../../assets/app-icon-light.png";
@@ -13,6 +14,7 @@ export default function AboutSettings({
   textTitle,
   textSub,
   borderDivider,
+  isLight,
 }) {
   const [version, setVersion] = React.useState(null);
   const [update, setUpdate] = React.useState({ status: "idle" });
@@ -42,17 +44,18 @@ export default function AboutSettings({
 
   const status = update.status;
   const isBusy = status === "checking" || status === "downloading";
+  const primaryBtn = "flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0D3822] text-[#34D399] border border-[#10B981]/30 text-xs font-semibold hover:bg-[#10462D]";
 
   return (
     <div className="space-y-5">
       {/* Header */}
       <div>
         <h3 className="text-sm font-bold text-accent flex items-center gap-2">
-          <FaCircleInfo /> About App
+          <FaCircleInfo /> About &amp; Updates
         </h3>
         <p className={`text-xs mt-1 ${textSub}`}>
-          WorshipDesk — offline-first church presentation, version info, and
-          release notes.
+          WorshipDesk — offline-first church presentation. Check for updates and
+          install a new version without leaving the app.
         </p>
       </div>
 
@@ -67,69 +70,25 @@ export default function AboutSettings({
             <span className="bg-[#0D3822] text-[#34D399] border border-[#10B981]/30 rounded-lg px-3 py-1 font-semibold text-xs">
               {version ? `WorshipDesk v${version}` : "WorshipDesk"}
             </span>
-            <span className={`text-xs ${textSub}`}>September 18, 2026</span>
+            <span className={`text-xs ${textSub}`}>
+              100% offline &middot; no account needed
+            </span>
           </div>
 
-          <div className="space-y-3">
-            <h2 className={`text-sm font-bold ${textTitle}`}>
-              Welcome to WorshipDesk 1.0
-            </h2>
-            <p className={`text-xs ${textSub} leading-relaxed max-w-2xl`}>
-              WorshipDesk 1.0 is an offline-first church presentation app, built
-              with a focus on reliability, speed, and a smoother overall
-              experience. From launching scriptures to projecting hymns,
-              everything should feel more snappy and refined across the board.
-            </p>
-          </div>
-
+          {/* Software Updates — kept directly under the version so the check
+              button is visible without scrolling. */}
           <div className="space-y-3 pt-1">
-            <h2 className={`text-sm font-bold ${textTitle}`}>
-              A few standout improvements
-            </h2>
-
-            <ul
-              className={`space-y-3 text-xs ${textSub} list-disc list-inside leading-relaxed pl-1 max-w-2xl`}
-            >
-              <li>
-                <span className={`font-semibold ${textTitle}`}>
-                  Scripture lookup is quicker to respond
-                </span>
-                , with indexed local SQLite database search across NIV, KJV,
-                NKJV, and Twi translations.
-              </li>
-              <li>
-                <span className={`font-semibold ${textTitle}`}>
-                  In longer services, WorshipDesk does a better job maintaining
-                  context
-                </span>
-                , rendering Methodist and Presbyterian hymnals with zero lag.
-              </li>
-              <li>
-                <span className={`font-semibold ${textTitle}`}>
-                  Multi-monitor projector output has been significantly improved
-                </span>
-                . Dual-window IPC canvas rendering delivers smooth projections
-                for secondary displays, TVs, and OBS/vMix live streams.
-              </li>
-              <li>
-                <span className={`font-semibold ${textTitle}`}>
-                  100% Offline Resilience
-                </span>
-                . All scriptures, hymnals, fonts, and logic run locally on
-                Windows without requiring active internet connectivity.
-              </li>
-            </ul>
-          </div>
-
-          {/* Software Updates */}
-          <div className="space-y-3 pt-4 border-t border-current/10">
             <h2 className={`text-sm font-bold ${textTitle}`}>Software Updates</h2>
 
             <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={onCheck}
                 disabled={isBusy}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-current/10 text-xs font-semibold hover:bg-black/5 disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed ${
+                  isLight
+                    ? "border-[#D1D5DB] text-[#111827] hover:bg-[#F3F4F6]"
+                    : "border-current/10 hover:bg-white/5"
+                }`}
               >
                 <FaArrowRotateRight
                   className={status === "checking" ? "animate-spin" : ""}
@@ -140,7 +99,7 @@ export default function AboutSettings({
               {status === "available" && !update.manualOnly && (
                 <button
                   onClick={() => window.api?.downloadUpdate?.()}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0D3822] text-[#34D399] border border-[#10B981]/30 text-xs font-semibold"
+                  className={primaryBtn}
                 >
                   <FaDownload /> Download v{update.version}
                 </button>
@@ -149,7 +108,7 @@ export default function AboutSettings({
               {status === "downloaded" && !update.manualOnly && (
                 <button
                   onClick={() => window.api?.installUpdate?.()}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0D3822] text-[#34D399] border border-[#10B981]/30 text-xs font-semibold"
+                  className={primaryBtn}
                 >
                   <FaCircleCheck /> Restart &amp; install
                 </button>
@@ -159,7 +118,7 @@ export default function AboutSettings({
                 update.manualOnly && (
                   <button
                     onClick={() => window.api?.openReleasesPage?.()}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0D3822] text-[#34D399] border border-[#10B981]/30 text-xs font-semibold"
+                    className={primaryBtn}
                   >
                     <FaDownload /> Open downloads page
                   </button>
@@ -167,22 +126,71 @@ export default function AboutSettings({
             </div>
 
             <p className={`text-xs ${textSub} min-h-4`}>
-              {status === "idle" && "WorshipDesk checks for updates when you ask it to."}
+              {status === "idle" &&
+                "WorshipDesk only checks for updates when you ask it to."}
               {status === "checking" && "Checking for updates…"}
               {status === "up-to-date" &&
-                `WorshipDesk ${update.version ?? ""} is up to date.`}
+                `WorshipDesk ${update.version ?? version ?? ""} is up to date.`}
               {status === "available" &&
                 (update.manualOnly
                   ? `Version ${update.version} is available. macOS builds are not code-signed, so download it from the releases page.`
                   : `Version ${update.version} is available.`)}
-              {status === "downloading" &&
-                `Downloading ${update.percent ?? 0}%…`}
+              {status === "downloading" && `Downloading ${update.percent ?? 0}%…`}
               {status === "downloaded" &&
                 (update.manualOnly
                   ? `Version ${update.version} downloaded. Install it from the releases page.`
                   : "Update ready. Restart to install — or just quit normally and it will install.")}
-              {status === "error" && (update.message || "Could not check for updates.")}
+              {status === "error" &&
+                (update.message || "Could not check for updates.")}
             </p>
+          </div>
+
+          <div className="space-y-3 pt-4 border-t border-current/10">
+            <h2 className={`text-sm font-bold ${textTitle}`}>
+              What&apos;s new in this version
+            </h2>
+
+            <ul
+              className={`space-y-3 text-xs ${textSub} list-disc list-inside leading-relaxed pl-1 max-w-2xl`}
+            >
+              <li>
+                <span className={`font-semibold ${textTitle}`}>
+                  The window now matches your theme
+                </span>
+                . The title bar and taskbar icon follow the app theme in both
+                light and dark mode, and the title bar spans the full width so
+                the window buttons no longer cover the live output controls.
+              </li>
+              <li>
+                <span className={`font-semibold ${textTitle}`}>
+                  Update from inside the app
+                </span>
+                . Use the check button above to see whether a newer version is
+                available, download it, and install it on the next restart.
+              </li>
+              <li>
+                <span className={`font-semibold ${textTitle}`}>
+                  Both Mac chips are supported
+                </span>
+                . Separate Intel and Apple Silicon builds, and the bundled
+                Bibles and hymnals now load correctly from an installed app.
+              </li>
+              <li>
+                <span className={`font-semibold ${textTitle}`}>
+                  Faster lookups across the full library
+                </span>
+                . 10 Bibles, 660 books, 309,149 verses and 2,374 hymns indexed in
+                a local SQLite database, with slim theme-matched scrollbars
+                throughout.
+              </li>
+              <li>
+                <span className={`font-semibold ${textTitle}`}>
+                  100% Offline Resilience
+                </span>
+                . All scriptures, hymnals, fonts, and logic run locally without
+                requiring an active internet connection.
+              </li>
+            </ul>
           </div>
 
           <div className="pt-4 text-center border-t border-current/10">

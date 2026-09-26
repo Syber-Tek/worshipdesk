@@ -84,7 +84,7 @@ export default function SettingsView({
     { id: "languages", label: "Languages", icon: FaLanguage },
     { id: "shortcuts", label: "Keybinds", icon: FaKeyboard },
     { id: "backup", label: "Backup & Export", icon: FaFloppyDisk },
-    { id: "about", label: "About App", icon: FaCircleInfo },
+    { id: "about", label: "About & Updates", icon: FaCircleInfo },
   ];
 
   const activeEffectiveTheme = effectiveTheme || themeMode || "dark";
