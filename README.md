@@ -80,6 +80,34 @@ npm run package
 ### GitHub Actions Automated Release (.exe & .zip)
 Every time a git release tag (e.g. `v1.1.0`) is pushed to GitHub, the `.github/workflows/build-release.yml` pipeline automatically builds the Windows `.exe` installer and `.zip` archive and publishes them to GitHub Releases.
 
+### AI Agent Tooling (`opencode.json`)
+This repo ships an [opencode](https://opencode.ai) config with three dev tools:
+
+| Tool | Kind | Purpose |
+| --- | --- | --- |
+| **reponova** | MCP server | Knowledge graph of this codebase (11 graph tools: search, impact, path, outline). Config in `reponova.yml`. |
+| **shadcn** | MCP server | Browse/search the shadcn/ui component registry. |
+| **ponytail** | opencode plugin | "Lazy senior dev" ruleset — minimal, non-over-engineered changes. |
+
+The MCP servers are installed once outside the repo (so they never leak into the packaged app):
+
+```bash
+npm install reponova --prefix "$USERPROFILE/.config/opencode/mcp/reponova" --omit=optional
+npm install shadcn   --prefix "$USERPROFILE/.config/opencode/mcp/shadcn"   --omit=optional
+npm install @reponova/lang-javascript \
+  --prefix "$USERPROFILE/.config/opencode/mcp/reponova" --omit=optional --legacy-peer-deps
+```
+
+Then rebuild the knowledge graph after code changes:
+
+```bash
+node "$USERPROFILE/.config/opencode/mcp/reponova/node_modules/reponova/dist/cli/index.js" build
+```
+
+> `opencode.json` references these installs by absolute path, so teammates must
+> adjust the two `command` paths to match their own home directory. Graph output
+> lands in `reponova-out/` (git-ignored).
+
 ---
 
 ## 🛠️ Built With
