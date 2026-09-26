@@ -39,6 +39,53 @@ const buildHymnDeck = (item) => {
   }));
 };
 
+const THEME_MODE_KEY = "church_presenter_theme_mode";
+
+const readThemeMode = () => {
+  if (typeof window === "undefined" || !window.localStorage) return "dark";
+  const saved = window.localStorage.getItem(THEME_MODE_KEY);
+  return saved === "light" || saved === "system" ? saved : "dark";
+};
+
+const resolveEffectiveTheme = (mode) => {
+  if (mode !== "system") return mode;
+  if (typeof window === "undefined" || !window.matchMedia) return "dark";
+  return window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light";
+};
+
+// The projector and stage windows return before the control window's theme code
+// runs, so they have to apply data-theme themselves. They are separate
+// BrowserWindows, so without this the CSS variables fall back to the dark
+// palette and the standby screen ignores the operator's chosen theme.
+function useOverlayTheme(isOverlayWindow) {
+  useEffect(() => {
+    if (!isOverlayWindow) return;
+    const apply = () => {
+      document.documentElement.setAttribute(
+        "data-theme",
+        resolveEffectiveTheme(readThemeMode()),
+      );
+    };
+    apply();
+    const media =
+      typeof window !== "undefined" && window.matchMedia
+        ? window.matchMedia("(prefers-color-scheme: dark)")
+        : null;
+    const onChange = () => apply();
+    media?.addEventListener("change", onChange);
+    // Best effort: picks up a theme change made in the control window.
+    window.addEventListener("storage", onChange);
+    const unsubscribe = window.api?.onNativeThemeChanged?.(onChange);
+    return () => {
+      media?.removeEventListener("change", onChange);
+      window.removeEventListener("storage", onChange);
+      if (typeof unsubscribe === "function") unsubscribe();
+    };
+  }, [isOverlayWindow]);
+}
+
 export default function App() {
   const isPresentationMode =
     typeof window !== "undefined" &&
@@ -49,6 +96,8 @@ export default function App() {
     typeof window !== "undefined" &&
     (window.location.search.includes("window=stage") ||
       window.location.href.includes("window=stage"));
+
+  useOverlayTheme(isPresentationMode || isStageMode);
 
   if (isPresentationMode) {
     return <PresentationOutputWindow />;
@@ -1266,10 +1315,10 @@ export default function App() {
 
   return (
     <div
-      className={`flex flex-col h-screen font-sans overflow-hidden select-none transition-colors duration-200 rounded-tl-[16px] rounded-tr-[16px] ${
+      className={`flex flex-col h-screen font-sans overflow-hidden select-none transition-colors duration-200 ${
         effectiveTheme === "light"
-          ? "bg-[#F4F5F7] text-[#111827]"
-          : "bg-bg text-text-primary"
+          ? "bg-[#E4E7EC] text-[#111827]"
+          : "bg-[#050608] text-text-primary"
       }`}
       style={{
         fontSize:
@@ -1302,8 +1351,13 @@ export default function App() {
         themeMode={effectiveTheme}
       />
 
-      {/* 2.2 CENTER WORKSPACE */}
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* 2.2 CENTER WORKSPACE — rounded top corners, so the darker app backdrop
+          shows through the arcs where it meets the title bar and the rails */}
+      <div
+        className={`flex-1 flex flex-col min-w-0 overflow-hidden rounded-tl-[18px] rounded-tr-[18px] ${
+          effectiveTheme === "light" ? "bg-[#FFFFFF]" : "bg-panel"
+        }`}
+      >
         {/* MAIN ROUTED VIEW CONTENT AREA */}
         <main className="flex-1 overflow-y-auto p-5 text-xs">
           {activeTab === "home" && (

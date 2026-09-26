@@ -4,7 +4,6 @@ import {
   FaArrowRotateRight,
   FaDownload,
   FaCircleCheck,
-  FaWifi,
 } from "react-icons/fa6";
 import appIconDark from "../../../assets/app-icon-dark.png";
 import appIconLight from "../../../assets/app-icon-light.png";
@@ -18,6 +17,8 @@ export default function AboutSettings({
 }) {
   const [version, setVersion] = React.useState(null);
   const [update, setUpdate] = React.useState({ status: "idle" });
+  // Automatic checking is on by default; the main process owns the real value.
+  const [autoCheck, setAutoCheck] = React.useState(true);
 
   React.useEffect(() => {
     if (window.api?.getAppInfo) {
@@ -26,12 +27,27 @@ export default function AboutSettings({
         .then((info) => setVersion(info?.version ?? null))
         .catch(() => {});
     }
+    if (window.api?.getAutoUpdateCheck) {
+      window.api
+        .getAutoUpdateCheck()
+        .then((res) => {
+          if (res && typeof res.autoCheck === "boolean") setAutoCheck(res.autoCheck);
+        })
+        .catch(() => {});
+    }
     if (!window.api?.onUpdaterStatus) return;
     const unsubscribe = window.api.onUpdaterStatus((payload) => {
       if (payload && payload.status) setUpdate(payload);
     });
     return typeof unsubscribe === "function" ? unsubscribe : undefined;
   }, []);
+
+  const onToggleAutoCheck = async (next) => {
+    setAutoCheck(next);
+    if (!window.api?.setAutoUpdateCheck) return;
+    const res = await window.api.setAutoUpdateCheck(next).catch(() => null);
+    if (res && typeof res.autoCheck === "boolean") setAutoCheck(res.autoCheck);
+  };
 
   const onCheck = async () => {
     if (!window.api?.checkForUpdates) return;
@@ -127,7 +143,9 @@ export default function AboutSettings({
 
             <p className={`text-xs ${textSub} min-h-4`}>
               {status === "idle" &&
-                "WorshipDesk only checks for updates when you ask it to."}
+                (autoCheck
+                  ? "WorshipDesk checks for a new version shortly after startup and every 6 hours. Nothing is ever downloaded without your say-so."
+                  : "Automatic checking is off. Use the button above whenever you want to look for a new version.")}
               {status === "checking" && "Checking for updates…"}
               {status === "up-to-date" &&
                 `WorshipDesk ${update.version ?? version ?? ""} is up to date.`}
@@ -143,6 +161,43 @@ export default function AboutSettings({
               {status === "error" &&
                 (update.message || "Could not check for updates.")}
             </p>
+
+            {/* Automatic check toggle */}
+            <label
+              className={`flex items-center gap-3 pt-1 cursor-pointer select-none ${
+                status === "checking" || status === "downloading"
+                  ? "opacity-60"
+                  : ""
+              }`}
+            >
+              <button
+                type="button"
+                role="switch"
+                aria-checked={autoCheck}
+                aria-label="Automatically check for updates"
+                onClick={() =>
+                  onToggleAutoCheck(!autoCheck).catch(() => {})
+                }
+                className={`relative w-9 h-5 rounded-full transition-colors shrink-0 ${
+                  autoCheck ? "bg-[#10B981]" : "bg-[#9CA3AF]"
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${
+                    autoCheck ? "left-4.5" : "left-0.5"
+                  }`}
+                />
+              </button>
+              <span className="text-xs">
+                <span className={`font-semibold ${textTitle}`}>
+                  Automatically check for updates
+                </span>
+                <span className={`block ${textSub}`}>
+                  On by default. Only looks for a new version — you still choose
+                  whether to download and install it.
+                </span>
+              </span>
+            </label>
           </div>
 
           <div className="space-y-3 pt-4 border-t border-current/10">
