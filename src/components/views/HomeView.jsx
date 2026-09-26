@@ -63,9 +63,9 @@ export default function HomeView({
     <div className="@container space-y-6 max-w-6xl mx-auto pb-6">
       {/* Top Banner: Service Dashboard Overview */}
       <div
-        className={`p-5 rounded-xl border flex flex-col @4xl:flex-row items-start @4xl:items-center justify-between gap-4 transition-colors duration-200 ${cardClass}`}
+        className={`p-5 rounded-xl border flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 transition-colors duration-200 ${cardClass}`}
       >
-        <div className="space-y-1 w-full @4xl:w-auto">
+        <div className="space-y-1 w-full xl:w-auto">
           <div className="flex items-center gap-2"></div>
           <h1 className={`text-xl font-bold tracking-tight ${headingClass}`}>
             WorshipDesk Dashboard
@@ -76,7 +76,7 @@ export default function HomeView({
           </p>
         </div>
 
-        <div className="flex flex-col @xl:flex-row items-stretch @xl:items-center gap-2.5 w-full @4xl:w-auto">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full xl:w-auto">
           <button
             onClick={() => setActiveTab("plan")}
             className="px-3.5 py-2 bg-accent hover:bg-accent-hover text-bg font-bold text-xs rounded-lg flex items-center justify-center gap-1.5 shadow transition cursor-pointer"
@@ -98,8 +98,11 @@ export default function HomeView({
         </div>
       </div>
 
-      {/* Metric Cards Grid (Matching reference visual density & surface layering) */}
-      <div className="grid grid-cols-1 @2xl:grid-cols-2 @5xl:grid-cols-4 gap-4">
+      {/* Metric Cards Grid. Always 2x2 once the window has room for it, dropping
+          to a single column only when it does not. The check is a container
+          query because the icon and live rails already take ~320px, so a
+          viewport breakpoint fires long after the space is actually gone. */}
+      <div className="grid grid-cols-1 @md:grid-cols-2 gap-4">
         {/* Card 1: Playlist Items */}
         <div className={`p-4 rounded-xl border space-y-3 ${cardClass}`}>
           <div className="flex justify-between items-center">
@@ -247,9 +250,9 @@ export default function HomeView({
       </div>
 
       {/* Main Workspace Layout: 2 Columns (Live Controls + Recent Service Timeline) */}
-      <div className="grid grid-cols-1 @4xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column (2 Span): Live Station & Quick Jump */}
-        <div className="@4xl:col-span-2 space-y-5">
+        <div className="lg:col-span-2 space-y-5">
           {/* Quick Scripture Jump Bar */}
           <div className={`p-4 rounded-xl border space-y-3 ${cardClass}`}>
             <h3
@@ -294,7 +297,7 @@ export default function HomeView({
 
           {/* Service Playlist Quick Preview */}
           <div className={`p-5 rounded-xl border space-y-4 ${cardClass}`}>
-            <div className="flex flex-col @2xl:flex-row @2xl:items-center justify-between gap-2 border-b pb-3 border-border">
+            <div className="flex justify-between items-center border-b pb-3 border-border">
               <div>
                 <h3 className={`text-sm font-bold ${headingClass}`}>
                   Current Service Playlist
@@ -305,7 +308,7 @@ export default function HomeView({
               </div>
               <button
                 onClick={() => setActiveTab("plan")}
-                className="text-xs text-accent hover:underline font-semibold shrink-0 self-start"
+                className="text-xs text-accent hover:underline font-semibold"
               >
                 Manage Full Order ➔
               </button>
@@ -372,7 +375,7 @@ export default function HomeView({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => handleStageNext && handleStageNext(item)}
                         title="Stage as Next"
