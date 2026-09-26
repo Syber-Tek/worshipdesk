@@ -46,6 +46,11 @@ mac:
   icon: src/assets/app-icon-dark.png
   category: public.app-category.productivity
   identity: null
+  # electron-builder normally omits ${arch} for the platform's default
+  # architecture, which makes the Intel and Apple Silicon DMGs share the name
+  # WorshipDesk-<version>.dmg. Forcing an explicit pattern keeps -x64 and
+  # -arm64 in the filename so both can be published side by side.
+  artifactName: ${productName}-${version}-${arch}.${ext}
   target:
     - dmg
     - zip
