@@ -121,6 +121,32 @@ export function mapBookToTranslation(name, targetCode) {
   return resolved ? resolved.name : (all[0] && all[0].name) || ''
 }
 
+// Find the counterpart of a book inside another translation's book list.
+// Book names are localized (English 'John' vs Twi 'Yohane'), so comparing names
+// only ever matches the book the user is already looking at and leaves every
+// other book unresolved. Canonical position is the reliable join key, with the
+// stored book_number as the fallback for lists that are not in canonical order.
+// Returns null rather than guessing, so callers never show a silent mismatch.
+export function resolveBookInList(books, name, targetCode) {
+  if (!Array.isArray(books) || books.length === 0) return null
+
+  const index = findCanonicalIndex(name)
+  if (index < 0) {
+    const n = normalizeBookName(name)
+    return books.find((b) => normalizeBookName(b.name) === n) || null
+  }
+
+  const wantedNumber = index + 1
+  const byNumber = books.find((b) => Number(b.book_number) === wantedNumber)
+  if (byNumber) return byNumber
+
+  const mapped = mapBookToTranslation(name, targetCode)
+  return (
+    books.find((b) => normalizeBookName(b.name) === normalizeBookName(mapped)) ||
+    null
+  )
+}
+
 // Canonical order used by the Twi .txt importer (basename -> display name -> position)
 export const TWI_BOOKS_CANONICAL = CANONICAL_BIBLE.map((b) => ({
   number: b.number,

@@ -13,7 +13,7 @@ import AddItemModal from "./components/modals/AddItemModal";
 import SplashScreen from "./components/SplashScreen";
 import { Toaster, toast } from "sonner";
 
-import { mapBookToTranslation, normalizeBookName } from "./bibleBooks.js";
+import { resolveBookInList, normalizeBookName } from "./bibleBooks.js";
 
 // Split a hymn's lyrics at blank lines into separate stanza slides so hymns can
 // also be presented verse-by-verse (stanza-by-stanza) like scripture.
@@ -514,19 +514,11 @@ export default function App() {
           setAllBooksList(books);
           // Keep the selected book valid across translations (English <-> Twi).
           const normalized = normalizeBookName(selectedBook);
-          const found = books.find(
-            (b) => normalizeBookName(b.name) === normalized,
-          );
+          const found =
+            books.find((b) => normalizeBookName(b.name) === normalized) ||
+            resolveBookInList(books, selectedBook, selectedTranslation);
           if (!found) {
-            const mappedName = mapBookToTranslation(
-              selectedBook,
-              selectedTranslation,
-            );
-            const target =
-              books.find(
-                (b) =>
-                  normalizeBookName(b.name) === normalizeBookName(mappedName),
-              ) || books[0];
+            const target = books[0];
             if (target) {
               setSelectedBook(target.name);
               setSelectedChapter((prev) =>
@@ -534,6 +526,14 @@ export default function App() {
               );
               setSelectedVerseIndex(0);
             }
+          } else if (normalizeBookName(found.name) !== normalized) {
+            setSelectedBook(found.name);
+            if (found.chaptersCount) {
+              setSelectedChapter((prev) =>
+                Math.min(prev || 1, found.chaptersCount),
+              );
+            }
+            setSelectedVerseIndex(0);
           } else if (found.chaptersCount) {
             setSelectedChapter((prev) =>
               Math.min(prev || 1, found.chaptersCount),
@@ -583,10 +583,17 @@ export default function App() {
             window.api.getBooks(bibleId).then((books) => {
               if (stale) return;
               if (!books || books.length === 0) return;
-              const matchedBook = books.find(
-                (b) =>
-                  normalizeBookName(b.name) === normalizeBookName(selectedBook),
-              );
+              const matchedBook =
+                books.find(
+                  (b) =>
+                    normalizeBookName(b.name) ===
+                    normalizeBookName(selectedBook),
+                ) ||
+                resolveBookInList(
+                  books,
+                  selectedBook,
+                  selectedTranslation,
+                );
               if (!matchedBook || !window.api.getVerses) return;
               window.api
                 .getVerses(matchedBook.id, selectedChapter)
@@ -635,20 +642,35 @@ export default function App() {
     }
     const secBible = biblesList.find((b) => b.code === secondaryTranslation);
     if (!secBible) return;
+
+    // Guarded so a fast book/translation change cannot land an older response
+    // on top of a newer selection, which is what left the parallel pane
+    // showing a different book than the primary one.
+    let stale = false;
     window.api.getBooks(secBible.id).then((books) => {
-      if (!books || books.length === 0) return;
-      const normalized = normalizeBookName(selectedBook);
-      const targetBook =
-        books.find((b) => normalizeBookName(b.name) === normalized) ||
-        books[0];
-      if (targetBook) {
-        window.api.getVerses(targetBook.id, selectedChapter).then((verses) => {
-          if (Array.isArray(verses)) {
-            setSecondaryVerses(verses);
-          }
-        });
-      }
+      if (stale) return;
+      const targetBook = resolveBookInList(
+        books,
+        selectedBook,
+        secondaryTranslation,
+      );
+      // No counterpart means no parallel text. Falling back to books[0] here
+      // is what silently showed the wrong book next to the right label.
+      if (!targetBook || !window.api.getVerses) return;
+      const chapter = Math.min(
+        selectedChapter || 1,
+        targetBook.chaptersCount || selectedChapter || 1,
+      );
+      window.api.getVerses(targetBook.id, chapter).then((verses) => {
+        if (stale) return;
+        if (Array.isArray(verses)) {
+          setSecondaryVerses(verses);
+        }
+      });
     });
+    return () => {
+      stale = true;
+    };
   }, [secondaryTranslation, selectedBook, selectedChapter, biblesList]);
 
   // Attach the parallel translation text to a verse when available.
