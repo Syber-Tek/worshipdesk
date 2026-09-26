@@ -16,6 +16,9 @@ contextBridge.exposeInMainWorld('api', {
   downloadUpdate: () => ipcRenderer.invoke('download-update'),
   installUpdate: () => ipcRenderer.invoke('install-update'),
   openReleasesPage: () => ipcRenderer.invoke('open-releases-page'),
+  getAutoUpdateCheck: () => ipcRenderer.invoke('get-auto-update-check'),
+  setAutoUpdateCheck: (enabled) =>
+    ipcRenderer.invoke('set-auto-update-check', Boolean(enabled)),
   onUpdaterStatus: (callback) => {
     const subscription = (_event, payload) => callback(payload)
     ipcRenderer.on('updater-status', subscription)
