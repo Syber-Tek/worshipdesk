@@ -8,7 +8,6 @@ import {
   FaDatabase,
   FaLanguage,
   FaKeyboard,
-  FaFloppyDisk,
   FaCircleInfo,
   FaMusic,
 } from "react-icons/fa6";
@@ -23,7 +22,6 @@ import SongsSettings from "./settings/SongsSettings";
 import ContentSettings from "./settings/ContentSettings";
 import LanguageSettings from "./settings/LanguageSettings";
 import ShortcutsSettings from "./settings/ShortcutsSettings";
-import BackupSettings from "./settings/BackupSettings";
 import AboutSettings from "./settings/AboutSettings";
 
 export default function SettingsView({
@@ -80,10 +78,9 @@ export default function SettingsView({
     { id: "presentation", label: "Presentation", icon: FaTv },
     { id: "bible", label: "Bible & Scripture", icon: FaBookBible },
     { id: "songs", label: "Songs & Hymns", icon: FaMusic },
-    { id: "content", label: "Content & Storage", icon: FaDatabase },
+    { id: "content", label: "Content & Backup", icon: FaDatabase },
     { id: "languages", label: "Languages", icon: FaLanguage },
     { id: "shortcuts", label: "Keybinds", icon: FaKeyboard },
-    { id: "backup", label: "Backup & Export", icon: FaFloppyDisk },
     { id: "about", label: "About & Updates", icon: FaCircleInfo },
   ];
 
@@ -252,8 +249,6 @@ export default function SettingsView({
         {settingsSection === "shortcuts" && (
           <ShortcutsSettings {...commonProps} />
         )}
-
-        {settingsSection === "backup" && <BackupSettings {...commonProps} />}
 
         {settingsSection === "about" && <AboutSettings {...commonProps} />}
       </div>
