@@ -86,7 +86,7 @@ export default function StageDisplayWindow() {
 
         {/* Live Clock Display */}
         <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[#18191C] border border-[#27272A] font-mono text-sm sm:text-base font-bold text-[#F4F4F5]">
-          <FaClock className="text-[#D4A94A] text-xs" />
+          <FaClock className="text-accent text-xs" />
           <span>{currentTime}</span>
         </div>
       </div>
@@ -94,7 +94,7 @@ export default function StageDisplayWindow() {
       {/* Main Center Area: Current Projected Text */}
       <div className="flex-1 flex flex-col justify-center py-6 space-y-4 max-w-7xl mx-auto w-full">
         {isLive && (slideData.title || slideData.hymnLabel) && (
-          <div className="inline-flex items-center gap-2 self-start px-3 py-1 rounded bg-[#1C1E24] border border-[#2D313E] text-xs sm:text-sm font-bold uppercase tracking-wider text-[#D4A94A]">
+          <div className="inline-flex items-center gap-2 self-start px-3 py-1 rounded bg-[#1C1E24] border border-[#2D313E] text-xs sm:text-sm font-bold uppercase tracking-wider text-accent">
             {slideData.hymnLabel
               ? `${slideData.hymnLabel} — `
               : ""}
@@ -108,7 +108,7 @@ export default function StageDisplayWindow() {
               {slideData.content}
             </div>
             {slideData.secondaryText && (
-              <div className="text-xl sm:text-3xl font-semibold italic text-[#D4A94A] pt-3 border-t border-[#252830]">
+              <div className="text-xl sm:text-3xl font-semibold italic text-accent pt-3 border-t border-[#252830]">
                 {slideData.secondaryText}
                 {slideData.secondaryTranslation && (
                   <span className="block text-xs font-mono font-bold uppercase not-italic tracking-wider text-[#A1A1AA] mt-1">
@@ -132,7 +132,7 @@ export default function StageDisplayWindow() {
 
       {/* Bottom Area: Next Slide Preview Container */}
       <div className="rounded-xl border border-[#3A311D] bg-[#16130D] p-4 sm:p-5 flex flex-col gap-1.5 shadow-lg">
-        <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-[#D4A94A]">
+        <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-accent">
           <FaForward className="text-xs" />
           <span>Upcoming Next Slide</span>
           {slideData.deckTotal > 0 && (
