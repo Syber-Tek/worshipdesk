@@ -12,6 +12,7 @@ export default function Header({
   themeMode,
   effectiveTheme,
   setThemeMode,
+  hasTitleBarOverlay = false,
 }) {
   const [isStageActive, setIsStageActive] = React.useState(false);
 
@@ -64,11 +65,18 @@ export default function Header({
 
   const safeDisplays = Array.isArray(displays) ? displays : [];
 
+  // On Windows/Linux the native title bar is hidden, so this header *is* the
+  // title bar: it becomes the window drag handle (double-click still maximises)
+  // and leaves a gutter for the OS caption buttons on the right.
+  const dragStyle = hasTitleBarOverlay ? { WebkitAppRegion: "drag" } : undefined;
+  const noDragStyle = hasTitleBarOverlay ? { WebkitAppRegion: "no-drag" } : undefined;
+
   return (
     <header
-      className={`h-12 border-b px-4 flex items-center justify-between text-xs transition-colors duration-200 ${
-        isLight ? "bg-[#FFFFFF] border-[#E5E7EB]" : "bg-panel border-border"
-      }`}
+      style={dragStyle}
+      className={`h-12 border-b px-4 flex items-center justify-between text-xs transition-colors duration-200 select-none ${
+        hasTitleBarOverlay ? "pr-[150px]" : ""
+      } ${isLight ? "bg-[#FFFFFF] border-[#E5E7EB]" : "bg-panel border-border"}`}
     >
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <span
@@ -102,7 +110,7 @@ export default function Header({
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2" style={noDragStyle}>
         {/* Quick Dark / Light Theme Toggle */}
         <button
           onClick={handleCycleTheme}
