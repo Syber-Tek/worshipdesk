@@ -1317,8 +1317,8 @@ export default function App() {
     <div
       className={`flex flex-col h-screen font-sans overflow-hidden select-none transition-colors duration-200 ${
         effectiveTheme === "light"
-          ? "bg-[#E4E7EC] text-[#111827]"
-          : "bg-[#050608] text-text-primary"
+          ? "bg-[#F4F5F7] text-[#111827]"
+          : "bg-bg text-text-primary"
       }`}
       style={{
         fontSize:
@@ -1351,13 +1351,8 @@ export default function App() {
         themeMode={effectiveTheme}
       />
 
-      {/* 2.2 CENTER WORKSPACE — rounded top corners, so the darker app backdrop
-          shows through the arcs where it meets the title bar and the rails */}
-      <div
-        className={`flex-1 flex flex-col min-w-0 overflow-hidden rounded-tl-[18px] rounded-tr-[18px] ${
-          effectiveTheme === "light" ? "bg-[#FFFFFF]" : "bg-panel"
-        }`}
-      >
+      {/* 2.2 CENTER WORKSPACE */}
+      <div className="flex-1 flex flex-col min-w-0">
         {/* MAIN ROUTED VIEW CONTENT AREA */}
         <main className="flex-1 overflow-y-auto p-5 text-xs">
           {activeTab === "home" && (
