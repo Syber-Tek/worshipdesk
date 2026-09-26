@@ -199,7 +199,9 @@ export default function Header({
           className={`flex items-center gap-1.5 px-3 py-1 rounded text-[11px] font-semibold uppercase tracking-wider transition cursor-pointer ${
             isLive
               ? "bg-live text-white shadow-[0_0_12px_rgba(229,72,77,0.4)] animate-pulse"
-              : "bg-[#24262B] text-[#9B9CA3] hover:text-text-primary border border-[#2A2C31]"
+              : isLight
+                ? "bg-[#F3F4F6] text-[#4B5563] border border-[#E5E7EB] hover:bg-[#E5E7EB] hover:text-[#111827]"
+                : "bg-[#24262B] text-[#9B9CA3] border border-[#2A2C31] hover:bg-[#2A2C31] hover:text-text-primary"
           }`}
         >
           <Activity set="bold" primaryColor="currentColor" size="small" />
