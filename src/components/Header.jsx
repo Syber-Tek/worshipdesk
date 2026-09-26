@@ -74,9 +74,9 @@ export default function Header({
   return (
     <header
       style={dragStyle}
-      className={`h-12 border-b px-4 flex items-center justify-between text-xs transition-colors duration-200 select-none ${
+      className={`h-12 shrink-0 px-4 flex items-center justify-between text-xs transition-colors duration-200 select-none ${
         hasTitleBarOverlay ? "pr-[150px]" : ""
-      } ${isLight ? "bg-[#FFFFFF] border-[#E5E7EB]" : "bg-panel border-border"}`}
+      } ${isLight ? "bg-[#FFFFFF]" : "bg-panel"}`}
     >
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <span

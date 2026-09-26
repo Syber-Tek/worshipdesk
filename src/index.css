@@ -16,6 +16,8 @@
   --color-accent-hover: #E2B757;
   --color-live: #E5484D;
   --color-success: #6FCF97;
+  --scrollbar-thumb: #33363E;
+  --scrollbar-thumb-hover: #464A55;
 }
 
 [data-theme="light"] {
@@ -29,6 +31,8 @@
   --color-text-primary: #111827;
   --color-text-secondary: #4B5563;
   --color-text-muted: #9CA3AF;
+  --scrollbar-thumb: #D3D7DE;
+  --scrollbar-thumb-hover: #B3B9C4;
 }
 
 @theme {
@@ -57,17 +61,26 @@ body, input, button, select, textarea {
 
 /* Compact Desktop Application Scrollbars */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 9px;
+  height: 9px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #282A30;
+  background-color: var(--scrollbar-thumb);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #383B44;
+  background-color: var(--scrollbar-thumb-hover);
+}
+::-webkit-scrollbar-thumb:active {
+  background-color: #D4A94A;
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 /* Crisp custom selection highlight */

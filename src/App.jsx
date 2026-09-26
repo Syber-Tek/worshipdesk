@@ -1266,7 +1266,7 @@ export default function App() {
 
   return (
     <div
-      className={`flex h-screen font-sans overflow-hidden select-none transition-colors duration-200 ${
+      className={`flex flex-col h-screen font-sans overflow-hidden select-none transition-colors duration-200 ${
         effectiveTheme === "light"
           ? "bg-[#F4F5F7] text-[#111827]"
           : "bg-bg text-text-primary"
@@ -1281,27 +1281,29 @@ export default function App() {
       }}
       onKeyDown={handleKeyDown}
     >
-      {/* 1. ICON RAIL (Fixed 52px width) */}
+      {/* 1. FULL-WIDTH CUSTOM TITLE BAR (native caption buttons overlay its right) */}
+      <Header
+        displays={displays}
+        isLive={isLive}
+        setIsLive={setIsLive}
+        broadcastToPresentation={broadcastToPresentation}
+        themeMode={themeMode}
+        effectiveTheme={effectiveTheme}
+        setThemeMode={setThemeMode}
+        hasTitleBarOverlay={hasTitleBarOverlay}
+      />
+
+      {/* 2. WORKSPACE ROW */}
+      <div className="flex flex-1 min-h-0">
+      {/* 2.1 ICON RAIL (Fixed 52px width) */}
       <IconRail
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         themeMode={effectiveTheme}
       />
 
-      {/* CENTER WORKSPACE */}
+      {/* 2.2 CENTER WORKSPACE */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* TOP STATUS BAR */}
-        <Header
-          displays={displays}
-          isLive={isLive}
-          setIsLive={setIsLive}
-          broadcastToPresentation={broadcastToPresentation}
-          themeMode={themeMode}
-          effectiveTheme={effectiveTheme}
-          setThemeMode={setThemeMode}
-          hasTitleBarOverlay={hasTitleBarOverlay}
-        />
-
         {/* MAIN ROUTED VIEW CONTENT AREA */}
         <main className="flex-1 overflow-y-auto p-5 text-xs">
           {activeTab === "home" && (
@@ -1428,7 +1430,7 @@ export default function App() {
         </main>
       </div>
 
-      {/* 3. CURRENT / NEXT RAIL & TRANSPORT CONTROLS */}
+      {/* 2.3 CURRENT / NEXT RAIL & TRANSPORT CONTROLS */}
       <CurrentNextRail
         currentSlide={currentSlide}
         nextSlide={nextSlide}
@@ -1454,6 +1456,7 @@ export default function App() {
         outputTheme={outputTheme}
         setOutputTheme={setOutputTheme}
       />
+      </div>
 
       {/* ADD ITEM MODAL */}
       <AddItemModal
