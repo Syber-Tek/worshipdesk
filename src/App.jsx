@@ -1266,7 +1266,7 @@ export default function App() {
 
   return (
     <div
-      className={`flex flex-col h-screen font-sans overflow-hidden select-none transition-colors duration-200 ${
+      className={`flex flex-col h-screen font-sans overflow-hidden select-none transition-colors duration-200 rounded-tl-[16px] rounded-tr-[16px] ${
         effectiveTheme === "light"
           ? "bg-[#F4F5F7] text-[#111827]"
           : "bg-bg text-text-primary"
