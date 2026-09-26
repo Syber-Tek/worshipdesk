@@ -106,21 +106,22 @@ export default function SettingsView({
   return (
     <div className="@container flex h-full max-w-5xl mx-auto flex-col gap-4">
       {/* Settings Sub-Navigation.
-          A responsive grid of tiles across the top, so the content panel below
-          keeps the full width of this column. Below the container threshold
-          there is no room for a grid, so it becomes a single scrolling chip row.
-          The rails either side of this view already take ~320px, which is why
-          the switch is driven by this container's width and not the window's. */}
+          An auto-fitting grid of tiles across the top at every width, so the
+          content panel below keeps the full width of this column. The switch is
+          driven by a container query rather than the window, because the rails
+          either side of this view already take ~320px - a viewport breakpoint
+          fires long after the column has actually run out of room. Labels wrap
+          instead of scrolling or truncating, so nothing is ever cut off. */}
       <nav
         aria-label="Settings sections"
-        className={`flex w-full shrink-0 gap-1.5 overflow-x-auto pb-1 @3xl:grid @3xl:grid-cols-[repeat(auto-fit,minmax(150px,1fr))] @3xl:overflow-x-visible @3xl:pb-2 rounded-lg border p-2 transition-colors duration-200 ${
+        className={`grid w-full shrink-0 grid-cols-[repeat(auto-fit,minmax(136px,1fr))] gap-1.5 rounded-lg border p-2 transition-colors duration-200 ${
           isLight
             ? "bg-[#FFFFFF] border-[#E5E7EB]"
             : "bg-[#151619] border-[#2A2C31]"
         }`}
       >
         <div
-          className={`w-full px-3 py-2 text-[10px] font-bold uppercase tracking-wider border-b mb-1 @3xl:col-span-full ${
+          className={`w-full px-3 py-2 text-[10px] font-bold uppercase tracking-wider border-b mb-1 col-span-full ${
             isLight
               ? "text-[#6B7280] border-[#E5E7EB]"
               : "text-[#6B6C73] border-[#2A2C31]"
@@ -137,7 +138,7 @@ export default function SettingsView({
               key={item.id}
               onClick={() => setSettingsSection(item.id)}
               aria-current={isActive ? "page" : undefined}
-              className={`flex shrink-0 items-center gap-2.5 whitespace-nowrap rounded border px-3 py-2 text-xs font-medium transition cursor-pointer ${
+              className={`flex items-center gap-2.5 rounded border px-3 py-2 text-xs font-medium transition cursor-pointer ${
                 isActive
                   ? isLight
                     ? "bg-[#E5E7EB] text-accent border-accent/30"
@@ -148,7 +149,7 @@ export default function SettingsView({
               }`}
             >
               <Icon className="shrink-0" size="14" />
-              <span className="truncate">{item.label}</span>
+              <span className="min-w-0 text-left leading-snug">{item.label}</span>
             </button>
           );
         })}
