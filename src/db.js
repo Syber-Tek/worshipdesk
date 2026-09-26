@@ -6,6 +6,33 @@ import { CANONICAL_BIBLE, normalizeBookName } from './bibleBooks.js'
 
 let db = null
 
+// ── Library folder resolution ────────────────────────────────────────────────
+// The bundled Bible / hymn content (bibles/, hymns/) is packed INSIDE the app
+// asar, so it must be read from the app path rather than the working directory.
+// process.cwd() is not usable here: in a packaged app it is wherever the
+// executable happened to be started from, and on macOS it is "/" when the app is
+// launched from Finder — which is why a packaged macOS build came up with an
+// empty Bible and Songs library.
+//
+// The user's own drop-in files have to live somewhere writable, because a
+// packaged app bundle (especially on macOS) is read-only, so those folders are
+// created under userData instead. Both locations are scanned: the bundled copy
+// plus the user's.
+const bundledDataDir = (name) => path.join(app.getAppPath(), name)
+const userDataDir = (name) => path.join(app.getPath('userData'), name)
+
+// Stable, portable label for a library file, used for the source_file column.
+// Keeps local usernames and absolute paths out of the database.
+const librarySourceLabel = (filePath) => {
+  for (const base of [bundledDataDir('hymns'), userDataDir('hymns'), bundledDataDir('bibles'), userDataDir('bibles')]) {
+    const rel = path.relative(base, filePath)
+    if (rel && !rel.startsWith('..') && !path.isAbsolute(rel)) {
+      return rel.split(path.sep).join('/')
+    }
+  }
+  return path.basename(filePath)
+}
+
 /**
  * Initializes the local offline SQLite database in Electron's userData folder.
  */
@@ -390,53 +417,69 @@ export function importXmlBibleFile(filePath) {
 
 export function autoScanBiblesFolder() {
   try {
-    const biblesDir = path.join(process.cwd(), 'bibles')
-    if (!fs.existsSync(biblesDir)) {
-      fs.mkdirSync(biblesDir, { recursive: true })
+    // Read-only: the copy that ships with the app, inside the asar.
+    const bundledDir = bundledDataDir('bibles')
+    // Writable: where the user drops their own .sql / .xml files.
+    const userDir = userDataDir('bibles')
+    if (!fs.existsSync(userDir)) {
+      fs.mkdirSync(userDir, { recursive: true })
     }
 
     // Ensure bibles/xml exists with an empty marker so users know where to drop files
-    const xmlDir = path.join(biblesDir, 'xml')
-    if (!fs.existsSync(xmlDir)) {
-      fs.mkdirSync(xmlDir, { recursive: true })
+    const userXmlDir = path.join(userDir, 'xml')
+    if (!fs.existsSync(userXmlDir)) {
+      fs.mkdirSync(userXmlDir, { recursive: true })
       const readmeText = `Church Presenter — Bible Data Importer Folder
 ==============================================
+This folder lives in your app data directory and is yours to write to:
+${userDir}
+
 Place your Bible files in these folders to import them on the next app start:
 
 1. SQL Files (.sql):
-   - Drop NKJV.sql, NIV.sql, or KJV.sql files directly into "bibles/".
+   - Drop NKJV.sql, NIV.sql, or KJV.sql files directly into this folder.
 
 2. XML Files (.xml):
    - Drop structured Bible XML files (Zefania/OSIS/USFX or
-     "<book number>...<chapter number>...<verse number>") into "bibles/xml/".
-   - Bundled NIV / NKJV / KJV (English) and Twerɛ Kronkron (Twi) XML Bibles
-     already live here and ship with the app.
+     "<book number>...<chapter number>...<verse number>") into the "xml" subfolder.
+   - The bundled NIV / NKJV / KJV (English) and Twerɛ Kronkron (Twi) XML Bibles
+     already ship with the app and do not need to be copied here.
 
 3. Songs (.sng):
-   - Drop "PH01.sng" style files into "bibles/".
+   - Drop "PH01.sng" style files into this folder.
 `
-      fs.writeFileSync(path.join(xmlDir, 'README.txt'), readmeText, 'utf-8')
+      fs.writeFileSync(path.join(userXmlDir, 'README.txt'), readmeText, 'utf-8')
     }
 
-    // Auto-import any .sql files in bibles/
-    const sqlFiles = fs.readdirSync(biblesDir).filter((f) => f.endsWith('.sql'))
-    for (const file of sqlFiles) {
-      importSqlFile(path.join(biblesDir, file))
+    // Import from the bundled copy first, then the user's folder, so a user's
+    // files win if the same name exists in both.
+    for (const biblesDir of [bundledDir, userDir]) {
+      if (!fs.existsSync(biblesDir) || !fs.statSync(biblesDir).isDirectory()) continue
+
+      // Auto-import any .sql files in bibles/
+      const sqlFiles = fs.readdirSync(biblesDir).filter((f) => f.endsWith('.sql'))
+      for (const file of sqlFiles) {
+        importSqlFile(path.join(biblesDir, file))
+      }
     }
 
     // Process imported tables into normalized schema
     processImportedTables()
 
-    // Auto-import XML files in bibles/ or bibles/xml/
-    if (fs.existsSync(xmlDir) && fs.statSync(xmlDir).isDirectory()) {
-      const xmlFiles = fs.readdirSync(xmlDir).filter((f) => f.endsWith('.xml'))
-      for (const file of xmlFiles) {
-        importXmlBibleFile(path.join(xmlDir, file))
+    // Auto-import XML files from bibles/ and bibles/xml/ in both locations
+    for (const biblesDir of [bundledDir, userDir]) {
+      if (!fs.existsSync(biblesDir) || !fs.statSync(biblesDir).isDirectory()) continue
+      const xmlDir = path.join(biblesDir, 'xml')
+      if (fs.existsSync(xmlDir) && fs.statSync(xmlDir).isDirectory()) {
+        const xmlFiles = fs.readdirSync(xmlDir).filter((f) => f.endsWith('.xml'))
+        for (const file of xmlFiles) {
+          importXmlBibleFile(path.join(xmlDir, file))
+        }
       }
-    }
-    const rootXmlFiles = fs.readdirSync(biblesDir).filter((f) => f.endsWith('.xml'))
-    for (const file of rootXmlFiles) {
-      importXmlBibleFile(path.join(biblesDir, file))
+      const rootXmlFiles = fs.readdirSync(biblesDir).filter((f) => f.endsWith('.xml'))
+      for (const file of rootXmlFiles) {
+        importXmlBibleFile(path.join(biblesDir, file))
+      }
     }
   } catch (err) {
     console.warn('Auto scan bibles folder notice:', err.message)
@@ -551,7 +594,7 @@ export function importSngFile(filePath, defaultCategory, defaultAuthor, isTwi) {
     if (isTwi) lyrics = twiGlyphFix(lyrics)
     if (!lyrics) return { success: false, message: 'No lyrics found' }
 
-    const sourceFile = path.relative(process.cwd(), filePath)
+    const sourceFile = librarySourceLabel(filePath)
     const insert = db.prepare(
       'INSERT INTO hymns (hymn_number, title, category, author, lyrics, source_file) VALUES (?, ?, ?, ?, ?, ?)'
     )
@@ -585,19 +628,30 @@ export function importSngFolder(folderPath, defaultCategory, defaultAuthor, isTw
 
 export function autoScanHymnsFolder() {
   try {
-    const hymnsDir = path.join(process.cwd(), 'hymns')
-    if (!fs.existsSync(hymnsDir)) {
-      fs.mkdirSync(hymnsDir, { recursive: true })
-      return
+    // The user's writable folder has to exist even when the bundled library is
+    // present, so the app can tell people where to drop their own .sng files.
+    const userDir = userDataDir('hymns')
+    if (!fs.existsSync(userDir)) {
+      fs.mkdirSync(userDir, { recursive: true })
     }
 
     // Clean scan of hymns folder to populate SQLite directly from subfolders
     db.prepare('DELETE FROM hymns').run()
 
-    const subdirs = fs.readdirSync(hymnsDir).filter((f) => fs.statSync(path.join(hymnsDir, f)).isDirectory())
-    for (const sub of subdirs) {
-      const { category, author, isTwi } = deriveCategoryAndAuthor(sub)
-      importSngFolder(path.join(hymnsDir, sub), category, author, isTwi)
+    // Scan the bundled copy inside the asar as well as the user's folder.
+    for (const hymnsDir of [bundledDataDir('hymns'), userDir]) {
+      if (!fs.existsSync(hymnsDir) || !fs.statSync(hymnsDir).isDirectory()) continue
+      const subdirs = fs.readdirSync(hymnsDir).filter((f) => {
+        try {
+          return fs.statSync(path.join(hymnsDir, f)).isDirectory()
+        } catch {
+          return false
+        }
+      })
+      for (const sub of subdirs) {
+        const { category, author, isTwi } = deriveCategoryAndAuthor(sub)
+        importSngFolder(path.join(hymnsDir, sub), category, author, isTwi)
+      }
     }
   } catch (err) {
     console.warn('Auto scan hymns folder notice:', err.message)
@@ -1009,18 +1063,21 @@ export function getHymnsCount() {
 
 export function getHymnCategories() {
   try {
-    const hymnsDir = path.join(process.cwd(), 'hymns')
-    if (fs.existsSync(hymnsDir)) {
-      const subdirs = fs.readdirSync(hymnsDir).filter((f) => {
+    // Merge the categories from the bundled library and the user's folder so
+    // both are offered in the picker.
+    const subdirs = new Set()
+    for (const hymnsDir of [bundledDataDir('hymns'), userDataDir('hymns')]) {
+      if (!fs.existsSync(hymnsDir)) continue
+      for (const f of fs.readdirSync(hymnsDir)) {
         try {
-          return fs.statSync(path.join(hymnsDir, f)).isDirectory()
+          if (fs.statSync(path.join(hymnsDir, f)).isDirectory()) subdirs.add(f)
         } catch {
-          return false
+          // Unreadable entry - skip it.
         }
-      })
-      if (subdirs.length > 0) {
-        return subdirs.sort()
       }
+    }
+    if (subdirs.size > 0) {
+      return [...subdirs].sort()
     }
   } catch (err) {
     console.error('Error scanning hymns folder for categories:', err)

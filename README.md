@@ -47,8 +47,19 @@ You can link your website's **Download** buttons directly to the latest GitHub r
 - **Recent Plans History:** Instant access to 10 recently opened service plans from the sidebar.
 
 ### 📁 6. Automated Offline Data Importers
-- **Song Importer (.sng / .txt / .json):** Auto-scans `hymns/` directory subfolders on startup and maps subfolders directly to categories.
-- **Bible Data Importers:** Drop `.sql` dumps, `.xml` files (Zefania, OSIS, USFX, Generic XML), or `Twi` book `.txt` files directly into `bibles/` for automatic offline seeding.
+- **Song Importer (.sng / .txt / .json):** Auto-scans the bundled `hymns/` library on startup and maps subfolders directly to categories.
+- **Bible Data Importers:** Drop `.sql` dumps, `.xml` files (Zefania, OSIS, USFX, Generic XML), or `Twi` book `.txt` files for automatic offline seeding.
+
+> **Where do I put my own Bible / song files?**
+> The bundled `bibles/` and `hymns/` folders ship *inside* the app and are read-only,
+> so your own files go in the app data folder instead:
+> - **Windows:** `%APPDATA%\WorshipDesk\` (`C:\Users\<you>\AppData\Roaming\WorshipDesk\`)
+> - **macOS:** `~/Library/Application Support/WorshipDesk/`
+> - **Linux:** `~/.config/WorshipDesk/`
+>
+> Drop songs into `hymns/<Category>/` and Bibles into `bibles/` (XML files go in
+> `bibles/xml/`). Both the bundled library and your folder are scanned on every
+> start, so a "Rescan" picks up anything you added.
 
 ---
 

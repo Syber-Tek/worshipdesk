@@ -18,11 +18,26 @@ permissions:
 
 jobs:
   build:
-    name: Build on ${{ matrix.os }}
+    name: Build ${{ matrix.name }}
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2022, macos-latest, ubuntu-latest]
+        include:
+          - os: windows-2022
+            name: Windows x64
+            builder_args: --win --x64
+          # Apple Silicon. macos-latest is an arm64 runner.
+          - os: macos-latest
+            name: macOS Apple Silicon (arm64)
+            builder_args: --mac --arm64
+          # Intel. macos-latest alone produced an arm64-only app, which macOS
+          # refuses to open on an Intel Mac ("not supported on this Mac").
+          - os: macos-15-intel
+            name: macOS Intel (x64)
+            builder_args: --mac --x64
+          - os: ubuntu-latest
+            name: Linux x64
+            builder_args: --linux
 
     runs-on: ${{ matrix.os }}
 
@@ -45,13 +60,18 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Build, Package and Create Executables
-        run: npm run make
+      # Build and package are separate so the architecture flags reach
+      # electron-builder rather than being appended to electron-vite build.
+      - name: Build Sources
+        run: npm run build
+
+      - name: Package and Create Executables
+        run: npx electron-builder --publish never ${{ matrix.builder_args }}
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: worshipdesk-${{ matrix.os }}
+          name: worshipdesk-${{ matrix.name }}
           path: |
             release/*.exe
             release/*.dmg
@@ -86,8 +106,22 @@ jobs:
 
             Download standalone offline setup installers:
             - 🪟 **Windows**: `.exe` Installer
-            - 🍎 **macOS**: `.dmg` Disk Image
+            - 🍎 **macOS Apple Silicon** (M1/M2/M3/M4): `.dmg` ending in `-arm64.dmg`
+            - 🍎 **macOS Intel** (older Macs): `.dmg` ending in `-x64.dmg`
             - 🐧 **Linux**: `.AppImage` Universal Package (Supports all Linux distros)
+
+            > **Not sure which macOS build to download?**
+            > Click the  (Apple menu) → **About This Mac**.
+            > "Apple M1/M2/M3/M4" means Apple Silicon (`-arm64.dmg`);
+            > "Intel" means an older Mac (`-x64.dmg`).
+            > Downloading the wrong one shows the warning
+            > "WorshipDesk is not supported on this Mac".
+
+            > **macOS: "app is damaged" or "cannot be opened"?**
+            > These builds are not code-signed or notarised, so Gatekeeper blocks
+            > them on first open. Open the folder containing the app, right-click
+            > (or Control-click) **WorshipDesk.app** → **Open** → **Open** in the
+            > dialog. It will then open normally every time.
           draft: false
           prerelease: false
           overwrite: true
