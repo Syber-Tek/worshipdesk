@@ -37,7 +37,7 @@ export default function PlanView({
   const [showRecentMenu, setShowRecentMenu] = useState(false);
 
   return (
-    <div className="space-y-4 max-w-4xl w-full mx-auto">
+    <div className="@container space-y-4 max-w-4xl w-full mx-auto">
       <div
         className={`p-5 rounded-lg border space-y-4 transition-colors duration-200 ${
           isLight
@@ -47,7 +47,7 @@ export default function PlanView({
       >
         {/* Header & Main Actions */}
         <div
-          className={`flex flex-col md:flex-row md:items-center justify-between gap-3 border-b pb-3 ${
+          className={`flex flex-col justify-between gap-3 border-b pb-3 ${
             isLight ? "border-[#E5E7EB]" : "border-[#2A2C31]"
           }`}
         >
@@ -66,13 +66,13 @@ export default function PlanView({
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(128px,1fr))] gap-2">
             {/* Save Plan Button */}
             <button
               type="button"
               onClick={handleSavePlanToFile}
               title="Save Service Plan to file on disk"
-              className={`px-3 py-1.5 border rounded font-semibold text-xs transition cursor-pointer flex items-center gap-1.5 ${
+              className={`w-full justify-center px-3 py-1.5 border rounded font-semibold text-xs transition cursor-pointer flex items-center gap-1.5 ${
                 isLight
                   ? "bg-[#F3F4F6] hover:bg-[#E5E7EB] border-[#E5E7EB] text-[#111827]"
                   : "bg-raised hover:bg-hover border-border text-text-primary"
@@ -86,7 +86,7 @@ export default function PlanView({
               type="button"
               onClick={handleOpenPlanFromFile}
               title="Open / Load Service Plan from disk"
-              className={`px-3 py-1.5 border rounded font-semibold text-xs transition cursor-pointer flex items-center gap-1.5 ${
+              className={`w-full justify-center px-3 py-1.5 border rounded font-semibold text-xs transition cursor-pointer flex items-center gap-1.5 ${
                 isLight
                   ? "bg-[#F3F4F6] hover:bg-[#E5E7EB] border-[#E5E7EB] text-[#111827]"
                   : "bg-raised hover:bg-hover border-border text-text-primary"
@@ -101,7 +101,7 @@ export default function PlanView({
                 type="button"
                 onClick={() => setShowRecentMenu(!showRecentMenu)}
                 title="View recent service plans history"
-                className={`px-3 py-1.5 border rounded font-semibold text-xs transition cursor-pointer flex items-center gap-1.5 ${
+                className={`w-full justify-center px-3 py-1.5 border rounded font-semibold text-xs transition cursor-pointer flex items-center gap-1.5 ${
                   showRecentMenu
                     ? "border-accent bg-accent/10 text-accent"
                     : isLight
@@ -115,7 +115,7 @@ export default function PlanView({
               {/* Recent Plans Dropdown Menu */}
               {showRecentMenu && (
                 <div
-                  className={`absolute right-0 mt-2 w-72 rounded-lg border shadow-xl z-50 p-2 space-y-1.5 ${
+                  className={`absolute right-0 mt-2 w-72 max-w-[85vw] rounded-lg border shadow-xl z-50 p-2 space-y-1.5 ${
                     isLight
                       ? "bg-white border-[#E5E7EB] text-[#111827]"
                       : "bg-[#1C1D21] border-[#2A2C31] text-text-primary"
@@ -175,7 +175,7 @@ export default function PlanView({
                 type="button"
                 onClick={handleClearPlan}
                 title="Clear current service playlist"
-                className={`px-2.5 py-1.5 border rounded font-semibold text-xs transition cursor-pointer flex items-center gap-1 text-red-400 ${
+                className={`w-full justify-center px-2.5 py-1.5 border rounded font-semibold text-xs transition cursor-pointer flex items-center gap-1 text-red-400 ${
                   isLight
                     ? "bg-[#FEE2E2] hover:bg-[#FCA5A5] border-[#FCA5A5]"
                     : "bg-red-950/40 hover:bg-red-900/60 border-red-900/60"
@@ -189,7 +189,7 @@ export default function PlanView({
             <button
               type="button"
               onClick={() => setShowAddModal(true)}
-              className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-accent hover:bg-accent/90 text-text-primary rounded font-semibold text-xs transition shadow cursor-pointer"
+                className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-accent hover:bg-accent/90 text-text-primary rounded font-semibold text-xs transition shadow cursor-pointer"
             >
               <FaPlus /> Add Item
             </button>
