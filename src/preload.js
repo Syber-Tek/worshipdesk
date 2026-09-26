@@ -5,7 +5,13 @@ contextBridge.exposeInMainWorld('api', {
   getAppInfo: () => ipcRenderer.invoke('get-app-info'),
   getDbStatus: () => ipcRenderer.invoke('get-db-status'),
   getDisplays: () => ipcRenderer.invoke('get-displays'),
-  setWindowIcon: (themeMode) => ipcRenderer.invoke('set-window-icon', themeMode),
+  setAppTheme: (themeMode) => ipcRenderer.invoke('set-app-theme', themeMode),
+  getAppTheme: () => ipcRenderer.invoke('get-app-theme'),
+  onNativeThemeChanged: (callback) => {
+    const subscription = (_event, payload) => callback(payload)
+    ipcRenderer.on('native-theme-changed', subscription)
+    return () => ipcRenderer.removeListener('native-theme-changed', subscription)
+  },
   openPresentationWindows: (displayIds) => ipcRenderer.invoke('open-presentation-windows', displayIds),
   openStageWindow: () => ipcRenderer.invoke('open-stage-window'),
   closeStageWindow: () => ipcRenderer.invoke('close-stage-window'),

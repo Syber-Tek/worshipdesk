@@ -127,10 +127,40 @@ export default function App() {
     if (typeof document !== "undefined") {
       document.documentElement.setAttribute("data-theme", effectiveTheme);
     }
-    if (typeof window !== "undefined" && window.api?.setWindowIcon) {
-      window.api.setWindowIcon(effectiveTheme).catch(() => {});
-    }
   }, [effectiveTheme]);
+
+  // Hand the raw theme MODE to the main process (not the resolved theme) so it
+  // can own nativeTheme.themeSource. That way the OS title bar, native dialogs
+  // and taskbar icon follow the in-app theme, and 'system' mode keeps tracking
+  // the PC's own setting live via nativeTheme 'updated'.
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.api?.setAppTheme) return;
+    window.api.setAppTheme(themeMode).catch(() => {});
+  }, [themeMode]);
+
+  // The main process is the source of truth for the effective theme, so an OS
+  // level change (day/night, manual PC switch) re-themes the app even when the
+  // app is sitting on "system".
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.api?.onNativeThemeChanged)
+      return;
+    const unsubscribe = window.api.onNativeThemeChanged(({ effectiveTheme: next }) => {
+      if (next === "light" || next === "dark") setSystemTheme(next);
+    });
+    return typeof unsubscribe === "function" ? unsubscribe : undefined;
+  }, []);
+
+  // When the OS title bar is hidden the in-app header becomes the title bar, so
+  // the header has to leave room for the native minimise/maximise/close buttons.
+  const [hasTitleBarOverlay, setHasTitleBarOverlay] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.api?.getAppInfo) return;
+    window.api
+      .getAppInfo()
+      .then((info) => setHasTitleBarOverlay(Boolean(info && info.hasTitleBarOverlay)))
+      .catch(() => {});
+  }, []);
 
   // Live Presentation & Transport State
   const [isLive, setIsLive] = useState(false);
@@ -1269,6 +1299,7 @@ export default function App() {
           themeMode={themeMode}
           effectiveTheme={effectiveTheme}
           setThemeMode={setThemeMode}
+          hasTitleBarOverlay={hasTitleBarOverlay}
         />
 
         {/* MAIN ROUTED VIEW CONTENT AREA */}
