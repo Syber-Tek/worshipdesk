@@ -12,6 +12,15 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.on('native-theme-changed', subscription)
     return () => ipcRenderer.removeListener('native-theme-changed', subscription)
   },
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+  downloadUpdate: () => ipcRenderer.invoke('download-update'),
+  installUpdate: () => ipcRenderer.invoke('install-update'),
+  openReleasesPage: () => ipcRenderer.invoke('open-releases-page'),
+  onUpdaterStatus: (callback) => {
+    const subscription = (_event, payload) => callback(payload)
+    ipcRenderer.on('updater-status', subscription)
+    return () => ipcRenderer.removeListener('updater-status', subscription)
+  },
   openPresentationWindows: (displayIds) => ipcRenderer.invoke('open-presentation-windows', displayIds),
   openStageWindow: () => ipcRenderer.invoke('open-stage-window'),
   closeStageWindow: () => ipcRenderer.invoke('close-stage-window'),

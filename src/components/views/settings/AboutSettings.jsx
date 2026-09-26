@@ -1,5 +1,10 @@
 import React from "react";
-import { FaCircleInfo } from "react-icons/fa6";
+import {
+  FaCircleInfo,
+  FaArrowRotateRight,
+  FaDownload,
+  FaCircleCheck,
+} from "react-icons/fa6";
 import appIconDark from "../../../assets/app-icon-dark.png";
 import appIconLight from "../../../assets/app-icon-light.png";
 
@@ -9,6 +14,35 @@ export default function AboutSettings({
   textSub,
   borderDivider,
 }) {
+  const [version, setVersion] = React.useState(null);
+  const [update, setUpdate] = React.useState({ status: "idle" });
+
+  React.useEffect(() => {
+    if (window.api?.getAppInfo) {
+      window.api
+        .getAppInfo()
+        .then((info) => setVersion(info?.version ?? null))
+        .catch(() => {});
+    }
+    if (!window.api?.onUpdaterStatus) return;
+    const unsubscribe = window.api.onUpdaterStatus((payload) => {
+      if (payload && payload.status) setUpdate(payload);
+    });
+    return typeof unsubscribe === "function" ? unsubscribe : undefined;
+  }, []);
+
+  const onCheck = async () => {
+    if (!window.api?.checkForUpdates) return;
+    setUpdate({ status: "checking" });
+    const res = await window.api.checkForUpdates().catch(() => null);
+    if (res && res.ok === false) {
+      setUpdate({ status: "error", message: res.message });
+    }
+  };
+
+  const status = update.status;
+  const isBusy = status === "checking" || status === "downloading";
+
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -31,7 +65,7 @@ export default function AboutSettings({
               className="w-7 h-7 object-contain rounded-md drop-shadow-sm"
             />
             <span className="bg-[#0D3822] text-[#34D399] border border-[#10B981]/30 rounded-lg px-3 py-1 font-semibold text-xs">
-              WorshipDesk v1.0.0
+              {version ? `WorshipDesk v${version}` : "WorshipDesk"}
             </span>
             <span className={`text-xs ${textSub}`}>September 18, 2026</span>
           </div>
@@ -85,6 +119,70 @@ export default function AboutSettings({
                 Windows without requiring active internet connectivity.
               </li>
             </ul>
+          </div>
+
+          {/* Software Updates */}
+          <div className="space-y-3 pt-4 border-t border-current/10">
+            <h2 className={`text-sm font-bold ${textTitle}`}>Software Updates</h2>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={onCheck}
+                disabled={isBusy}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-current/10 text-xs font-semibold hover:bg-black/5 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <FaArrowRotateRight
+                  className={status === "checking" ? "animate-spin" : ""}
+                />
+                Check for updates
+              </button>
+
+              {status === "available" && !update.manualOnly && (
+                <button
+                  onClick={() => window.api?.downloadUpdate?.()}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0D3822] text-[#34D399] border border-[#10B981]/30 text-xs font-semibold"
+                >
+                  <FaDownload /> Download v{update.version}
+                </button>
+              )}
+
+              {status === "downloaded" && !update.manualOnly && (
+                <button
+                  onClick={() => window.api?.installUpdate?.()}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0D3822] text-[#34D399] border border-[#10B981]/30 text-xs font-semibold"
+                >
+                  <FaCircleCheck /> Restart &amp; install
+                </button>
+              )}
+
+              {(status === "available" || status === "downloaded") &&
+                update.manualOnly && (
+                  <button
+                    onClick={() => window.api?.openReleasesPage?.()}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0D3822] text-[#34D399] border border-[#10B981]/30 text-xs font-semibold"
+                  >
+                    <FaDownload /> Open downloads page
+                  </button>
+                )}
+            </div>
+
+            <p className={`text-xs ${textSub} min-h-4`}>
+              {status === "idle" && "WorshipDesk checks for updates when you ask it to."}
+              {status === "checking" && "Checking for updates…"}
+              {status === "up-to-date" &&
+                `WorshipDesk ${update.version ?? ""} is up to date.`}
+              {status === "available" &&
+                (update.manualOnly
+                  ? `Version ${update.version} is available. macOS builds are not code-signed, so download it from the releases page.`
+                  : `Version ${update.version} is available.`)}
+              {status === "downloading" &&
+                `Downloading ${update.percent ?? 0}%…`}
+              {status === "downloaded" &&
+                (update.manualOnly
+                  ? `Version ${update.version} downloaded. Install it from the releases page.`
+                  : "Update ready. Restart to install — or just quit normally and it will install.")}
+              {status === "error" && (update.message || "Could not check for updates.")}
+            </p>
           </div>
 
           <div className="pt-4 text-center border-t border-current/10">

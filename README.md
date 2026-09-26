@@ -11,6 +11,23 @@ You can link your website's **Download** buttons directly to the latest GitHub r
 - **📦 Standalone Portable Archive (`.zip`):** [Download WorshipDesk Portable ZIP](https://github.com/Syber-Tek/worshipdesk/releases/latest/download/WorshipDesk-Windows-x64.zip)
 - **⚡ Windows Executable Installer (`.exe`):** [Download WorshipDesk Setup (.exe)](https://github.com/Syber-Tek/worshipdesk/releases/latest/download/WorshipDesk-Setup.exe)
 
+### 🔄 In-App Updates
+
+WorshipDesk can update itself from **Settings → About → Check for updates**.
+
+- Nothing is downloaded or installed automatically. You choose to check, choose
+  to download, and choose when to restart.
+- A downloaded update is applied the next time you quit normally, so an update
+  can never interrupt a service in progress.
+- Updates come from the public [`worshipdesk-releases`](https://github.com/Syber-Tek/worshipdesk-releases)
+  repository. The source repository is private, but the release feed is public,
+  so the app is fully functional offline once installed.
+- **Windows** installs and applies updates in place.
+- **macOS** builds are not code-signed, so macOS will not let the app replace
+  itself. On macOS the button opens the releases page instead — download the
+  `.dmg` for your Mac (Apple Silicon = `-arm64`, Intel = `-x64`) and drag it over
+  the old copy.
+
 ---
 
 ## 🌟 Comprehensive Feature Set
