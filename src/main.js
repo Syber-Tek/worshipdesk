@@ -23,6 +23,7 @@ import {
   getHymnsCount,
   getHymnCategories
 } from './db.js';
+import { initUpdater } from './updater.js';
 
 let dbPath = '';
 let mainWindow = null;
@@ -639,6 +640,10 @@ const createWindow = () => {
   } else {
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
   }
+
+  // Register the auto-update IPC and point it at this window. Safe to call on
+  // every (re)open: the listeners are only wired once.
+  initUpdater(mainWindow);
 };
 
 app.whenReady().then(() => {

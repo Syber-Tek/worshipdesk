@@ -76,6 +76,10 @@ jobs:
             release/*.exe
             release/*.dmg
             release/*.AppImage
+            # Needed by the release job so it can publish the auto-update
+            # metadata for electron-updater.
+            release/*.yml
+            release/*.blockmap
           if-no-files-found: warn
 
   release:
@@ -100,6 +104,11 @@ jobs:
             artifacts/**/*.exe
             artifacts/**/*.dmg
             artifacts/**/*.AppImage
+            # Auto-update metadata. Without latest.yml / latest-mac.yml alongside
+            # the installers, electron-updater can see a release but has nothing
+            # to compare versions or download against.
+            artifacts/**/*.yml
+            artifacts/**/*.blockmap
           name: WorshipDesk Release ${{ github.event.inputs.tag_name || (github.ref_type == 'tag' && github.ref_name || 'v1.0.0') }}
           body: |
             ## 🚀 WorshipDesk Official Release

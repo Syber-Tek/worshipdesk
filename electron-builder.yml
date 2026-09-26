@@ -13,6 +13,18 @@ files:
 asar: true
 asarUnpack:
   - "**/node_modules/better-sqlite3/**"
+
+# Auto-update feed. The source repo is private, so updates are served from the
+# public worshipdesk-releases repo, which the release workflow publishes to.
+# electron-updater bakes this into app-update.yml inside the packaged app, and
+# electron-builder writes the matching latest.yml / latest-mac.yml metadata next
+# to the installers.
+publish:
+  provider: github
+  owner: Syber-Tek
+  repo: worshipdesk-releases
+  releaseType: release
+
 electronFuses:
   runAsNode: false
   enableCookieEncryption: true
@@ -40,7 +52,11 @@ nsis:
   installerIcon: src/assets/app-icon-dark.ico
   uninstallerIcon: src/assets/app-icon-dark.ico
   installerHeaderIcon: src/assets/app-icon-dark.ico
-  artifactName: ${productName} Setup ${version}.${ext}
+  # No spaces on purpose. For the GitHub provider electron-builder rewrites the
+  # download URL in latest.yml to a "GitHub safe" name (spaces become dashes),
+  # so a name containing spaces would publish an installer that auto-update
+  # cannot find. Keeping it space-free makes the asset name and the URL match.
+  artifactName: ${productName}-Setup-${version}.${ext}
 
 mac:
   icon: src/assets/app-icon-dark.png
