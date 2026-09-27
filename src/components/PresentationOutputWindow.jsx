@@ -46,11 +46,11 @@ export default function PresentationOutputWindow() {
           <h2 className="text-xl font-bold tracking-widest text-text-primary uppercase">
             WorshipDesk
           </h2>
-          <div className="px-3 py-1 rounded bg-[#24262B] border border-[#2A2C31] text-[11px] font-semibold text-accent flex items-center gap-2">
+          <div className="px-3 py-1 rounded bg-raised border border-border text-[11px] font-semibold text-accent flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
             PROJECTOR DISPLAY READY — STANDBY MODE
           </div>
-          <p className="text-xs text-[#9B9CA3] max-w-md text-center mt-1 leading-relaxed">
+          <p className="text-xs text-muted max-w-md text-center mt-1 leading-relaxed">
             Click <span className="text-accent font-bold">"Present"</span> or
             toggle{" "}
             <span className="text-live font-bold">"LIVE ON-AIR"</span> in

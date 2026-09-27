@@ -1,4 +1,4 @@
-import { app, Menu, BrowserWindow, ipcMain, screen, dialog, Notification, nativeImage } from 'electron';
+import { app, Menu, BrowserWindow, ipcMain, screen, dialog, Notification, nativeImage, nativeTheme } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
 import {
@@ -23,11 +23,98 @@ import {
   getHymnsCount,
   getHymnCategories
 } from './db.js';
+import { initUpdater } from './updater.js';
 
 let dbPath = '';
 let mainWindow = null;
 let stageWindow = null;
 const presentationWindows = new Map(); // displayId -> BrowserWindow
+
+// WorshipDesk never talks to a proxy — it is offline-first, and the only
+// outbound call it can make is the opt-in update check. Letting Chromium consult
+// the system proxy would make its network service run WPAD auto-discovery every
+// time the machine joins a network, which is what kills that service
+// ("Network service crashed or was terminated") and stalls the app. A direct
+// connection is both correct here and keeps the service out of the picture.
+app.commandLine.appendSwitch('no-proxy-server');
+
+// ── Native chrome theming ─────────────────────────────────────────────────────
+// The renderer owns the app theme (dark / light / system). The main process
+// mirrors that choice onto the chrome the OS draws for us, so the Windows title
+// bar and the taskbar icon follow the in-app theme instead of the OS theme:
+//   - titleBarStyle 'hidden' + titleBarOverlay replaces the native title bar
+//     with our own header area, tinted through setTitleBarOverlay()
+//   - setBackgroundColor() kills the white flash before the renderer paints
+//   - setIcon() swaps the taskbar / window icon
+const TITLE_BAR_HEIGHT = 48; // must match the in-app Header height (h-12)
+
+const NATIVE_THEME = {
+  dark: { titleBarColor: '#141518', symbolColor: '#EDEDEE', background: '#0B0C0E' },
+  light: { titleBarColor: '#FFFFFF', symbolColor: '#111827', background: '#F3F4F6' },
+};
+
+// Only Windows and Linux get the overlay treatment. macOS keeps its native
+// title bar (different metrics, and the traffic lights need their own gutter),
+// but it still picks up the app theme through nativeTheme below.
+const usesTitleBarOverlay = process.platform === 'win32' || process.platform === 'linux';
+
+let appThemeMode = 'dark';
+
+const getEffectiveTheme = () => (nativeTheme.shouldUseDarkColors ? 'dark' : 'light');
+
+// Window options that make a freshly created window match the active theme.
+const nativeChromeOptions = () => {
+  const theme = NATIVE_THEME[getEffectiveTheme()];
+  return {
+    backgroundColor: theme.background,
+    ...(usesTitleBarOverlay
+      ? {
+          titleBarStyle: 'hidden',
+          titleBarOverlay: {
+            color: theme.titleBarColor,
+            symbolColor: theme.symbolColor,
+            height: TITLE_BAR_HEIGHT,
+          },
+        }
+      : {}),
+  };
+};
+
+function applyNativeTheme() {
+  // Projector / stage windows are deliberately left alone: they render their own
+  // black output canvas and are not app chrome.
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  const theme = NATIVE_THEME[getEffectiveTheme()];
+
+  if (usesTitleBarOverlay) {
+    mainWindow.setTitleBarOverlay({
+      color: theme.titleBarColor,
+      symbolColor: theme.symbolColor,
+      height: TITLE_BAR_HEIGHT,
+    });
+  }
+  mainWindow.setBackgroundColor(theme.background);
+
+  const icon = getAppIcon(getEffectiveTheme());
+  if (icon && !icon.isEmpty()) {
+    mainWindow.setIcon(icon);
+  }
+}
+
+ipcMain.handle('set-app-theme', (_event, themeMode) => {
+  appThemeMode = ['dark', 'light', 'system'].includes(themeMode) ? themeMode : 'dark';
+  // Drives the OS-level widgets (title bar, scrollbars, native dialogs) and
+  // resolves 'system' to whatever the PC is currently set to.
+  nativeTheme.themeSource = appThemeMode;
+  applyNativeTheme();
+  return { success: true, themeMode: appThemeMode, effectiveTheme: getEffectiveTheme() };
+});
+
+ipcMain.handle('get-app-theme', () => ({
+  themeMode: appThemeMode,
+  effectiveTheme: getEffectiveTheme(),
+  hasTitleBarOverlay: usesTitleBarOverlay,
+}));
 
 function getDisplayDetails() {
   const primaryDisplay = screen.getPrimaryDisplay();
@@ -50,6 +137,9 @@ ipcMain.handle('get-app-info', () => {
     platform: process.platform,
     arch: process.arch,
     isOffline: true,
+    // When true the OS title bar is hidden and the in-app header doubles as the
+    // drag handle, so the renderer has to reserve room for the caption buttons.
+    hasTitleBarOverlay: usesTitleBarOverlay,
   };
 });
 
@@ -428,40 +518,54 @@ ipcMain.handle('get-stage-window-status', () => {
 });
 
 function getAppIcon(themeMode = 'dark') {
-  const primaryIcon = themeMode === 'light' ? 'app-icon-dark.png' : 'app-icon-light.png';
-  const fallbackIcon = themeMode === 'light' ? 'app-icon-light.png' : 'app-icon-dark.png';
-  const candidates = [
-    path.join(process.cwd(), `src/assets/${primaryIcon}`),
-    path.join(process.cwd(), `src/assets/${fallbackIcon}`),
-    path.join(__dirname, `assets/${primaryIcon}`),
-    path.join(app.getAppPath(), `src/assets/${primaryIcon}`),
+  // macOS takes the icon from the .app bundle and ignores setIcon(), so there is
+  // nothing to swap there.
+  if (process.platform === 'darwin') return undefined;
+
+  // A light-coloured icon reads on a dark title bar and vice-versa, so each
+  // theme gets the opposite icon.
+  const isLightTheme = themeMode === 'light';
+  const names = [
+    isLightTheme ? 'app-icon-dark' : 'app-icon-light',
+    isLightTheme ? 'app-icon-light' : 'app-icon-dark',
   ];
-  for (const p of candidates) {
-    if (fs.existsSync(p)) {
-      const img = nativeImage.createFromPath(p);
-      if (!img.isEmpty()) return img;
+  // Windows reads .ico for a crisp multi-resolution taskbar icon; it falls back
+  // to the .png if the .ico cannot be decoded.
+  const extensions = process.platform === 'win32' ? ['.ico', '.png'] : ['.png'];
+
+  // electron-builder packs src/assets INSIDE the asar, and
+  // nativeImage.createFromPath() cannot read through an asar. The .ico files are
+  // not shipped inside the archive, so the byte fallback is what makes the
+  // theme-aware icon swap work in a packaged build.
+  const roots = [
+    app.getAppPath(),
+    process.resourcesPath,
+    process.cwd(),
+    path.join(__dirname, '..', '..'),
+  ];
+
+  for (const root of roots) {
+    if (!root) continue;
+    for (const name of names) {
+      for (const ext of extensions) {
+        const file = path.join(root, 'src', 'assets', `${name}${ext}`);
+        try {
+          if (!fs.existsSync(file)) continue;
+          // .ico only decodes through createFromPath (it yields a crisp
+          // multi-resolution 256px icon for the taskbar), but createFromPath
+          // cannot read through the asar, so fall back to the bytes.
+          const byPath = nativeImage.createFromPath(file);
+          if (!byPath.isEmpty()) return byPath;
+          const byBuffer = nativeImage.createFromBuffer(fs.readFileSync(file));
+          if (!byBuffer.isEmpty()) return byBuffer;
+        } catch {
+          // Unreadable candidate - try the next one.
+        }
+      }
     }
   }
   return undefined;
 }
-
-ipcMain.handle('set-window-icon', (_e, themeMode) => {
-  const icon = getAppIcon(themeMode);
-  if (icon && !icon.isEmpty()) {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.setIcon(icon);
-    }
-    for (const win of presentationWindows.values()) {
-      if (win && !win.isDestroyed()) {
-        win.setIcon(icon);
-      }
-    }
-    if (stageWindow && !stageWindow.isDestroyed()) {
-      stageWindow.setIcon(icon);
-    }
-  }
-  return { success: true };
-});
 
 const createPresentationWindow = (display) => {
   const isPrimary = display.id === screen.getPrimaryDisplay().id;
@@ -506,12 +610,13 @@ const createPresentationWindow = (display) => {
 };
 
 const createWindow = () => {
-  const appIcon = getAppIcon();
+  const appIcon = getAppIcon(getEffectiveTheme());
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     title: 'WorshipDesk - Control Window',
     icon: appIcon,
+    ...nativeChromeOptions(),
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
       nodeIntegration: false,
@@ -543,9 +648,28 @@ const createWindow = () => {
   } else {
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
   }
+
+  // Register the auto-update IPC and point it at this window. Safe to call on
+  // every (re)open: the listeners are only wired once.
+  initUpdater(mainWindow);
 };
 
 app.whenReady().then(() => {
+  // Adopt the app theme as the OS theme source so the title bar, native dialogs
+  // and scrollbars follow the in-app choice. 'system' keeps tracking the PC.
+  nativeTheme.themeSource = appThemeMode;
+
+  // Fires when the PC's own theme changes, so 'system' mode updates everywhere
+  // without a restart.
+  nativeTheme.on('updated', () => {
+    applyNativeTheme();
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('native-theme-changed', {
+        effectiveTheme: getEffectiveTheme(),
+      });
+    }
+  });
+
   // Remove the File/Edit/View menu bar in production builds only.
   // Keep it while running via `npm run dev` so DevTools shortcuts & defaults
   // stay available during development.

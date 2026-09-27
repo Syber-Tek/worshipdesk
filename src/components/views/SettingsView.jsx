@@ -8,7 +8,6 @@ import {
   FaDatabase,
   FaLanguage,
   FaKeyboard,
-  FaFloppyDisk,
   FaCircleInfo,
   FaMusic,
 } from "react-icons/fa6";
@@ -23,7 +22,6 @@ import SongsSettings from "./settings/SongsSettings";
 import ContentSettings from "./settings/ContentSettings";
 import LanguageSettings from "./settings/LanguageSettings";
 import ShortcutsSettings from "./settings/ShortcutsSettings";
-import BackupSettings from "./settings/BackupSettings";
 import AboutSettings from "./settings/AboutSettings";
 
 export default function SettingsView({
@@ -80,11 +78,10 @@ export default function SettingsView({
     { id: "presentation", label: "Presentation", icon: FaTv },
     { id: "bible", label: "Bible & Scripture", icon: FaBookBible },
     { id: "songs", label: "Songs & Hymns", icon: FaMusic },
-    { id: "content", label: "Content & Storage", icon: FaDatabase },
+    { id: "content", label: "Content & Backup", icon: FaDatabase },
     { id: "languages", label: "Languages", icon: FaLanguage },
     { id: "shortcuts", label: "Keybinds", icon: FaKeyboard },
-    { id: "backup", label: "Backup & Export", icon: FaFloppyDisk },
-    { id: "about", label: "About App", icon: FaCircleInfo },
+    { id: "about", label: "About & Updates", icon: FaCircleInfo },
   ];
 
   const activeEffectiveTheme = effectiveTheme || themeMode || "dark";
@@ -95,18 +92,35 @@ export default function SettingsView({
     ...themeTokens,
   };
 
+  const panelRef = React.useRef(null);
+
+  // Every section is its own page, so opening one should start at the top
+  // instead of inheriting wherever the previous section was scrolled to.
+  React.useEffect(() => {
+    if (panelRef.current) panelRef.current.scrollTop = 0;
+  }, [settingsSection]);
+
   return (
-    <div className="flex flex-col xl:flex-row h-full gap-4 max-w-5xl mx-auto">
-      {/* Settings Sub-Sidebar Navigation */}
-      <div
-        className={`w-full xl:w-64 border rounded-lg p-2 flex flex-wrap items-start gap-1 xl:flex-col xl:space-y-0 shrink-0 self-start transition-colors duration-200 ${
+    <div className="@container flex h-full max-w-5xl mx-auto flex-col gap-4">
+      {/* Settings Sub-Navigation.
+          An auto-fitting grid of tiles across the top at every width, so the
+          content panel below keeps the full width of this column. The switch is
+          driven by a container query rather than the window, because the rails
+          either side of this view already take ~320px - a viewport breakpoint
+          fires long after the column has actually run out of room. Once the
+          column is wide enough for a full-screen window it pins to 5 columns,
+          so the 10 sections always sit as 2 rows of 5. Labels wrap instead of
+          scrolling or truncating, so nothing is ever cut off. */}
+      <nav
+        aria-label="Settings sections"
+        className={`grid w-full shrink-0 grid-cols-[repeat(auto-fit,minmax(136px,1fr))] @[52rem]:grid-cols-5 gap-1.5 rounded-lg border p-2 transition-colors duration-200 ${
           isLight
             ? "bg-[#FFFFFF] border-[#E5E7EB]"
             : "bg-[#151619] border-[#2A2C31]"
         }`}
       >
         <div
-          className={`w-full px-3 py-2 text-[10px] font-bold uppercase tracking-wider border-b mb-1 ${
+          className={`w-full px-3 py-2 text-[10px] font-bold uppercase tracking-wider border-b mb-1 col-span-full ${
             isLight
               ? "text-[#6B7280] border-[#E5E7EB]"
               : "text-[#6B6C73] border-[#2A2C31]"
@@ -119,27 +133,30 @@ export default function SettingsView({
           const isActive = settingsSection === item.id;
           return (
             <button
+              type="button"
               key={item.id}
               onClick={() => setSettingsSection(item.id)}
-              className={`flex-1 min-w-40 xl:w-full xl:flex-none flex items-center gap-2.5 px-3 py-2 rounded text-xs font-medium transition cursor-pointer ${
+              aria-current={isActive ? "page" : undefined}
+              className={`flex items-center gap-2.5 rounded border px-3 py-2 text-xs font-medium transition cursor-pointer ${
                 isActive
                   ? isLight
-                    ? "bg-[#E5E7EB] text-accent border border-accent/30"
-                    : "bg-[#24262B] text-accent border border-accent/30"
+                    ? "bg-[#E5E7EB] text-accent border-accent/30"
+                    : "bg-[#24262B] text-accent border-accent/30"
                   : isLight
-                    ? "text-[#4B5563] hover:text-[#111827] hover:bg-[#F3F4F6]"
-                    : "text-[#9B9CA3] hover:text-text-primary hover:bg-[#1C1D21]"
+                    ? "text-[#4B5563] border-transparent hover:text-[#111827] hover:bg-[#F3F4F6]"
+                    : "text-[#9B9CA3] border-transparent hover:text-text-primary hover:bg-[#1C1D21]"
               }`}
             >
               <Icon className="shrink-0" size="14" />
-              <span className="truncate">{item.label}</span>
+              <span className="min-w-0 text-left leading-snug">{item.label}</span>
             </button>
           );
         })}
-      </div>
+      </nav>
 
       {/* Main Settings Content Area */}
       <div
+        ref={panelRef}
         className={`flex-1 border rounded-lg p-6 overflow-y-auto space-y-6 transition-colors duration-200 ${
           isLight
             ? "bg-[#FFFFFF] border-[#E5E7EB]"
@@ -234,8 +251,6 @@ export default function SettingsView({
         {settingsSection === "shortcuts" && (
           <ShortcutsSettings {...commonProps} />
         )}
-
-        {settingsSection === "backup" && <BackupSettings {...commonProps} />}
 
         {settingsSection === "about" && <AboutSettings {...commonProps} />}
       </div>
