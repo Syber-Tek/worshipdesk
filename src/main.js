@@ -30,6 +30,14 @@ let mainWindow = null;
 let stageWindow = null;
 const presentationWindows = new Map(); // displayId -> BrowserWindow
 
+// WorshipDesk never talks to a proxy — it is offline-first, and the only
+// outbound call it can make is the opt-in update check. Letting Chromium consult
+// the system proxy would make its network service run WPAD auto-discovery every
+// time the machine joins a network, which is what kills that service
+// ("Network service crashed or was terminated") and stalls the app. A direct
+// connection is both correct here and keeps the service out of the picture.
+app.commandLine.appendSwitch('no-proxy-server');
+
 // ── Native chrome theming ─────────────────────────────────────────────────────
 // The renderer owns the app theme (dark / light / system). The main process
 // mirrors that choice onto the chrome the OS draws for us, so the Windows title

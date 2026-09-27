@@ -349,7 +349,7 @@ export default function PlanView({
                   </button>
 
                   <button
-                    onClick={() => handleDeleteItem && handleDeleteItem(index)}
+                    onClick={() => handleDeleteItem && handleDeleteItem(item.id)}
                     className="p-1.5 rounded border border-transparent hover:border-red-900/50 hover:bg-red-950/30 text-red-400 transition cursor-pointer"
                     title="Remove Item"
                   >

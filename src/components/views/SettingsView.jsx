@@ -107,11 +107,13 @@ export default function SettingsView({
           content panel below keeps the full width of this column. The switch is
           driven by a container query rather than the window, because the rails
           either side of this view already take ~320px - a viewport breakpoint
-          fires long after the column has actually run out of room. Labels wrap
-          instead of scrolling or truncating, so nothing is ever cut off. */}
+          fires long after the column has actually run out of room. Once the
+          column is wide enough for a full-screen window it pins to 5 columns,
+          so the 10 sections always sit as 2 rows of 5. Labels wrap instead of
+          scrolling or truncating, so nothing is ever cut off. */}
       <nav
         aria-label="Settings sections"
-        className={`grid w-full shrink-0 grid-cols-[repeat(auto-fit,minmax(136px,1fr))] gap-1.5 rounded-lg border p-2 transition-colors duration-200 ${
+        className={`grid w-full shrink-0 grid-cols-[repeat(auto-fit,minmax(136px,1fr))] @[52rem]:grid-cols-5 gap-1.5 rounded-lg border p-2 transition-colors duration-200 ${
           isLight
             ? "bg-[#FFFFFF] border-[#E5E7EB]"
             : "bg-[#151619] border-[#2A2C31]"
