@@ -13,7 +13,7 @@ import AddItemModal from "./components/modals/AddItemModal";
 import SplashScreen from "./components/SplashScreen";
 import { Toaster, toast } from "sonner";
 
-import { mapBookToTranslation, normalizeBookName } from "./bibleBooks.js";
+import { resolveBookInList, normalizeBookName } from "./bibleBooks.js";
 
 // Split a hymn's lyrics at blank lines into separate stanza slides so hymns can
 // also be presented verse-by-verse (stanza-by-stanza) like scripture.
@@ -39,6 +39,53 @@ const buildHymnDeck = (item) => {
   }));
 };
 
+const THEME_MODE_KEY = "church_presenter_theme_mode";
+
+const readThemeMode = () => {
+  if (typeof window === "undefined" || !window.localStorage) return "dark";
+  const saved = window.localStorage.getItem(THEME_MODE_KEY);
+  return saved === "light" || saved === "system" ? saved : "dark";
+};
+
+const resolveEffectiveTheme = (mode) => {
+  if (mode !== "system") return mode;
+  if (typeof window === "undefined" || !window.matchMedia) return "dark";
+  return window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light";
+};
+
+// The projector and stage windows return before the control window's theme code
+// runs, so they have to apply data-theme themselves. They are separate
+// BrowserWindows, so without this the CSS variables fall back to the dark
+// palette and the standby screen ignores the operator's chosen theme.
+function useOverlayTheme(isOverlayWindow) {
+  useEffect(() => {
+    if (!isOverlayWindow) return;
+    const apply = () => {
+      document.documentElement.setAttribute(
+        "data-theme",
+        resolveEffectiveTheme(readThemeMode()),
+      );
+    };
+    apply();
+    const media =
+      typeof window !== "undefined" && window.matchMedia
+        ? window.matchMedia("(prefers-color-scheme: dark)")
+        : null;
+    const onChange = () => apply();
+    media?.addEventListener("change", onChange);
+    // Best effort: picks up a theme change made in the control window.
+    window.addEventListener("storage", onChange);
+    const unsubscribe = window.api?.onNativeThemeChanged?.(onChange);
+    return () => {
+      media?.removeEventListener("change", onChange);
+      window.removeEventListener("storage", onChange);
+      if (typeof unsubscribe === "function") unsubscribe();
+    };
+  }, [isOverlayWindow]);
+}
+
 export default function App() {
   const isPresentationMode =
     typeof window !== "undefined" &&
@@ -49,6 +96,8 @@ export default function App() {
     typeof window !== "undefined" &&
     (window.location.search.includes("window=stage") ||
       window.location.href.includes("window=stage"));
+
+  useOverlayTheme(isPresentationMode || isStageMode);
 
   if (isPresentationMode) {
     return <PresentationOutputWindow />;
@@ -127,10 +176,40 @@ export default function App() {
     if (typeof document !== "undefined") {
       document.documentElement.setAttribute("data-theme", effectiveTheme);
     }
-    if (typeof window !== "undefined" && window.api?.setWindowIcon) {
-      window.api.setWindowIcon(effectiveTheme).catch(() => {});
-    }
   }, [effectiveTheme]);
+
+  // Hand the raw theme MODE to the main process (not the resolved theme) so it
+  // can own nativeTheme.themeSource. That way the OS title bar, native dialogs
+  // and taskbar icon follow the in-app theme, and 'system' mode keeps tracking
+  // the PC's own setting live via nativeTheme 'updated'.
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.api?.setAppTheme) return;
+    window.api.setAppTheme(themeMode).catch(() => {});
+  }, [themeMode]);
+
+  // The main process is the source of truth for the effective theme, so an OS
+  // level change (day/night, manual PC switch) re-themes the app even when the
+  // app is sitting on "system".
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.api?.onNativeThemeChanged)
+      return;
+    const unsubscribe = window.api.onNativeThemeChanged(({ effectiveTheme: next }) => {
+      if (next === "light" || next === "dark") setSystemTheme(next);
+    });
+    return typeof unsubscribe === "function" ? unsubscribe : undefined;
+  }, []);
+
+  // When the OS title bar is hidden the in-app header becomes the title bar, so
+  // the header has to leave room for the native minimise/maximise/close buttons.
+  const [hasTitleBarOverlay, setHasTitleBarOverlay] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.api?.getAppInfo) return;
+    window.api
+      .getAppInfo()
+      .then((info) => setHasTitleBarOverlay(Boolean(info && info.hasTitleBarOverlay)))
+      .catch(() => {});
+  }, []);
 
   // Live Presentation & Transport State
   const [isLive, setIsLive] = useState(false);
@@ -435,19 +514,11 @@ export default function App() {
           setAllBooksList(books);
           // Keep the selected book valid across translations (English <-> Twi).
           const normalized = normalizeBookName(selectedBook);
-          const found = books.find(
-            (b) => normalizeBookName(b.name) === normalized,
-          );
+          const found =
+            books.find((b) => normalizeBookName(b.name) === normalized) ||
+            resolveBookInList(books, selectedBook, selectedTranslation);
           if (!found) {
-            const mappedName = mapBookToTranslation(
-              selectedBook,
-              selectedTranslation,
-            );
-            const target =
-              books.find(
-                (b) =>
-                  normalizeBookName(b.name) === normalizeBookName(mappedName),
-              ) || books[0];
+            const target = books[0];
             if (target) {
               setSelectedBook(target.name);
               setSelectedChapter((prev) =>
@@ -455,6 +526,14 @@ export default function App() {
               );
               setSelectedVerseIndex(0);
             }
+          } else if (normalizeBookName(found.name) !== normalized) {
+            setSelectedBook(found.name);
+            if (found.chaptersCount) {
+              setSelectedChapter((prev) =>
+                Math.min(prev || 1, found.chaptersCount),
+              );
+            }
+            setSelectedVerseIndex(0);
           } else if (found.chaptersCount) {
             setSelectedChapter((prev) =>
               Math.min(prev || 1, found.chaptersCount),
@@ -504,10 +583,17 @@ export default function App() {
             window.api.getBooks(bibleId).then((books) => {
               if (stale) return;
               if (!books || books.length === 0) return;
-              const matchedBook = books.find(
-                (b) =>
-                  normalizeBookName(b.name) === normalizeBookName(selectedBook),
-              );
+              const matchedBook =
+                books.find(
+                  (b) =>
+                    normalizeBookName(b.name) ===
+                    normalizeBookName(selectedBook),
+                ) ||
+                resolveBookInList(
+                  books,
+                  selectedBook,
+                  selectedTranslation,
+                );
               if (!matchedBook || !window.api.getVerses) return;
               window.api
                 .getVerses(matchedBook.id, selectedChapter)
@@ -556,20 +642,35 @@ export default function App() {
     }
     const secBible = biblesList.find((b) => b.code === secondaryTranslation);
     if (!secBible) return;
+
+    // Guarded so a fast book/translation change cannot land an older response
+    // on top of a newer selection, which is what left the parallel pane
+    // showing a different book than the primary one.
+    let stale = false;
     window.api.getBooks(secBible.id).then((books) => {
-      if (!books || books.length === 0) return;
-      const normalized = normalizeBookName(selectedBook);
-      const targetBook =
-        books.find((b) => normalizeBookName(b.name) === normalized) ||
-        books[0];
-      if (targetBook) {
-        window.api.getVerses(targetBook.id, selectedChapter).then((verses) => {
-          if (Array.isArray(verses)) {
-            setSecondaryVerses(verses);
-          }
-        });
-      }
+      if (stale) return;
+      const targetBook = resolveBookInList(
+        books,
+        selectedBook,
+        secondaryTranslation,
+      );
+      // No counterpart means no parallel text. Falling back to books[0] here
+      // is what silently showed the wrong book next to the right label.
+      if (!targetBook || !window.api.getVerses) return;
+      const chapter = Math.min(
+        selectedChapter || 1,
+        targetBook.chaptersCount || selectedChapter || 1,
+      );
+      window.api.getVerses(targetBook.id, chapter).then((verses) => {
+        if (stale) return;
+        if (Array.isArray(verses)) {
+          setSecondaryVerses(verses);
+        }
+      });
     });
+    return () => {
+      stale = true;
+    };
   }, [secondaryTranslation, selectedBook, selectedChapter, biblesList]);
 
   // Attach the parallel translation text to a verse when available.
@@ -1236,7 +1337,7 @@ export default function App() {
 
   return (
     <div
-      className={`flex h-screen font-sans overflow-hidden select-none transition-colors duration-200 ${
+      className={`flex flex-col h-screen font-sans overflow-hidden select-none transition-colors duration-200 ${
         effectiveTheme === "light"
           ? "bg-[#F4F5F7] text-[#111827]"
           : "bg-bg text-text-primary"
@@ -1251,26 +1352,29 @@ export default function App() {
       }}
       onKeyDown={handleKeyDown}
     >
-      {/* 1. ICON RAIL (Fixed 52px width) */}
+      {/* 1. FULL-WIDTH CUSTOM TITLE BAR (native caption buttons overlay its right) */}
+      <Header
+        displays={displays}
+        isLive={isLive}
+        setIsLive={setIsLive}
+        broadcastToPresentation={broadcastToPresentation}
+        themeMode={themeMode}
+        effectiveTheme={effectiveTheme}
+        setThemeMode={setThemeMode}
+        hasTitleBarOverlay={hasTitleBarOverlay}
+      />
+
+      {/* 2. WORKSPACE ROW */}
+      <div className="flex flex-1 min-h-0">
+      {/* 2.1 ICON RAIL (Fixed 52px width) */}
       <IconRail
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         themeMode={effectiveTheme}
       />
 
-      {/* CENTER WORKSPACE */}
+      {/* 2.2 CENTER WORKSPACE */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* TOP STATUS BAR */}
-        <Header
-          displays={displays}
-          isLive={isLive}
-          setIsLive={setIsLive}
-          broadcastToPresentation={broadcastToPresentation}
-          themeMode={themeMode}
-          effectiveTheme={effectiveTheme}
-          setThemeMode={setThemeMode}
-        />
-
         {/* MAIN ROUTED VIEW CONTENT AREA */}
         <main className="flex-1 overflow-y-auto p-5 text-xs">
           {activeTab === "home" && (
@@ -1397,7 +1501,7 @@ export default function App() {
         </main>
       </div>
 
-      {/* 3. CURRENT / NEXT RAIL & TRANSPORT CONTROLS */}
+      {/* 2.3 CURRENT / NEXT RAIL & TRANSPORT CONTROLS */}
       <CurrentNextRail
         currentSlide={currentSlide}
         nextSlide={nextSlide}
@@ -1423,6 +1527,7 @@ export default function App() {
         outputTheme={outputTheme}
         setOutputTheme={setOutputTheme}
       />
+      </div>
 
       {/* ADD ITEM MODAL */}
       <AddItemModal

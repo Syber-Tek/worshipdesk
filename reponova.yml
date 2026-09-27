@@ -1,0 +1,26 @@
+# RepoNova knowledge-graph configuration
+# https://github.com/CristianoCiuti/reponova
+# Feeds the `reponova` MCP server configured in opencode.json.
+# Build the graph with:  reponova build
+
+output: ./reponova-out
+
+repos:
+  - name: worshipdesk
+    path: .
+
+exclude_common: true
+exclude:
+  - "reponova-out/**"
+  - "release/**"
+  - "out/**"
+  - "bibles/**"
+  - "hymns/**"
+  - "src/assets/**"
+
+docs:
+  enabled: true
+
+plugins:
+  javascript:
+    enabled: true

@@ -13,6 +13,16 @@ export default function GeneralSettings({
   isLight,
 }) {
   const [startup, setStartup] = useState(false);
+  const [version, setVersion] = useState(null);
+
+  useEffect(() => {
+    if (window.api && window.api.getAppInfo) {
+      window.api
+        .getAppInfo()
+        .then((info) => setVersion(info?.version ?? null))
+        .catch(() => {});
+    }
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -69,7 +79,7 @@ export default function GeneralSettings({
               isLight ? "text-[#9CA3AF]" : "text-[#6B6C73]"
             }`}
           >
-            v1.0.0
+            {version ? `v${version}` : "v—"}
           </span>
         </div>
 

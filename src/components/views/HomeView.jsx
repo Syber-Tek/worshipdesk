@@ -60,7 +60,7 @@ export default function HomeView({
   const nextPlaylistItem = playlist.find((item) => item.status === "next");
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-6">
+    <div className="@container space-y-6 max-w-6xl mx-auto pb-6">
       {/* Top Banner: Service Dashboard Overview */}
       <div
         className={`p-5 rounded-xl border flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 transition-colors duration-200 ${cardClass}`}
@@ -98,8 +98,11 @@ export default function HomeView({
         </div>
       </div>
 
-      {/* Metric Cards Grid (Matching reference visual density & surface layering) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Metric Cards Grid. Always 2x2 once the window has room for it, dropping
+          to a single column only when it does not. The check is a container
+          query because the icon and live rails already take ~320px, so a
+          viewport breakpoint fires long after the space is actually gone. */}
+      <div className="grid grid-cols-1 @md:grid-cols-2 gap-4">
         {/* Card 1: Playlist Items */}
         <div className={`p-4 rounded-xl border space-y-3 ${cardClass}`}>
           <div className="flex justify-between items-center">

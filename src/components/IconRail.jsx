@@ -25,7 +25,7 @@ export default function IconRail({ activeTab, setActiveTab, themeMode }) {
   return (
     <aside
       className={`w-13 border-r flex flex-col items-center justify-between py-3 z-20 transition-colors duration-200 ${
-        isLight ? "bg-[#FFFFFF] border-[#E5E7EB]" : "bg-[#121316] border-border"
+        isLight ? "bg-[#FFFFFF] border-[#E5E7EB]" : "bg-panel border-border"
       }`}
     >
       <div className="flex flex-col items-center gap-4 w-full">
