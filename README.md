@@ -24,7 +24,7 @@ Point a website **Download** button at that page. Direct `/releases/latest/downl
 
 WorshipDesk updates itself from **Settings → About & Updates**.
 
-- **Checks run automatically** in installed builds: 45 seconds after launch, then every 6 hours. Turn this off with the **Automatic update checks** toggle on the same page — the choice is remembered between restarts.
+- **Checks are opt-in.** The app contacts nothing on its own — press **Check for updates**, or turn on the **Automatic update checks** toggle on the same page to check 45 seconds after launch and every 6 hours. The choice is remembered between restarts.
 - **Downloads and installs stay manual.** Nothing is fetched or applied without you asking, and a downloaded update is applied the next time you quit normally, so an update can never interrupt a service in progress.
 - Automatic checks are skipped in development (`npm start`); only installed builds phone home.
 - Updates come from the public [`worshipdesk-releases`](https://github.com/Syber-Tek/worshipdesk-releases) repository, so the app is fully functional offline once installed.

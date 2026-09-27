@@ -517,6 +517,11 @@ function rtfToPlainText(rtf) {
   return text
     .replace(/^[ \t]+/gm, '')
     .replace(/[ \t]+$/gm, '')
+    // SongShow marks section headings and verse/chorus breaks with a bullet
+    // glyph (\'b6 / \'95). Keep the heading text, drop the bare separator lines
+    // so a stray dot never becomes its own line on the slide.
+    .replace(/^•+[ \t]*$\n?/gm, '')
+    .replace(/^•+[ \t]*/gm, '')
     .replace(/\n{3,}/g, '\n\n')
     .trim()
 }
@@ -574,6 +579,8 @@ export function importSngFile(filePath, defaultCategory, defaultAuthor, isTwi) {
 
     let title = meta.title || baseName
     title = title.replace(/\s*\([A-Za-z]{1,4}\s*\d+\)\s*$/, '').trim() || baseName
+    // Some Twi titles carry a trailing full stop from the source file.
+    title = title.replace(/\s*\.\s*$/, '').trim() || title
     if (isTwi) title = twiGlyphFix(title)
 
     const hymnNumber = parseHymnNumber(meta.userinfo1, meta.cclinum, meta.number, baseName, title)

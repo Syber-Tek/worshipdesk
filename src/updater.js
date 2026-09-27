@@ -8,10 +8,12 @@ import path from 'path'
 // download it instead.
 const RELEASES_URL = 'https://github.com/Syber-Tek/worshipdesk-releases/releases/latest'
 
-// Automatic checking is on by default. It only ever *looks* for a newer version
-// (autoDownload stays false), so nothing is ever fetched or installed without
-// the user pressing Download.
-const AUTO_CHECK_DEFAULT = true
+// Automatic checking is opt-in. A background GitHub check 45s after launch was
+// the only network traffic the app ever made on its own, and on a flaky or
+// captive connection that call could leave Chromium's network service unhappy
+// mid-service. Nothing is contacted until the user asks for it in About &
+// Updates, which keeps the offline promise true in practice.
+const AUTO_CHECK_DEFAULT = false
 // Wait a little after launch so a slow or offline start is not mistaken for a
 // broken updater, and the service setup gets priority.
 const AUTO_CHECK_STARTUP_DELAY_MS = 45 * 1000

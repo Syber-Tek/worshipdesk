@@ -17,8 +17,8 @@ export default function AboutSettings({
 }) {
   const [version, setVersion] = React.useState(null);
   const [update, setUpdate] = React.useState({ status: "idle" });
-  // Automatic checking is on by default; the main process owns the real value.
-  const [autoCheck, setAutoCheck] = React.useState(true);
+  // Automatic checking is opt-in; the main process owns the real value.
+  const [autoCheck, setAutoCheck] = React.useState(false);
 
   React.useEffect(() => {
     if (window.api?.getAppInfo) {
@@ -193,8 +193,9 @@ export default function AboutSettings({
                   Automatically check for updates
                 </span>
                 <span className={`block ${textSub}`}>
-                  On by default. Only looks for a new version — you still choose
-                  whether to download and install it.
+                  Off by default, so the app never touches the network on its
+                  own. When on, it only looks for a new version — you still
+                  choose whether to download and install it.
                 </span>
               </span>
             </label>
