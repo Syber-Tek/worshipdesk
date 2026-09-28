@@ -95,17 +95,13 @@ jobs:
             # beside them, and the portable download is a dead link.
             release/*.zip
             release/*.blockmap
-          if-no-files-found: warn
-
-      # builder-debug.yml is deliberately never uploaded. It is electron-builder
-      # diagnostics, it is not read by electron-updater, and it names runner
-      # paths that have no business in a public repo.
-      - name: Upload Update Manifest
-        uses: actions/upload-artifact@v4
-        if: matrix.meta
-        with:
-          name: worshipdesk-${{ matrix.name }}
-          path: ${{ matrix.meta }}
+            # The one update manifest this platform owns. Empty for the Intel
+            # macOS job, whose manifest is published by the arm64 job.
+            #
+            # This has to be a glob line inside the one upload step:
+            # upload-artifact@v4 artifacts are immutable, so a second step
+            # reusing this artifact name is a 409 Conflict.
+            ${{ matrix.meta }}
           if-no-files-found: warn
 
   release:
