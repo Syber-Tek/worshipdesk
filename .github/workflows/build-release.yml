@@ -4,6 +4,10 @@ on:
   push:
     tags:
       - 'v*'
+  # Verify on the pull request rather than on the merge. A main-push trigger ran
+  # a second full four-platform build for every release, because `npm run
+  # release` pushes the version commit and the tag as one operation.
+  pull_request:
     branches:
       - main
   workflow_dispatch:
@@ -26,18 +30,28 @@ jobs:
           - os: windows-2022
             name: Windows x64
             builder_args: --win --x64
+            # Only the platform that produces a manifest publishes it. Every
+            # matrix job writes builder-debug.yml and both macOS jobs write
+            # latest-mac.yml, so globbing release/*.yml collected several files
+            # with the same basename and the release action 404'd trying to
+            # replace one it had just uploaded.
+            meta: release/latest.yml
           # Apple Silicon. macos-latest is an arm64 runner.
           - os: macos-latest
             name: macOS Apple Silicon (arm64)
             builder_args: --mac --arm64
+            meta: release/latest-mac.yml
           # Intel. macos-latest alone produced an arm64-only app, which macOS
           # refuses to open on an Intel Mac ("not supported on this Mac").
           - os: macos-15-intel
             name: macOS Intel (x64)
             builder_args: --mac --x64
+            # The arm64 job above already publishes latest-mac.yml.
+            meta: ''
           - os: ubuntu-latest
             name: Linux x64
             builder_args: --linux
+            meta: release/latest-linux.yml
 
     runs-on: ${{ matrix.os }}
 
@@ -80,10 +94,18 @@ jobs:
             # Without this the .zip.blockmap files get published with no .zip
             # beside them, and the portable download is a dead link.
             release/*.zip
-            # Needed by the release job so it can publish the auto-update
-            # metadata for electron-updater.
-            release/*.yml
             release/*.blockmap
+          if-no-files-found: warn
+
+      # builder-debug.yml is deliberately never uploaded. It is electron-builder
+      # diagnostics, it is not read by electron-updater, and it names runner
+      # paths that have no business in a public repo.
+      - name: Upload Update Manifest
+        uses: actions/upload-artifact@v4
+        if: matrix.meta
+        with:
+          name: worshipdesk-${{ matrix.name }}
+          path: ${{ matrix.meta }}
           if-no-files-found: warn
 
   release:
@@ -115,11 +137,13 @@ jobs:
             # Portable zip. Its .zip.blockmap is already picked up below, so
             # without this the blockmap ships with no zip beside it.
             artifacts/**/*.zip
-            # Auto-update metadata. Without latest.yml / latest-mac.yml alongside
-            # the installers, electron-updater can see a release but has nothing
-            # to compare versions or download against.
-            artifacts/**/*.yml
             artifacts/**/*.blockmap
+            # One glob per manifest, each with exactly one producer. A broad
+            # artifacts/**/*.yml matched builder-debug.yml from all four matrix
+            # jobs, and the duplicate basenames broke the upload.
+            artifacts/**/latest.yml
+            artifacts/**/latest-mac.yml
+            artifacts/**/latest-linux.yml
           name: WorshipDesk Release ${{ github.event_name == 'workflow_dispatch' && inputs.tag_name || github.ref_name }}
           body: |
             ## 🚀 WorshipDesk Official Release
