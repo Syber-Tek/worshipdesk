@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+﻿import React, { useEffect, useState, useRef, useCallback } from "react";
 import PresentationOutputWindow from "./components/PresentationOutputWindow";
 import StageDisplayWindow from "./components/StageDisplayWindow";
 import IconRail from "./components/IconRail";
@@ -14,6 +14,8 @@ import SplashScreen from "./components/SplashScreen";
 import { Toaster, toast } from "sonner";
 
 import { resolveBookInList, normalizeBookName } from "./bibleBooks.js";
+import { defaultFit } from "./lib/mediaKinds.js";
+import usePresentationOutput from "./hooks/usePresentationOutput.js";
 
 // Split a hymn's lyrics at blank lines into separate stanza slides so hymns can
 // also be presented verse-by-verse (stanza-by-stanza) like scripture.
@@ -212,9 +214,6 @@ export default function App() {
   }, []);
 
   // Live Presentation & Transport State
-  const [isLive, setIsLive] = useState(false);
-  const [isBlank, setIsBlank] = useState(false);
-  const [isBlack, setIsBlack] = useState(false);
 
   // Live Output Presentation Theme & Background State
   const [outputTheme, setOutputTheme] = useState(() => {
@@ -370,11 +369,6 @@ export default function App() {
     }
   }, [projectionDisplays]);
 
-  // Current Live & Next Staged Slide
-  const [currentSlide, setCurrentSlide] = useState(null);
-
-  const [nextSlide, setNextSlide] = useState({});
-
   // Service Playlist State
   const [playlist, setPlaylist] = useState([]);
   const [recentPlans, setRecentPlans] = useState(() => {
@@ -459,6 +453,9 @@ export default function App() {
   const [newItemTitle, setNewItemTitle] = useState("");
   const [newItemContent, setNewItemContent] = useState("");
   const [newItemType, setNewItemType] = useState("Bible Verse");
+  const [missingMediaIds, setMissingMediaIds] = useState(() => new Set());
+  // The playlist row currently open in the add/edit modal, or null when adding.
+  const [editingItem, setEditingItem] = useState(null);
 
   // Hardware & System State
   const [appInfo, setAppInfo] = useState(null);
@@ -479,8 +476,6 @@ export default function App() {
   const [secondaryTranslation, setSecondaryTranslation] = useState("None");
   const [secondaryVerses, setSecondaryVerses] = useState([]);
   // Hymn stanza deck (set when presenting a hymn so it navigates stanza by stanza)
-  const [hymnDeck, setHymnDeck] = useState([]);
-  const [hymnDeckIndex, setHymnDeckIndex] = useState(0);
   const searchInputRef = useRef(null);
 
   // Fetch Bibles from SQLite on mount
@@ -716,111 +711,67 @@ export default function App() {
       ? filteredVerses[selectedVerseIndex] || filteredVerses[0]
       : null;
 
-  // Broadcast Live Slide via IPC
-  const broadcastToPresentation = useCallback(
-    (overrides = {}) => {
-      if (window.api && window.api.sendLiveSlide) {
-        const isVerseDeck =
-          (currentSlide?.type || "Bible Verse") === "Bible Verse";
-        const isHymnDeckActive = !isVerseDeck && hymnDeck.length > 1;
+  // The presentation engine owns what is on air. Kept in one place so a slide
+  // cannot be shaped differently by two different present paths.
+  const {
+    currentSlide,
+    nextSlide,
+    isLive,
+    isBlack,
+    isBlank,
+    hymnDeck,
+    hymnDeckIndex,
+    setCurrentSlide,
+    setNextSlide,
+    setIsLive,
+    setIsBlack,
+    setIsBlank,
+    setHymnDeck,
+    setHymnDeckIndex,
+    normalizeSlide,
+    mediaOverrides,
+    broadcastToPresentation,
+    mediaPage,
+    mediaPageCount,
+    setMediaPageCount,
+    isPagingPdf,
+    handleReplayVideo,
+    handleSelectItem,
+    handleStageNext,
+    handlePresentItemNow,
+    handlePresentNow,
+    handleTransportPresent,
+    handleTransportStop,
+    handleToggleBlack,
+    handleToggleClear,
+    handleTransportPrev,
+    handleTransportNext,
+    handleTransportPresentNext,
+    handleTransportPresentPrev,
+  } = usePresentationOutput({
+    playlist,
+    setPlaylist,
+    filteredVerses,
+    selectedVerseIndex,
+    setSelectedVerseIndex,
+    selectedTranslation,
+    getVerseWithSecondary,
+    buildHymnDeck,
+    outputTheme,
+    outputBgImage,
+    outputBgVideo,
+    showVerseQuotes,
+    appNamePosition,
+    customHeaderTitle,
+    slideMargin,
+    attributionPosition,
+    outputFontSize,
+  });
 
-        let nextSlideTitle = "";
-        let nextSlideContent = "";
-
-        if (isVerseDeck && Array.isArray(filteredVerses)) {
-          const nextVerse = filteredVerses[selectedVerseIndex + 1];
-          if (nextVerse) {
-            nextSlideTitle = nextVerse.ref || `Verse ${selectedVerseIndex + 2}`;
-            nextSlideContent = nextVerse.text || "";
-          }
-        } else if (isHymnDeckActive && Array.isArray(hymnDeck)) {
-          const nextHymnSlide = hymnDeck[hymnDeckIndex + 1];
-          if (nextHymnSlide) {
-            nextSlideTitle = nextHymnSlide.hymnLabel
-              ? `${nextHymnSlide.hymnLabel} — ${nextHymnSlide.title}`
-              : nextHymnSlide.title;
-            nextSlideContent = nextHymnSlide.content || "";
-          }
-        }
-
-        window.api.sendLiveSlide({
-          title: currentSlide?.title || currentSlide?.ref || "",
-          content: currentSlide?.content || currentSlide?.text || "",
-          secondaryText: currentSlide?.secondaryText || "",
-          secondaryTranslation: currentSlide?.secondaryTranslation || "",
-          type: currentSlide?.type || "Bible Verse",
-          hymnLabel: currentSlide?.hymnLabel || "",
-          nextSlideTitle,
-          nextSlideContent,
-          isLive,
-          isBlank,
-          isBlack,
-          outputTheme,
-          outputBgImage,
-          outputBgVideo,
-          showVerseQuotes,
-          appNamePosition,
-          customHeaderTitle,
-          slideMargin,
-          attributionPosition,
-          outputFontSize,
-          deckPosition: isVerseDeck
-            ? Math.min(selectedVerseIndex + 1, filteredVerses.length)
-            : isHymnDeckActive
-              ? hymnDeckIndex + 1
-              : 0,
-          deckTotal: isVerseDeck
-            ? filteredVerses.length
-            : isHymnDeckActive
-              ? hymnDeck.length
-              : 0,
-          ...overrides,
-        });
-      }
-    },
-    [
-      currentSlide,
-      isLive,
-      isBlank,
-      isBlack,
-      outputTheme,
-      outputBgImage,
-      outputBgVideo,
-      showVerseQuotes,
-      appNamePosition,
-      customHeaderTitle,
-      slideMargin,
-      attributionPosition,
-      outputFontSize,
-      selectedVerseIndex,
-      filteredVerses.length,
-      hymnDeck,
-      hymnDeckIndex,
-    ],
-  );
-
-  useEffect(() => {
-    broadcastToPresentation();
-  }, [broadcastToPresentation]);
-
-  const normalizeSlide = (item) => {
-    if (!item || typeof item !== "object") return null;
-    const isVerse = !!(item.ref || item.book || item.type === "Bible Verse");
-    const refTitle = item.ref ? item.ref : "";
-    const title = item.title || refTitle || "Untitled Slide";
-    const content =
-      item.content || item.text || item.lyrics || item.verse_text || "";
-    const type = item.type || (isVerse ? "Bible Verse" : "Custom Slide");
-    return {
-      title,
-      content,
-      secondaryText: item.secondaryText || "",
-      secondaryTranslation: item.secondaryTranslation || "",
-      type,
-      hymn_number: item.hymn_number,
-      category: item.category,
-    };
-  };
+  // ---------------------------------------------------------------------
+  // Playlist handlers. These own the service plan itself, as opposed to the
+  // presentation engine above, which only decides what is on air.
+  // ---------------------------------------------------------------------
 
   const handleAddToPlaylist = (item) => {
     const slide = normalizeSlide(item);
@@ -835,6 +786,8 @@ export default function App() {
     toast.success(`Added "${slide.title || "item"}" to Service Plan`);
   };
 
+  // Global shortcuts for the control window. Ignores typing targets so the arrow
+  // keys and space still behave normally inside a text field.
   const handleKeyDown = (e) => {
     const tag =
       e.target && e.target.tagName ? e.target.tagName.toUpperCase() : "";
@@ -865,69 +818,6 @@ export default function App() {
     }
   };
 
-  // Playlist Handlers
-  const handleSelectItem = (item) => {
-    setNextSlide({
-      id: item.id,
-      title: item.title,
-      content: item.content,
-      secondaryText: item.secondaryText || "",
-      secondaryTranslation: item.secondaryTranslation || "",
-      type: item.type,
-    });
-
-    setPlaylist((prev) =>
-      prev.map((i) => {
-        if (i.id === item.id) return { ...i, status: "next" };
-        if (i.status === "next") return { ...i, status: "pending" };
-        return i;
-      }),
-    );
-    toast.info(`Staged "${item.title || "item"}" as Next`);
-  };
-
-  const handlePresentItemNow = (item) => {
-    const isHymn = !!item && item.type === "Hymn";
-    let updatedSlide;
-    if (isHymn) {
-      const slides = buildHymnDeck(item);
-      setHymnDeck(slides);
-      setHymnDeckIndex(0);
-      updatedSlide = slides[0];
-    } else {
-      setHymnDeck([]);
-      setHymnDeckIndex(0);
-      updatedSlide = {
-        id: item.id,
-        title: item.title,
-        content: item.content,
-        type: item.type,
-      };
-    }
-    setCurrentSlide(updatedSlide);
-    setIsLive(true);
-    setIsBlack(false);
-    setIsBlank(false);
-
-    broadcastToPresentation({
-      title: updatedSlide.title,
-      content: updatedSlide.content,
-      type: updatedSlide.type,
-      isLive: true,
-      isBlack: false,
-      isBlank: false,
-    });
-
-    setPlaylist((prev) =>
-      prev.map((i) => {
-        if (i.id === item.id) return { ...i, status: "live" };
-        if (i.status === "live") return { ...i, status: "pending" };
-        return i;
-      }),
-    );
-    toast.success(`Broadcasting "${updatedSlide.title || "slide"}" Live`);
-  };
-
   const handleMoveUp = (index) => {
     if (index === 0) return;
     const updated = [...playlist];
@@ -948,274 +838,150 @@ export default function App() {
     toast.info("Reordered Service Plan item");
   };
 
-  const handleDeleteItem = (id) => {
-    setPlaylist((prev) => {
-      const target = prev.find((i) => i.id === id);
-      if (target) {
-        toast.info(`Removed "${target.title || "item"}" from Service Plan`);
-      }
-      return prev.filter((i) => i.id !== id);
-    });
+  // Open the add/edit modal on an existing row. The modal is reused for both, so
+  // the form fields are seeded here rather than duplicated in PlanView.
+  const handleOpenEdit = (item) => {
+    if (!item) {
+      setEditingItem(null);
+      setShowAddModal(false);
+      return;
+    }
+    setEditingItem(item);
+    setNewItemTitle(item.title || "");
+    setNewItemContent(item.content || "");
+    setNewItemType(item.type || "Bible Verse");
+    setShowAddModal(true);
   };
 
+  // Save changes back onto the row. A null payload just closes the modal, which
+  // is how Cancel and the backdrop are wired.
+  const handleEditItem = (payload) => {
+    if (!payload) {
+      handleOpenEdit(null);
+      return;
+    }
+    setPlaylist((prev) =>
+      prev.map((i) => (i.id === editingItem?.id ? { ...i, ...payload } : i)),
+    );
+    handleOpenEdit(null);
+    toast.success(`Updated "${payload.title || "item"}"`);
+  };
+
+  const handleDeleteItem = (id) => {    setPlaylist((prev) => prev.filter((i) => i.id !== id));
+    toast.info("Removed item from Service Plan");
+  };
+
+  // Submit handler behind the add-custom-slide modal.
   const handleAddItem = (e) => {
     e.preventDefault();
-    if (!newItemTitle.trim() || !newItemContent.trim()) return;
-
-    const newItem = {
-      id: `item-${Date.now()}`,
-      title: newItemTitle,
-      content: newItemContent,
-      type: newItemType,
-      status: "pending",
-    };
-
-    setPlaylist((prev) => [...prev, newItem]);
+    if (!newItemTitle.trim() || !newItemContent.trim()) {
+      toast.error("A slide needs both a title and some text");
+      return;
+    }
+    setPlaylist((prev) => [
+      ...prev,
+      {
+        id: `item-${Date.now()}`,
+        title: newItemTitle.trim(),
+        content: newItemContent.trim(),
+        type: newItemType,
+        status: "pending",
+      },
+    ]);
     setNewItemTitle("");
     setNewItemContent("");
     setShowAddModal(false);
-    toast.success(`Added "${newItem.title || "item"}" to Service Plan`);
+    toast.success(`Added "${newItemTitle.trim()}" to Service Plan`);
   };
 
-  // Scripture Transport Handlers
-  const handleStageNext = (item) => {
-    const slide = normalizeSlide(item);
-    if (!slide) return;
-    setNextSlide({ id: `item-${Date.now()}`, ...slide });
-    toast.info(`Staged "${slide.title || "item"}" as Next`);
-  };
-
-  const handlePresentNow = (item) => {
-    const isVerse = !!(item && item.ref);
-    const isHymn = !!item && item.type === "Hymn";
-    let updated;
-    if (isHymn) {
-      const slides = buildHymnDeck(item);
-      setHymnDeck(slides);
-      setHymnDeckIndex(0);
-      updated = slides[0];
-    } else {
-      setHymnDeck([]);
-      setHymnDeckIndex(0);
-      updated = {
-        id: item.id ? `verse-${item.id}` : `present-${Date.now()}`,
-        title: item.ref
-          ? item.ref
-          : item.title || "",
-        content: item.content || item.text || "",
-        secondaryText: item.secondaryText || "",
-        secondaryTranslation: item.secondaryTranslation || "",
-        type: item.type || "Bible Verse",
-      };
-    }
-    setCurrentSlide(updated);
-    setIsLive(true);
-    setIsBlack(false);
-    setIsBlank(false);
-
-    broadcastToPresentation({
-      title: updated.title,
-      content: updated.content,
-      secondaryText: updated.secondaryText,
-      secondaryTranslation: updated.secondaryTranslation,
-      type: updated.type,
-      isLive: true,
-      isBlack: false,
-      isBlank: false,
-    });
-    toast.success(`Broadcasting "${updated.title || "slide"}" Live`);
-  };
-
-  const handleTransportPresent = () => {
-    if (nextSlide) {
-      let toPresent = nextSlide;
-      if (nextSlide.type === "Hymn") {
-        const slides = buildHymnDeck(nextSlide);
-        setHymnDeck(slides);
-        setHymnDeckIndex(0);
-        toPresent = slides[0];
-      }
-      setCurrentSlide(toPresent);
-      setIsLive(true);
-      setIsBlack(false);
-      setIsBlank(false);
-
-      broadcastToPresentation({
-        title: toPresent.title,
-        content: toPresent.content,
-        secondaryText: toPresent.secondaryText || "",
-        secondaryTranslation: toPresent.secondaryTranslation || "",
-        type: toPresent.type,
-        isLive: true,
-        isBlack: false,
-        isBlank: false,
-      });
-      toast.success(`Broadcasting "${toPresent.title || "slide"}" Live`);
-    }
-  };
-
-  const handleTransportStop = () => {
-    setIsLive(false);
-    broadcastToPresentation({ isLive: false });
-    toast.info("Presentation output in Standby mode");
-  };
-
-  const handleToggleBlack = () => {
-    const nextState = !isBlack;
-    setIsBlack(nextState);
-    broadcastToPresentation({ isBlack: nextState });
-    if (nextState) {
-      toast.warning("Blackout screen active");
-    } else {
-      toast.info("Blackout screen off");
-    }
-  };
-
-  const handleToggleClear = () => {
-    setCurrentSlide({});
-    setNextSlide({});
-    setHymnDeck([]);
-    setHymnDeckIndex(0);
-    setIsLive(true);
-    setIsBlack(false);
-    setIsBlank(true);
-
-    broadcastToPresentation({
-      title: "",
+  // Add one playlist item per picked file. The title is the original filename
+  // purely so the operator can recognise it in the plan; the output window
+  // deliberately never shows it on air.
+  const handleAddMediaItems = (mediaList, { fit, muted } = {}) => {
+    if (!mediaList || mediaList.length === 0) return;
+    const items = mediaList.map((entry, i) => ({
+      id: `media-${Date.now()}-${i}`,
+      title: entry.sourceName || entry.storedName,
       content: "",
-      secondaryText: "",
-      secondaryTranslation: "",
-      nextSlideTitle: "",
-      nextSlideContent: "",
-      type: "Bible Verse",
-      isLive: true,
-      isBlack: false,
-      isBlank: true,
-    });
-    toast.info("Live output and staged next slide cleared");
+      type: "Media Slide",
+      mediaType: entry.kind,
+      mediaName: entry.storedName,
+      mediaFit: fit || defaultFit(entry.kind),
+      mediaMuted: muted !== false,
+      status: "pending",
+    }));
+    setPlaylist((prev) => [...prev, ...items]);
+    setShowAddModal(false);
+    toast.success(
+      `Added ${items.length} media slide${items.length === 1 ? "" : "s"}`,
+    );
   };
 
-  const handleTransportPrev = () => {
-    if (selectedVerseIndex > 0) {
-      const prevVerse = filteredVerses[selectedVerseIndex - 1];
-      setSelectedVerseIndex(selectedVerseIndex - 1);
-      setNextSlide({
-        id: `verse-${prevVerse.id}`,
-        title: `${prevVerse.ref} (${selectedTranslation})`,
-        content: prevVerse.text,
-        type: "Bible Verse",
-      });
-      toast.info(`Staged ${prevVerse.ref || "verse"} as Next`);
-    }
-  };
-
-  const handleTransportNext = () => {
-    if (selectedVerseIndex < filteredVerses.length - 1) {
-      const nextV = filteredVerses[selectedVerseIndex + 1];
-      setSelectedVerseIndex(selectedVerseIndex + 1);
-      setNextSlide({
-        id: `verse-${nextV.id}`,
-        title: `${nextV.ref} (${selectedTranslation})`,
-        content: nextV.text,
-        type: "Bible Verse",
-      });
-      toast.info(`Staged ${nextV.ref || "verse"} as Next`);
-    }
-  };
-
-  // Advance to the next verse/stanza AND present it in one action.
-  const handleTransportPresentNext = () => {
-    const isHymnDeckActive =
-      hymnDeck.length > 1 && currentSlide?.type === "Hymn";
-    if (isHymnDeckActive) {
-      if (hymnDeckIndex < hymnDeck.length - 1) {
-        const nI = hymnDeckIndex + 1;
-        const slide = hymnDeck[nI];
-        setHymnDeckIndex(nI);
-        setCurrentSlide(slide);
-        setIsLive(true);
-        setIsBlack(false);
-        setIsBlank(false);
-        broadcastToPresentation({
-          ...slide,
-          isLive: true,
-          isBlack: false,
-          isBlank: false,
-        });
-        toast.success(`Broadcasting "${slide.title || "slide"}" Live`);
+  // Point a missing media item at the file again. The main process stores the
+  // replacement and hands back the new stored name.
+  const handleRelinkMedia = async (itemId) => {
+    const target = playlist.find((i) => i.id === itemId);
+    if (!target) return;
+    try {
+      const result = await window.api.relinkMedia(target.mediaName);
+      if (!result || !result.success) {
+        if (result && result.message && result.message !== "Cancelled") {
+          toast.error(result.message);
+        }
+        return;
       }
-    } else if (selectedVerseIndex < filteredVerses.length - 1) {
-      const nextV = getVerseWithSecondary(filteredVerses[selectedVerseIndex + 1]);
-      const updated = {
-        id: `verse-${nextV.id}`,
-        title: nextV.ref || `${nextV.ref} (${selectedTranslation})`,
-        content: nextV.text,
-        secondaryText: nextV.secondaryText || "",
-        secondaryTranslation: nextV.secondaryTranslation || "",
-        type: "Bible Verse",
-      };
-      setSelectedVerseIndex(selectedVerseIndex + 1);
-      setNextSlide(updated);
-      setCurrentSlide(updated);
-      setIsLive(true);
-      setIsBlack(false);
-      setIsBlank(false);
-
-      broadcastToPresentation({
-        ...updated,
-        isLive: true,
-        isBlack: false,
-        isBlank: false,
+      setPlaylist((prev) =>
+        prev.map((i) =>
+          i.id === itemId
+            ? {
+                ...i,
+                mediaName: result.storedName,
+                mediaType: result.kind,
+                title: result.sourceName || i.title,
+              }
+            : i,
+        ),
+      );
+      setMissingMediaIds((prev) => {
+        const next = new Set(prev);
+        next.delete(itemId);
+        return next;
       });
-      toast.success(`Broadcasting "${updated.title || "slide"}" Live`);
+      toast.success(`Relinked "${target.title}"`);
+    } catch (err) {
+      toast.error(String((err && err.message) || err));
     }
   };
 
-  // Go back to the previous verse/stanza AND present it in one action.
-  const handleTransportPresentPrev = () => {
-    const isHymnDeckActive =
-      hymnDeck.length > 1 && currentSlide?.type === "Hymn";
-    if (isHymnDeckActive) {
-      if (hymnDeckIndex > 0) {
-        const pI = hymnDeckIndex - 1;
-        const slide = hymnDeck[pI];
-        setHymnDeckIndex(pI);
-        setCurrentSlide(slide);
-        setIsLive(true);
-        setIsBlack(false);
-        setIsBlank(false);
-        broadcastToPresentation({
-          ...slide,
-          isLive: true,
-          isBlack: false,
-          isBlank: false,
+  // Flag any media item whose stored file has gone missing, so the planner can
+  // show a Relink button before the item is ever put on air.
+  useEffect(() => {
+    const mediaNames = playlist
+      .map((i) => i.mediaName)
+      .filter((name) => typeof name === "string" && name);
+    if (mediaNames.length === 0) {
+      setMissingMediaIds(new Set());
+      return;
+    }
+    let cancelled = false;
+    window.api
+      .resolveMediaUrls(mediaNames)
+      .then((map) => {
+        if (cancelled) return;
+        const missing = new Set();
+        playlist.forEach((item) => {
+          if (item.mediaName && map && map[item.mediaName]?.exists === false) {
+            missing.add(item.id);
+          }
         });
-      }
-    } else if (selectedVerseIndex > 0) {
-      const prevV = getVerseWithSecondary(filteredVerses[selectedVerseIndex - 1]);
-      const updated = {
-        id: `verse-${prevV.id}`,
-        title: prevV.ref || `${prevV.ref} (${selectedTranslation})`,
-        content: prevV.text,
-        secondaryText: prevV.secondaryText || "",
-        secondaryTranslation: prevV.secondaryTranslation || "",
-        type: "Bible Verse",
-      };
-      setSelectedVerseIndex(selectedVerseIndex - 1);
-      setNextSlide(updated);
-      setCurrentSlide(updated);
-      setIsLive(true);
-      setIsBlack(false);
-      setIsBlank(false);
+        setMissingMediaIds(missing);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [playlist]);
 
-      broadcastToPresentation({
-        ...updated,
-        isLive: true,
-        isBlack: false,
-        isBlank: false,
-      });
-    }
-  };
 
   // Arrows pressed on the projector window advance the verse deck here.
   useEffect(() => {
@@ -1440,6 +1206,9 @@ export default function App() {
               handleMoveUp={handleMoveUp}
               handleMoveDown={handleMoveDown}
               handleDeleteItem={handleDeleteItem}
+          missingMediaIds={missingMediaIds}
+          handleRelinkMedia={handleRelinkMedia}
+        handleEditItem={handleOpenEdit}
               recentPlans={recentPlans}
               handleSavePlanToFile={handleSavePlanToFile}
               handleOpenPlanFromFile={handleOpenPlanFromFile}
@@ -1470,6 +1239,11 @@ export default function App() {
               refreshBibles={refreshBibles}
               outputTheme={outputTheme}
               setOutputTheme={setOutputTheme}
+        mediaPage={mediaPage}
+        mediaPageCount={mediaPageCount}
+        isPagingPdf={isPagingPdf}
+        onMediaPageCount={setMediaPageCount}
+        onReplayVideo={handleReplayVideo}
               outputBgImage={outputBgImage}
               setOutputBgImage={setOutputBgImage}
               outputBgVideo={outputBgVideo}
@@ -1526,6 +1300,11 @@ export default function App() {
         setProjectionDisplays={setProjectionDisplays}
         outputTheme={outputTheme}
         setOutputTheme={setOutputTheme}
+        mediaPage={mediaPage}
+        mediaPageCount={mediaPageCount}
+        isPagingPdf={isPagingPdf}
+        onMediaPageCount={setMediaPageCount}
+        onReplayVideo={handleReplayVideo}
       />
       </div>
 
@@ -1537,9 +1316,12 @@ export default function App() {
         setNewItemTitle={setNewItemTitle}
         newItemContent={newItemContent}
         setNewItemContent={setNewItemContent}
-        newItemType={newItemType}
-        setNewItemType={setNewItemType}
-        handleAddItem={handleAddItem}
+          newItemType={newItemType}
+          setNewItemType={setNewItemType}
+          handleAddItem={handleAddItem}
+          handleAddMediaItems={handleAddMediaItems}
+        onEdit={handleEditItem}
+        editingItem={editingItem}
         themeMode={effectiveTheme}
       />
 

@@ -60,18 +60,32 @@ WorshipDesk updates itself from **Settings → About & Updates**.
 - **Theme-Aware Output:** The projector STANDBY screen and scrollbars follow the app theme in both light and dark mode. The Stage Display stays dark by design, since it is read from a distance on stage.
 
 ### 🎥 4. Dynamic Motion Video & Backgrounds
-- **Bundled Motion Loops:** Pre-loaded motion video backgrounds (`Golden Particles`, `Aurora Lights`, `Galaxy Stars`, `Cinematic Clouds`, `Earth Night`).
-- **Custom Video & Image File Picker:** Select custom local `.mp4`, `.webm`, `.jpg`, `.png` files for live presentation backgrounds.
-- **Adaptive Theme Engine:** Switch between Obsidian Dark, Daylight Light, Custom Image, and Motion Video themes with Cluely design tokens.
+- **Bundled Motion Loops:** Four pre-loaded, low-bitrate motion video backgrounds that ship inside the app (`Aurora Lights`, `Galaxy Stars`, `Cinematic Clouds`, `Earth Night`) — no download, no internet needed.
+- **Custom Video & Image File Picker:** Select your own local `.mp4`, `.webm`, `.jpg`, `.png` file for live presentation backgrounds.
+- **Adaptive Theme Engine:** Switch the projector between Obsidian Dark, Daylight Light, Custom Image, and Motion Video themes.
 
-### 📋 5. Sunday Service Planner & File Management
-- **Order of Service Playlist:** Drag, move up/down, and manage playlist items with status indicators (`live`, `next`, `pending`).
+### 🖼️ 5. Full-Screen Media Slides (Image, Video & PDF)
+Media are first-class playlist items — not a separate mode. Add them to a service plan exactly like scripture and hymns, and they get the same `live` / `next` / `pending` status and one-click staging.
+
+- **Full-Bleed Playback:** Images, video, and PDF pages fill the projector screen edge to edge, with a per-slide fit control: **Show whole** (letterboxed, nothing cropped) or **Fill screen** (fills the display, may crop the edges).
+- **Live & Next Thumbnails:** The right rail previews the *actual* media for both **Live Output** and **Next Staged**, so the operator can confirm what is on screen and what is coming before advancing.
+- **WYSIWYG Fit Preview:** The media picker renders a live preview of the chosen file at the selected fit, so framing is decided while picking rather than during a service.
+- **PDF Page Navigation:** A PDF can be projected and stepped through page by page using the same Next/Prev transport controls as everything else. PDFs are rendered in place — never rasterized, split, or re-saved.
+- **Video Replay:** A single Replay control re-triggers the current video from the beginning without re-staging it.
+- **Per-Slide Sound Control:** Mute or unmute video independently of the other slides in the plan.
+- **Edit Any Playlist Item:** Open any row and change it in place. For media this means **replace the file**, change fit, or toggle sound; for text, verses, and hymns it means the content and type. One form serves both, so there is no second editing path to learn.
+- **Missing File Detection & Relink:** If a media file has been moved, renamed, or its drive is not connected, that row is flagged **Missing** in the plan and can be pointed at its new location in one click — the rest of the service plan is untouched.
+
+
+### 📋 6. Sunday Service Planner & File Management
+- **Order of Service Playlist:** Drag, move up/down, and edit playlist items with status indicators (`live`, `next`, `pending`).
+- **Edit in Place:** Every item — scripture, hymn stanza, custom slide, announcement, image, video, or PDF — is editable from the plan itself.
 - **Service Plan Files (`.worship` / `.json`):** Save and open complete service plans directly to disk.
 - **Recent Plans History:** Instant access to 10 recently opened service plans from the sidebar.
 - **Responsive Throughout:** The Dashboard, Service Planner, and Settings all lay themselves out against the space actually available (measured with container queries, since the icon and live rails already take ~320px), rather than against the raw window width. The Dashboard's four metric cards hold a 2x2 grid and only collapse to a single column when the window is genuinely too small.
 - **Consolidated Settings:** Ten tabs cover every setting. Backup & Export lives inside **Content & Backup** rather than taking a tab of its own.
 
-### 📁 6. Automated Offline Data Importers
+### 📁 7. Automated Offline Data Importers
 - **Song Importer (.sng / .txt / .json):** Auto-scans the bundled `hymns/` library on startup and maps subfolders directly to categories.
 - **Bible Data Importers:** Drop `.sql` dumps, `.xml` files (Zefania, OSIS, USFX, Generic XML), or `Twi` book `.txt` files for automatic offline seeding.
 
@@ -156,6 +170,7 @@ node "$USERPROFILE/.config/opencode/mcp/reponova/node_modules/reponova/dist/cli/
 - **Electron 34** + **Vite 5** + **React 19**
 - **Tailwind CSS v4** + **React Icons** + **React Iconly**
 - **better-sqlite3** (SQLite WAL Mode)
+- **pdfjs-dist** (in-place PDF page rendering)
 - **Sonner** Toast Notification System
 
 ---

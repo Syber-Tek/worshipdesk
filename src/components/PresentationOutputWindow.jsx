@@ -1,8 +1,36 @@
 import React, { useEffect, useState } from "react";
 import { resolveBackground, resolveVideo } from "./outputBackgrounds";
+import MediaSlide from "./MediaSlide";
+
+// Which window am I, and am I allowed to make noise? Set by the main process when
+// the window is created: the stage display is always silent, and exactly one
+// projector window is the audio owner.
+const params = new URLSearchParams(window.location.search);
+const WINDOW_ROLE = params.get("window") || "control";
+const IS_AUDIO_OWNER = params.get("audio") === "1";
 
 export default function PresentationOutputWindow() {
   const [slideData, setSlideData] = useState({});
+  // A media slide stores only a filename. The main process turns it into a
+  // file:// URL and reports whether the file is still there, so a moved or
+  // deleted file produces a clear message instead of a black screen.
+  const [media, setMedia] = useState({ url: null, exists: false });
+
+  useEffect(() => {
+    const name = slideData.mediaName;
+    if (!name || !window.api || !window.api.resolveMediaUrls) {
+      setMedia({ url: null, exists: false });
+      return;
+    }
+    let cancelled = false;
+    window.api.resolveMediaUrls([name]).then((map) => {
+      if (cancelled) return;
+      setMedia(map?.[name] || { url: null, exists: false });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [slideData.mediaName]);
 
   useEffect(() => {
     if (window.api && window.api.onPresentationUpdate) {
@@ -57,6 +85,41 @@ export default function PresentationOutputWindow() {
             the main control window to project scriptures and hymns.
           </p>
         </div>
+      </div>
+    );
+  }
+
+  // A media slide IS the slide: the picked file fills the screen, and the
+  // app-wide output theme (dark/light/image/video) does not apply to it.
+  if (slideData.mediaName) {
+    if (!media.url) {
+      return (
+        <div className="h-screen w-screen bg-black flex flex-col items-center justify-center gap-3 text-white select-none font-sans p-8">
+          <div className="text-xl font-bold tracking-widest uppercase text-red-400">
+            Media File Not Found
+          </div>
+          <p className="text-sm text-white/70 text-center max-w-lg leading-relaxed">
+            {slideData.title || slideData.mediaName}
+          </p>
+          <p className="text-xs text-white/50 text-center max-w-lg leading-relaxed">
+            The file is no longer where WorshipDesk stored it. Close the planner
+            item's menu and choose Relink to point it at the file again.
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="h-screen w-screen bg-black relative overflow-hidden select-none">
+        <MediaSlide
+          type={slideData.mediaType}
+          url={media.url}
+          fit={slideData.mediaFit}
+          allowAudio={IS_AUDIO_OWNER && slideData.mediaMuted === false}
+          label={slideData.title}
+          page={slideData.mediaPage || 0}
+          replayKey={slideData.mediaReplay || 0}
+        />
       </div>
     );
   }

@@ -1,4 +1,4 @@
-import React from 'react'
+﻿import React from 'react'
 import {
   ArrowLeft,
   ArrowRight,
@@ -10,6 +10,7 @@ import {
   Video
 } from 'react-iconly'
 import { FaDisplay, FaEraser, FaEyeSlash, FaLock, FaLockOpen } from 'react-icons/fa6'
+import { MediaThumb } from './MediaSlide'
 
 export default function CurrentNextRail({
   currentSlide,
@@ -34,9 +35,21 @@ export default function CurrentNextRail({
   projectionDisplays = [],
   setProjectionDisplays,
   outputTheme = 'dark',
-  setOutputTheme
+  setOutputTheme,
+  mediaPage = 0,
+  onMediaPageCount,
+  isPagingPdf = false,
+  mediaPageCount = 0,
+  onReplayVideo
 }) {
   const isLight = themeMode === 'light'
+
+  // While a PDF is on air, Next/Prev step its pages. Otherwise they step Bible
+  // verses, and the disabled state has to follow whichever deck is live.
+  const prevDisabled = isPagingPdf ? mediaPage <= 0 : hymnDeckActive || selectedVerseIndex <= 0
+  const nextDisabled = isPagingPdf
+    ? mediaPage >= mediaPageCount - 1
+    : hymnDeckActive || selectedVerseIndex >= filteredVersesLength - 1
 
   return (
     <aside
@@ -71,7 +84,18 @@ export default function CurrentNextRail({
           </div>
 
           <div className="min-h-14 flex flex-col justify-center">
-            {currentSlide && (currentSlide.title || currentSlide.ref || currentSlide.content || currentSlide.text) ? (
+            {currentSlide?.mediaName ? (
+              // A media slide's title is just its filename, and the thumbnail
+              // below already shows the content. Name the kind instead.
+              <h4 className={`font-bold text-xs ${isLight ? 'text-[#111827]' : 'text-text-primary'}`}>
+                {currentSlide.mediaType === 'pdf'
+                  ? 'PDF slide'
+                  : currentSlide.mediaType === 'video'
+                    ? 'Video slide'
+                    : 'Image slide'}
+                {currentSlide.mediaMuted === false ? ' (with sound)' : ''}
+              </h4>
+            ) : currentSlide && (currentSlide.title || currentSlide.ref || currentSlide.content || currentSlide.text) ? (
               <>
                 <h4 className={`font-bold text-xs ${isLight ? 'text-[#111827]' : 'text-text-primary'}`}>
                   {currentSlide.title || currentSlide.ref}
@@ -84,6 +108,24 @@ export default function CurrentNextRail({
               <p className={`text-[11px] italic ${isLight ? 'text-[#9CA3AF]' : 'text-[#6B6C73]'}`}>
                 No active live slide projected
               </p>
+            )}
+            {currentSlide?.mediaName && (
+              <MediaThumb
+                type={currentSlide.mediaType}
+                name={currentSlide.mediaName}
+                fit={currentSlide.mediaFit}
+                page={mediaPage}
+                onPageCount={onMediaPageCount}
+              />
+            )}
+            {currentSlide?.mediaType === 'video' && onReplayVideo && (
+              <button
+                onClick={onReplayVideo}
+                className="mt-1.5 w-full py-1.5 rounded text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer bg-accent hover:bg-accent/90 text-bg"
+              >
+                <Play set="bold" primaryColor="#0B0C0E" size="small" />
+                Replay video
+              </button>
             )}
           </div>
         </div>
@@ -106,7 +148,15 @@ export default function CurrentNextRail({
           </div>
 
           <div className="min-h-14 flex flex-col justify-center">
-            {nextSlide ? (
+            {nextSlide?.mediaName ? (
+              <h4 className={`font-bold text-xs ${isLight ? 'text-[#111827]' : 'text-text-primary'}`}>
+                {nextSlide.mediaType === 'pdf'
+                  ? 'PDF slide'
+                  : nextSlide.mediaType === 'video'
+                    ? 'Video slide'
+                    : 'Image slide'}
+              </h4>
+            ) : nextSlide ? (
               <>
                 <h4 className={`font-bold text-xs ${isLight ? 'text-[#111827]' : 'text-text-primary'}`}>
                   {nextSlide.title || nextSlide.ref}
@@ -119,6 +169,13 @@ export default function CurrentNextRail({
               <p className={`text-[11px] italic ${isLight ? 'text-[#9CA3AF]' : 'text-[#6B6C73]'}`}>
                 No next slide staged
               </p>
+            )}
+            {nextSlide?.mediaName && (
+              <MediaThumb
+                type={nextSlide.mediaType}
+                name={nextSlide.mediaName}
+                fit={nextSlide.mediaFit}
+              />
             )}
           </div>
         </div>
@@ -219,7 +276,7 @@ export default function CurrentNextRail({
                           : [...(prev || []), numericId]
                       )
                     }}
-                    title={isPrimary ? 'Control display (always the main window)' : isSelected ? 'Projecting here — click to remove' : 'Click to project here'}
+                    title={isPrimary ? 'Control display (always the main window)' : isSelected ? 'Projecting here â€” click to remove' : 'Click to project here'}
                     className={`w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded border text-[10px] transition ${
                       isPrimary
                         ? 'opacity-60 cursor-not-allowed'
@@ -260,7 +317,7 @@ export default function CurrentNextRail({
         <div className="grid grid-cols-2 gap-1.5">
           <button
             onClick={handleTransportPrev}
-            disabled={hymnDeckActive || selectedVerseIndex <= 0}
+            disabled={prevDisabled}
             className={`py-2 border rounded font-semibold text-[11px] flex items-center justify-center gap-1 transition disabled:opacity-40 cursor-pointer ${
               isLight
                 ? 'bg-[#E5E7EB] hover:bg-[#D1D5DB] border-[#D1D5DB] text-[#111827]'
@@ -271,7 +328,7 @@ export default function CurrentNextRail({
           </button>
           <button
             onClick={handleTransportNext}
-            disabled={hymnDeckActive || selectedVerseIndex >= filteredVersesLength - 1}
+            disabled={nextDisabled}
             className={`py-2 border rounded font-semibold text-[11px] flex items-center justify-center gap-1 transition disabled:opacity-40 cursor-pointer ${
               isLight
                 ? 'bg-[#E5E7EB] hover:bg-[#D1D5DB] border-[#D1D5DB] text-[#111827]'
