@@ -1,7 +1,7 @@
 {
   "name": "worshipdesk",
   "productName": "WorshipDesk",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Offline-First Church Worship Presentation System",
   "main": "./out/main/index.js",
   "private": true,
