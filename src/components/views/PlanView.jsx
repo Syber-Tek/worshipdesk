@@ -7,6 +7,7 @@ import {
   ArrowDown,
   Delete,
   InfoSquare,
+  Edit,
 } from "react-iconly";
 import {
   FaPlus,
@@ -26,6 +27,9 @@ export default function PlanView({
   handleMoveUp,
   handleMoveDown,
   handleDeleteItem,
+  missingMediaIds,
+  handleRelinkMedia,
+  handleEditItem,
   recentPlans = [],
   handleSavePlanToFile,
   handleOpenPlanFromFile,
@@ -289,12 +293,36 @@ export default function PlanView({
                         isLight ? "text-[#6B7280]" : "text-[#9B9CA3]"
                       }`}
                     >
-                      {item.content}
+                      {item.mediaName
+                        ? `${item.mediaType} · ${
+                            item.mediaFit === "cover" ? "Fill screen" : "Show whole"
+                          }${item.mediaMuted === false ? " · sound on" : ""}`
+                        : item.content}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-1.5 shrink-0">
+                  {item.mediaName && missingMediaIds && missingMediaIds.has(item.id) && (
+                    <button
+                      onClick={() => handleRelinkMedia && handleRelinkMedia(item.id)}
+                      title="This media file is missing. Click to point it at the file again."
+                      className="px-2 py-1 rounded border border-red-500/60 bg-red-950/40 text-red-300 text-[10px] font-bold uppercase tracking-wide hover:bg-red-900/40 transition cursor-pointer"
+                    >
+                      Missing — Relink
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleEditItem && handleEditItem(item)}
+                    title="Edit this item"
+                    className={`p-1.5 border rounded transition cursor-pointer ${
+                      isLight
+                        ? "bg-[#FFFFFF] hover:bg-[#F3F4F6] border-[#E5E7EB]"
+                        : "bg-raised hover:bg-hover border-border"
+                    }`}
+                  >
+                    <Edit set="light" primaryColor="currentColor" size="small" />
+                  </button>
                   <button
                     onClick={() => handleSelectItem && handleSelectItem(item)}
                     title="Stage as Next"

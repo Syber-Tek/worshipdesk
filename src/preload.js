@@ -68,6 +68,12 @@ contextBridge.exposeInMainWorld('api', {
   importSongsDialog: () => ipcRenderer.invoke('import-songs-dialog'),
   importBibleSql: () => ipcRenderer.invoke('import-bible-sql-dialog'),
   importBibleXml: () => ipcRenderer.invoke('import-bible-xml-dialog'),
+  // Media slides (image / video / PDF)
+  pickMediaFiles: () => ipcRenderer.invoke('pick-media-files'),
+  pickSlideFolder: () => ipcRenderer.invoke('pick-slide-folder'),
+  resolveMediaUrls: (storedNames) => ipcRenderer.invoke('resolve-media-url', storedNames),
+  relinkMedia: (storedName) => ipcRenderer.invoke('relink-media', storedName),
+  getMediaUsage: () => ipcRenderer.invoke('get-media-usage'),
   // STAGE 5: PRESENTATION OUTPUT MULTI-WINDOW IPC
   sendLiveSlide: (slideData) => ipcRenderer.send('send-live-slide', slideData),
   onPresentationUpdate: (callback) => {
