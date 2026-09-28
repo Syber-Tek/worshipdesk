@@ -9,9 +9,9 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
-        description: 'Release tag (e.g. v1.0.0)'
-        required: false
-        default: 'v1.0.0'
+        description: 'Release tag to publish (e.g. v1.2.0)'
+        required: true
+        default: 'v1.1.0'
 
 permissions:
   contents: write
@@ -76,6 +76,10 @@ jobs:
             release/*.exe
             release/*.dmg
             release/*.AppImage
+            # Portable zip from the nsis `zip` target and the macOS zip target.
+            # Without this the .zip.blockmap files get published with no .zip
+            # beside them, and the portable download is a dead link.
+            release/*.zip
             # Needed by the release job so it can publish the auto-update
             # metadata for electron-updater.
             release/*.yml
@@ -86,7 +90,11 @@ jobs:
     name: Release
     needs: build
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    # Publishing is deliberately tag-only. A main-branch push still runs the
+    # build job above (so breakage is caught), but it must never create a
+    # release: that is what used to publish 1.1.0 artifacts under a v1.0.0 tag
+    # and leave two conflicting releases on the public feed.
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Download All Build Artifacts
@@ -99,17 +107,20 @@ jobs:
         with:
           repository: Syber-Tek/worshipdesk-releases
           token: ${{ secrets.PUBLIC_RELEASE_TOKEN }}
-          tag_name: ${{ github.event.inputs.tag_name || (github.ref_type == 'tag' && github.ref_name || 'v1.0.0') }}
+          tag_name: ${{ github.event_name == 'workflow_dispatch' && inputs.tag_name || github.ref_name }}
           files: |
             artifacts/**/*.exe
             artifacts/**/*.dmg
             artifacts/**/*.AppImage
+            # Portable zip. Its .zip.blockmap is already picked up below, so
+            # without this the blockmap ships with no zip beside it.
+            artifacts/**/*.zip
             # Auto-update metadata. Without latest.yml / latest-mac.yml alongside
             # the installers, electron-updater can see a release but has nothing
             # to compare versions or download against.
             artifacts/**/*.yml
             artifacts/**/*.blockmap
-          name: WorshipDesk Release ${{ github.event.inputs.tag_name || (github.ref_type == 'tag' && github.ref_name || 'v1.0.0') }}
+          name: WorshipDesk Release ${{ github.event_name == 'workflow_dispatch' && inputs.tag_name || github.ref_name }}
           body: |
             ## 🚀 WorshipDesk Official Release
 
