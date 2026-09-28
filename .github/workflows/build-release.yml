@@ -43,7 +43,7 @@ jobs:
             meta: release/latest-mac.yml
           # Intel. macos-latest alone produced an arm64-only app, which macOS
           # refuses to open on an Intel Mac ("not supported on this Mac").
-          - os: macos-15-intel
+          - os: macos-latest
             name: macOS Intel (x64)
             builder_args: --mac --x64
             # The arm64 job above already publishes latest-mac.yml.
@@ -57,10 +57,10 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
 
       - name: Setup Node.js Environment
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: 'npm'
