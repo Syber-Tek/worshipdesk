@@ -2,6 +2,10 @@
 
 This document tracks the major ProPresenter-tier features to build into WorshipDesk step-by-step.
 
+Candidate features that are *not* yet scheduled live in
+[`FEATURE_BACKLOG.md`](./FEATURE_BACKLOG.md) — the short list worth building now,
+plus the options deliberately being left alone.
+
 ---
 
 ## 🎯 ProPresenter Parity Feature Roadmap
@@ -54,7 +58,7 @@ This document tracks the major ProPresenter-tier features to build into WorshipD
 ### [x] Feature 5: 🔄 Automatic In-App Updates
 - **Description**: Deliver new versions to users automatically over-the-air via GitHub Releases.
 - **Delivered**:
-  - **Automatic checks are on by default** for installed builds: 45 seconds after launch, then every 6 hours.
+  - **Automatic checks are opt-in** for installed builds: switch on, then check 45 seconds after launch and every 6 hours. Off by default, so the app contacts nothing until you ask it to.
   - Persistent **Automatic update checks** switch in `Settings -> About & Updates`; the preference is stored per user and survives restarts.
   - Manual **Check for Updates** remains available, plus download and install controls.
   - `autoDownload` is off, so nothing is fetched or installed without the user asking. A downloaded update is applied on the next normal quit, so it can never interrupt a service.

@@ -24,6 +24,8 @@ import {
   getHymnCategories
 } from './db.js';
 import { initUpdater } from './updater.js';
+import { mediaKind, naturalCompare } from './lib/mediaKinds.js';
+import { safeStoredName, storedNameFor, toFileUrl } from './lib/mediaStore.js';
 
 let dbPath = '';
 let mainWindow = null;
@@ -315,6 +317,163 @@ ipcMain.handle('open-plan-file', async () => {
   }
 });
 
+// ── Media slides (image / video / PDF) ────────────────────────────────────────
+// Picked media is copied into userData/media so a saved plan stays self-contained:
+// the original file can be moved, renamed or deleted and the plan still works.
+// Items store the stored *filename*, never an absolute path, so plans survive the
+// folder being moved or the app being reinstalled.
+const mediaFolder = () => path.join(app.getPath('userData'), 'media');
+
+const MEDIA_FILTERS = [
+  { name: 'Media', extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'mp4', 'webm', 'mov', 'm4v', 'pdf'] },
+  { name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'] },
+  { name: 'Videos', extensions: ['mp4', 'webm', 'mov', 'm4v'] },
+  { name: 'PDF', extensions: ['pdf'] },
+];
+
+// Copy into the media folder, de-duplicating on name so picking the same file
+// twice does not fill the disk. Returns the stored filename.
+async function storeMediaFile(sourcePath) {
+  const kind = mediaKind(sourcePath);
+  if (!kind) throw new Error(`Unsupported media type: ${path.extname(sourcePath) || 'unknown'}`);
+
+  await fs.promises.mkdir(mediaFolder(), { recursive: true });
+
+  // ponytail: name-based de-dupe only. A content hash would also catch "same clip
+  // renamed", but that needs a full read of every file on every import.
+  const storedName = storedNameFor(sourcePath, (candidate) =>
+    fs.existsSync(path.join(mediaFolder(), candidate))
+  );
+
+  await fs.promises.copyFile(sourcePath, path.join(mediaFolder(), storedName));
+  return { storedName, kind };
+}
+
+
+// Pick one or more media files and copy them into the media folder.
+ipcMain.handle('pick-media-files', async () => {
+  try {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      title: 'Add Media Slide (image, video, or PDF)',
+      properties: ['openFile', 'multiSelections'],
+      filters: MEDIA_FILTERS,
+    });
+    if (canceled || filePaths.length === 0) return { success: false, message: 'Cancelled' };
+
+    const media = [];
+    const skipped = [];
+    for (const filePath of filePaths) {
+      try {
+        media.push({ ...(await storeMediaFile(filePath)), sourceName: path.basename(filePath) });
+      } catch (err) {
+        skipped.push({ sourceName: path.basename(filePath), reason: String((err && err.message) || err) });
+      }
+    }
+    if (media.length === 0) {
+      return { success: false, message: skipped[0]?.reason || 'No supported files selected' };
+    }
+    return { success: true, media, skipped };
+  } catch (err) {
+    return { success: false, message: String((err && err.message) || err) };
+  }
+});
+
+// Import a whole folder of images at once (e.g. slides exported from PowerPoint).
+// Returns files in name order so slide 1 comes before slide 10.
+ipcMain.handle('pick-slide-folder', async () => {
+  try {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      title: 'Import Slide Images From Folder',
+      properties: ['openDirectory'],
+    });
+    if (canceled || filePaths.length === 0) return { success: false, message: 'Cancelled' };
+
+    const entries = await fs.promises.readdir(filePaths[0], { withFileTypes: true });
+    const imageFiles = entries
+      .filter((entry) => entry.isFile() && mediaKind(entry.name) === 'image')
+      .map((entry) => path.join(filePaths[0], entry.name))
+      .sort(naturalCompare);
+
+    if (imageFiles.length === 0) return { success: false, message: 'That folder has no images in it' };
+
+    const media = [];
+    const skipped = [];
+    for (const filePath of imageFiles) {
+      try {
+        media.push({ ...(await storeMediaFile(filePath)), sourceName: path.basename(filePath) });
+      } catch (err) {
+        skipped.push({ sourceName: path.basename(filePath), reason: String((err && err.message) || err) });
+      }
+    }
+    return { success: true, media, skipped };
+  } catch (err) {
+    return { success: false, message: String((err && err.message) || err) };
+  }
+});
+
+// Resolve a stored media filename to a file:// URL the renderer can load, and
+// report whether it still exists. Used to flag missing media before it goes live.
+ipcMain.handle('resolve-media-url', async (_e, storedNames = []) => {
+  const folder = mediaFolder();
+  const out = {};
+  for (const raw of Array.isArray(storedNames) ? storedNames : []) {
+    // safeStoredName rejects separators and traversal, so a name coming back from
+    // the renderer can only ever resolve to a file inside the media folder. The
+    // response is keyed by the *requested* string so the renderer's lookup always
+    // finds its entry, even when the name had to be rejected.
+    const storedName = safeStoredName(raw);
+    if (!storedName) {
+      out[raw] = { url: null, exists: false };
+      continue;
+    }
+    const full = path.join(folder, storedName);
+    const exists = fs.existsSync(full);
+    out[raw] = { url: exists ? toFileUrl(full, path.sep) : null, exists };
+  }
+  return out;
+});
+
+// Point an item at a different file (the relink fallback for missing media).
+ipcMain.handle('relink-media', async (_e, storedName) => {
+  try {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      title: 'Relink Media',
+      properties: ['openFile'],
+      filters: MEDIA_FILTERS,
+    });
+    if (canceled || filePaths.length === 0) return { success: false, message: 'Cancelled' };
+
+    // Replace the old file only once the new one is safely stored.
+    const stored = await storeMediaFile(filePaths[0]);
+    if (typeof storedName === 'string' && storedName) {
+      const old = path.join(mediaFolder(), storedName);
+      if (fs.existsSync(old)) await fs.promises.unlink(old).catch(() => {});
+    }
+    return { success: true, storedName: stored.storedName, kind: stored.kind, sourceName: path.basename(filePaths[0]) };
+  } catch (err) {
+    return { success: false, message: String((err && err.message) || err) };
+  }
+});
+
+// Total bytes held in the media folder, for the Settings readout.
+ipcMain.handle('get-media-usage', async () => {
+  try {
+    const folder = mediaFolder();
+    const entries = await fs.promises.readdir(folder, { withFileTypes: true });
+    let bytes = 0;
+    let count = 0;
+    for (const entry of entries) {
+      if (!entry.isFile()) continue;
+      const stat = await fs.promises.stat(path.join(folder, entry.name));
+      bytes += stat.size;
+      count += 1;
+    }
+    return { success: true, bytes, count, folder };
+  } catch {
+    return { success: true, bytes: 0, count: 0, folder: mediaFolder() };
+  }
+});
+
 // Native OS notification (Windows toast / tray balloon) fired from the renderer.
 ipcMain.on('native-notification', (_event, { title, body } = {}) => {
   if (!Notification.isSupported()) return;
@@ -599,13 +758,21 @@ const createPresentationWindow = (display) => {
     presentationWindows.delete(String(display.id));
   });
 
+  // Exactly one projector window is allowed to play video sound, otherwise a
+  // two-projector setup plays the same clip twice. The lowest open display id owns
+  // audio, so the sound moves to another window if this one is closed.
+  const openIds = Array.from(presentationWindows.keys()).map(Number).sort((a, b) => a - b);
+  const audioOwner = openIds[0] === Number(display.id);
+
   const baseUrl = process.env.ELECTRON_RENDERER_URL || `file://${path.join(__dirname, '../renderer/index.html')}`;
-  const presentationUrl = `${baseUrl}?window=presentation`;
+  const presentationUrl = `${baseUrl}?window=presentation&audio=${audioOwner ? 1 : 0}`;
 
   if (process.env.ELECTRON_RENDERER_URL) {
     win.loadURL(presentationUrl);
   } else {
-    win.loadFile(path.join(__dirname, '../renderer/index.html'), { query: { window: 'presentation' } });
+    win.loadFile(path.join(__dirname, '../renderer/index.html'), {
+      query: { window: 'presentation', audio: audioOwner ? '1' : '0' },
+    });
   }
 };
 
