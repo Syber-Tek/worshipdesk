@@ -136,26 +136,27 @@ export default function PresentationSettings({
                   }
                   className="flex-1 text-xs rounded px-3 py-1.5 outline-none border border-border bg-raised text-text-primary placeholder:text-text-muted"
                 />
-                <label className="px-3 py-1.5 bg-accent hover:bg-accent/90 text-bg font-bold rounded text-xs cursor-pointer flex items-center">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    // Copies into the app's media folder. The old code read the
+                    // file as a data URI into localStorage, which blows past the
+                    // ~5 MB quota for anything but a small image.
+                    const result = await window.api.pickMediaFiles();
+                    if (!result || !result.success) return;
+                    const picked = (result.media || []).find((m) => m.kind === "image");
+                    if (!picked) return;
+                    const map = await window.api.resolveMediaUrls([picked.storedName]);
+                    const url = map?.[picked.storedName]?.url;
+                    if (url) {
+                      if (setOutputBgImage) setOutputBgImage(url);
+                      if (setOutputTheme) setOutputTheme("image");
+                    }
+                  }}
+                  className="px-3 py-1.5 bg-accent hover:bg-accent/90 text-bg font-bold rounded text-xs cursor-pointer flex items-center"
+                >
                   Browse File
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (evt) => {
-                          if (evt.target?.result && setOutputBgImage) {
-                            setOutputBgImage(evt.target.result);
-                          }
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                  />
-                </label>
+                </button>
               </div>
 
               {/* Wallpaper Presets */}
@@ -255,26 +256,26 @@ export default function PresentationSettings({
                   }
                   className="flex-1 text-xs rounded px-3 py-1.5 outline-none border border-border bg-raised text-text-primary placeholder:text-text-muted"
                 />
-                <label className="px-3 py-1.5 bg-accent hover:bg-accent/90 text-bg font-bold rounded text-xs cursor-pointer flex items-center gap-1 transition shadow-xs">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    // Same as the image picker: copy into the media folder and
+                    // store the resolved URL, never a base64 data URI.
+                    const result = await window.api.pickMediaFiles();
+                    if (!result || !result.success) return;
+                    const picked = (result.media || []).find((m) => m.kind === "video");
+                    if (!picked) return;
+                    const map = await window.api.resolveMediaUrls([picked.storedName]);
+                    const url = map?.[picked.storedName]?.url;
+                    if (url) {
+                      if (setOutputBgVideo) setOutputBgVideo(url);
+                      if (setOutputTheme) setOutputTheme("video");
+                    }
+                  }}
+                  className="px-3 py-1.5 bg-accent hover:bg-accent/90 text-bg font-bold rounded text-xs cursor-pointer flex items-center gap-1 transition shadow-xs"
+                >
                   <FaFilm size={12} /> Browse Video File
-                  <input
-                    type="file"
-                    accept="video/mp4,video/webm,video/ogg,video/quicktime"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (evt) => {
-                          if (evt.target?.result && setOutputBgVideo) {
-                            setOutputBgVideo(evt.target.result);
-                          }
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                  />
-                </label>
+                </button>
               </div>
 
               {/* Video Motion Presets */}
