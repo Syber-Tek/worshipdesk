@@ -176,6 +176,8 @@ node "$USERPROFILE/.config/opencode/mcp/reponova/node_modules/reponova/dist/cli/
 
 ## 📄 License
 
-Distributed under the **GNU Affero General Public License v3.0** (`AGPL-3.0-only`). Full text in [`LICENSE`](LICENSE).
+Licensed under the **PolyForm Noncommercial License 1.0.0** (`PolyForm-Noncommercial-1.0.0`). Full text in [`LICENSE`](LICENSE).
 
-You may copy, modify and redistribute this software, including commercially. If you distribute a modified version, or run a modified version over a network, you must publish your source under the same license.
+You may use, copy, modify and redistribute WorshipDesk for any **non-commercial** purpose — personal projects, churches, and other charitable, educational or government organisations included, regardless of how they are funded. **Commercial use is not permitted**, so nobody may sell a modified version of WorshipDesk.
+
+This is a source-available licence, not an OSI-approved open-source licence. Contributions are very welcome — open a pull request and it will be reviewed.
