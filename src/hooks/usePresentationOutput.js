@@ -31,6 +31,7 @@ export default function usePresentationOutput({
   slideMargin,
   attributionPosition,
   outputFontSize,
+  hymnTextScale,
 }) {
   const [currentSlide, setCurrentSlide] = useState(null);
   const [nextSlide, setNextSlide] = useState({});
@@ -149,6 +150,7 @@ export default function usePresentationOutput({
           slideMargin,
           attributionPosition,
           outputFontSize,
+          hymnTextScale,
           // mediaName is a stored filename, not a path. The output window
           // resolves it to a file:// URL via IPC so path logic stays in main.
           ...mediaOverrides(currentSlide),
@@ -182,6 +184,7 @@ export default function usePresentationOutput({
       slideMargin,
       attributionPosition,
       outputFontSize,
+      hymnTextScale,
       selectedVerseIndex,
       filteredVerses.length,
       hymnDeck,

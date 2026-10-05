@@ -13,6 +13,7 @@ import {
   FaListOl,
   FaMagnifyingGlass,
   FaGear,
+  FaTextHeight,
 } from "react-icons/fa6";
 
 
@@ -68,6 +69,22 @@ export default function ShortcutsSettings({
       description:
         "Jump keyboard focus directly to scripture or song search input",
       keys: [["Ctrl", "F"], ["/"]],
+    },
+    {
+      id: "font-larger",
+      icon: FaTextHeight,
+      label: "Projector Text Larger",
+      description:
+        "Step the live projected text up one size, the same as the slider in the control rail",
+      keys: [["Ctrl", "]"]],
+    },
+    {
+      id: "font-smaller",
+      icon: FaTextHeight,
+      label: "Projector Text Smaller",
+      description:
+        "Step the live projected text down one size, the same as the slider in the control rail",
+      keys: [["Ctrl", "["]],
     },
   ];
 

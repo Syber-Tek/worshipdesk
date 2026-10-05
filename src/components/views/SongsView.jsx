@@ -8,6 +8,11 @@ import {
   Document,
 } from "react-iconly";
 import { FaMusic, FaPlus } from "react-icons/fa6";
+import {
+  ALL_HYMN_CATEGORIES,
+  loadHymnCategories,
+  resolveHymnCategory,
+} from "../../lib/hymnCategories";
 export default function SongsView({
   handleStageNext,
   handlePresentNow,
@@ -21,17 +26,28 @@ export default function SongsView({
   const [hymnsList, setHymnsList] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(
-    defaultHymnCategory || "All",
+    ALL_HYMN_CATEGORIES,
   );
+  // The unfiltered option, plus whatever the database actually holds. The
+  // fallback list lives in src/lib/hymnCategories.js so it cannot drift from the
+  // one the Settings dropdown uses - when the two disagreed, choosing a default
+  // category stored a string that matched no hymn and this tab came up empty.
+  //
+  // Declared with the other state, not further down: the effect below reads it in
+  // its dependency array, which is evaluated during render, so referencing it
+  // before this line throws "Cannot access 'categories' before initialization"
+  // and takes the whole page down.
+  const [categories, setCategories] = useState(["All"]);
   const [selectedHymn, setSelectedHymn] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [lyricsCache, setLyricsCache] = useState({});
 
+  // Re-applied when the categories arrive as well as when the setting changes:
+  // a stored value that is not one of them filters the list down to nothing, so
+  // it falls back to All instead of opening on an empty tab.
   useEffect(() => {
-    if (defaultHymnCategory) {
-      setSelectedCategory(defaultHymnCategory);
-    }
-  }, [defaultHymnCategory]);
+    setSelectedCategory(resolveHymnCategory(defaultHymnCategory, categories));
+  }, [defaultHymnCategory, categories]);
 
   const cardClass = isLight
     ? "bg-[#FFFFFF] border-[#E5E7EB] text-[#111827] shadow-sm"
@@ -44,32 +60,8 @@ export default function SongsView({
   const labelClass = isLight ? "text-[#6B7280]" : "text-text-secondary";
   const headingClass = isLight ? "text-[#111827]" : "text-text-primary";
 
-  const DEFAULT_CATEGORIES = [
-    "Presby Hymns -Twi",
-    "Presby Hymns -Eng",
-    "Methodist Hymns -Twi",
-    "Methodist Hymns -Eng",
-    "Presby Liturgy -Twi",
-    "Presby Liturgy -Eng",
-    "Methodist Liturgy -Twi",
-    "Methodist Liturgy -Eng",
-  ];
-
-  const [categories, setCategories] = useState(["All", ...DEFAULT_CATEGORIES]);
-
   const loadCategories = async () => {
-    if (window.api && window.api.getHymnCategories) {
-      try {
-        const dbCats = await window.api.getHymnCategories();
-        if (Array.isArray(dbCats) && dbCats.length > 0) {
-          setCategories(["All", ...dbCats]);
-          return;
-        }
-      } catch (err) {
-        console.warn("Main process getHymnCategories IPC pending restart, using default categories:", err);
-      }
-    }
-    setCategories(["All", ...DEFAULT_CATEGORIES]);
+    setCategories(await loadHymnCategories());
   };
 
   useEffect(() => {

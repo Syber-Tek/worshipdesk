@@ -3,6 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import {
   initDatabase,
+  refreshLibraries,
   getStatusMessage,
   getBibles,
   getBibleStats,
@@ -28,6 +29,7 @@ import { mediaKind, naturalCompare } from './lib/mediaKinds.js';
 import { safeStoredName, storedNameFor, toFileUrl } from './lib/mediaStore.js';
 
 let dbPath = '';
+let dbError = null;
 let mainWindow = null;
 let stageWindow = null;
 const presentationWindows = new Map(); // displayId -> BrowserWindow
@@ -39,6 +41,95 @@ const presentationWindows = new Map(); // displayId -> BrowserWindow
 // ("Network service crashed or was terminated") and stalls the app. A direct
 // connection is both correct here and keeps the service out of the picture.
 app.commandLine.appendSwitch('no-proxy-server');
+
+// ─── Old hardware / broken GPU drivers ────────────────────────────────────────
+// Church laptops are often 10+ years old (Sandy Bridge and similar, with Intel
+// HD 3000-class graphics and a 2012 driver stack). Chromium's GPU process does
+// not always come up there, and when it does not, the window it paints is blank
+// or never appears at all. Software rendering always works, so on the machines
+// that need it we relaunch once with hardware acceleration switched off.
+//
+// The marker file makes this a one-shot self-heal: it is only written when the
+// GPU is genuinely unavailable, and its presence disables acceleration before
+// ready, so the relaunch cannot loop.
+const gpuCompatMarker = () => path.join(app.getPath('userData'), 'gpu-compat.flag');
+const gpuCompatEnabled = () => {
+  try {
+    return fs.existsSync(gpuCompatMarker());
+  } catch {
+    return false;
+  }
+};
+if (gpuCompatEnabled()) {
+  app.disableHardwareAcceleration();
+}
+
+// A startup log next to the database. A packaged app that never opens a window
+// gives the operator nothing to report with, and this is the one artefact that
+// says what happened and how long it took.
+const startedAt = Date.now();
+const startupLogPath = () => path.join(app.getPath('userData'), 'startup.log');
+const startupLog = (message) => {
+  const line = `[${new Date().toISOString()}] ${message}\n`;
+  try {
+    const file = startupLogPath();
+    // Keep it bounded. It is an aid for one bad launch, and an unbounded log on a
+    // slow disk is the last thing this machine needs.
+    if (fs.existsSync(file) && fs.statSync(file).size > 256 * 1024) {
+      fs.writeFileSync(file, `--- truncated, app started ${new Date().toISOString()} ---\n`, 'utf-8');
+    }
+    fs.appendFileSync(file, line, 'utf-8');
+  } catch {
+    // Logging must never be the reason the app fails to start.
+  }
+  console.log(message);
+};
+
+// A renderer that dies (out of memory on a small machine, or a GPU crash) leaves
+// a permanently blank window otherwise. Reloading is the cheapest recovery and
+// the window state is app state in localStorage, so nothing is lost.
+const watchForBlankWindows = (win, name) => {
+  if (!win || win.isDestroyed()) return;
+  let crashes = 0;
+  win.webContents.on('render-process-gone', (_event, details) => {
+    if (details.reason === 'clean-exit') return;
+    startupLog(`${name} renderer gone (${details.reason}, exit ${details.exitCode})`);
+    if (win.isDestroyed()) return;
+    if (crashes >= 3) {
+      startupLog(`${name} renderer crashed ${crashes} times, not reloading again`);
+      return;
+    }
+    crashes += 1;
+    win.reload();
+  });
+};
+
+// ── One instance only ─────────────────────────────────────────────────────────
+// Without this, launching the app while it is already running starts a SECOND
+// process against the same church.db and the same output windows. That is the
+// most likely thing an operator does on a slow machine - "it did not start, let
+// me click it again" - and it produces two control windows fighting over the
+// projector, duplicate imports, and SQLITE_BUSY write contention that WAL alone
+// does not resolve. The second launch is redirected to the window that already
+// exists instead. Same behaviour on Windows and macOS; on macOS this also covers
+// opening the app from Finder or Spotlight while it is already running.
+const gotInstanceLock = app.requestSingleInstanceLock();
+if (!gotInstanceLock) {
+  // The real instance is already up and the 'second-instance' handler below will
+  // raise its window. Exit before touching the database or creating any window.
+  app.exit(0);
+}
+
+app.on('second-instance', () => {
+  startupLog('second instance launched, focusing the existing window');
+  for (const win of [mainWindow, stageWindow]) {
+    if (!win || win.isDestroyed()) continue;
+    if (win.isMinimized()) win.restore();
+    if (!win.isVisible()) win.show();
+    win.focus();
+    return;
+  }
+});
 
 // ── Native chrome theming ─────────────────────────────────────────────────────
 // The renderer owns the app theme (dark / light / system). The main process
@@ -146,11 +237,15 @@ ipcMain.handle('get-app-info', () => {
 });
 
 ipcMain.handle('get-db-status', () => {
+  if (dbError) {
+    return { dbPath, message: `Database unavailable: ${dbError}`, createdAt: null, error: true };
+  }
   const status = getStatusMessage();
   return {
     dbPath,
     message: status ? status.message : 'Database empty',
     createdAt: status ? status.created_at : null,
+    error: false,
   };
 });
 
@@ -627,6 +722,8 @@ const createStageWindow = () => {
     stageWindow.setIcon(appIcon);
   }
 
+  watchForBlankWindows(stageWindow, 'stage');
+
   stageWindow.on('closed', () => {
     stageWindow = null;
     notifyStageStatusChange();
@@ -753,6 +850,8 @@ const createPresentationWindow = (display) => {
     win.setIcon(appIcon);
   }
 
+  watchForBlankWindows(win, `projector ${display.id}`);
+
   presentationWindows.set(String(display.id), win);
   win.on('closed', () => {
     presentationWindows.delete(String(display.id));
@@ -796,6 +895,8 @@ const createWindow = () => {
     mainWindow.setIcon(appIcon);
   }
 
+  watchForBlankWindows(mainWindow, 'control');
+
   mainWindow.on('closed', () => {
     mainWindow = null;
     for (const win of presentationWindows.values()) {
@@ -821,10 +922,55 @@ const createWindow = () => {
   initUpdater(mainWindow);
 };
 
-app.whenReady().then(() => {
+// Guarded as well as the exit above: app.exit() tears the process down, but the
+// rest of this module still runs to the end of its tick, so without this the
+// ready handler could still be registered and reach initDatabase().
+if (gotInstanceLock) {
+  app.whenReady().then(() => {
+  startupLog('app ready');
+
   // Adopt the app theme as the OS theme source so the title bar, native dialogs
   // and scrollbars follow the in-app choice. 'system' keeps tracking the PC.
   nativeTheme.themeSource = appThemeMode;
+
+  // One-shot self-heal for machines whose GPU cannot give Chromium a usable
+  // context. Checked only while the marker file is absent, so it can never
+  // relaunch twice for the same machine.
+  if (!gpuCompatEnabled()) {
+    let status = {};
+    try {
+      status = app.getGPUFeatureStatus();
+    } catch {
+      status = {};
+    }
+    const broken = ['rasterization', 'webgl'].filter((feature) => status[feature] === 'unavailable');
+    if (broken.length > 0) {
+      // The marker is what stops this from happening again on the next launch, so
+      // it has to be on disk before we relaunch. If it cannot be written - a
+      // read-only or full userData folder - relaunching anyway would detect the
+      // same broken GPU and relaunch forever, leaving the operator with an app
+      // that never starts. That is worse than the problem being fixed, so in that
+      // case carry on with the GPU as-is and leave the manual route: launch with
+      // the --disable-gpu switch.
+      let recorded = false;
+      try {
+        fs.writeFileSync(gpuCompatMarker(), new Date().toISOString(), 'utf-8');
+        recorded = true;
+      } catch (err) {
+        startupLog(`could not record GPU compatibility flag: ${err && err.message}`);
+      }
+
+      if (recorded) {
+        startupLog(`GPU unavailable (${broken.join(', ')}) - relaunching with software rendering`);
+        app.relaunch();
+        app.exit(0);
+        return;
+      }
+      startupLog(`GPU unavailable (${broken.join(', ')}) - starting anyway, use --disable-gpu if this looks wrong`);
+    } else {
+      startupLog(`GPU ok (${JSON.stringify(status)})`);
+    }
+  }
 
   // Fires when the PC's own theme changes, so 'system' mode updates everywhere
   // without a restart.
@@ -844,8 +990,38 @@ app.whenReady().then(() => {
     Menu.setApplicationMenu(null);
   }
 
-  dbPath = initDatabase();
+  // The window is created FIRST and the library import happens afterwards. The
+  // import is minutes of synchronous SQLite work on a slow hard disk, and while
+  // it ran before createWindow() there was nothing on screen to look at, which
+  // read to the user as "the app does not work on this laptop". The renderer
+  // process paints and paints independently, so the splash shows immediately and
+  // its first IPC calls simply queue in main until the import finishes.
+  try {
+    dbPath = initDatabase();
+    startupLog(`database opened at ${dbPath}`);
+  } catch (err) {
+    // A failed database must still leave a window on screen. Every data handler
+    // in db.js already no-ops on a null db, so the operator gets a usable shell
+    // plus Settings > Content & Backup instead of no app at all.
+    startupLog(`database failed to open: ${err && (err.stack || err.message || err)}`);
+    dbError = String((err && err.message) || err);
+  }
+
   createWindow();
+  startupLog(`control window created after ${Date.now() - startedAt}ms`);
+
+  try {
+    const result = refreshLibraries();
+    startupLog(
+      result.changed
+        ? `libraries imported (bibles=${!!result.bibles} hymns=${!!result.hymns}) - ready after ${
+            Date.now() - startedAt
+          }ms`
+        : `libraries ${result.skipped} - ready after ${Date.now() - startedAt}ms`
+    );
+  } catch (err) {
+    startupLog(`library import failed: ${err && (err.stack || err.message || err)}`);
+  }
 
   const notifyDisplayChange = () => {
     if (mainWindow && !mainWindow.isDestroyed()) {
@@ -862,9 +1038,11 @@ app.whenReady().then(() => {
       createWindow();
     }
   });
-});
+  });
+}
 
 app.on('window-all-closed', () => {
+  startupLog(`all windows closed after ${(Date.now() - startedAt) / 1000}s`);
   if (process.platform !== 'darwin') {
     app.quit();
   }

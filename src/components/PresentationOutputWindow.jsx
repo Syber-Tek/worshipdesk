@@ -138,7 +138,11 @@ export default function PresentationOutputWindow() {
   const content = slideData.content ?? "";
   const displayContent = showQuotes ? `"${content}"` : content;
 
-  const fontScale = slideData.outputFontSize || "normal";
+  // Hymn lyrics have their own scale in Settings > Songs, so a slide follows the
+  // scale that actually belongs to its kind instead of one global size.
+  const fontScale = isHymn
+    ? slideData.hymnTextScale || slideData.outputFontSize || "normal"
+    : slideData.outputFontSize || "normal";
   const verseSizes = {
     small: "text-2xl md:text-4xl",
     normal: "text-3xl md:text-5xl",
