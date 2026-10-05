@@ -25,7 +25,7 @@
     "name": "Syber-Tek",
     "email": "dellpc788@gmail.com"
   },
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
     "@vitejs/plugin-react": "^4.7.0",
