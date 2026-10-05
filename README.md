@@ -6,7 +6,7 @@ An offline-first, high-performance desktop presentation application built for ch
 
 ## 📥 Direct Downloads & Executables
 
-Downloads are published to the **public** [`worshipdesk-releases`](https://github.com/Syber-Tek/worshipdesk-releases) repository, so no GitHub account is needed to grab a build. (The source repository is private; only the release feed is public.)
+Downloads are published to the **public** [`worshipdesk-releases`](https://github.com/Syber-Tek/worshipdesk-releases) repository, so no GitHub account is needed to grab a build. The source repository is public too, so issues and pull requests are welcome.
 
 - **Latest release page (recommended):** [Download WorshipDesk](https://github.com/Syber-Tek/worshipdesk-releases/releases/latest)
 
@@ -15,7 +15,6 @@ Point a website **Download** button at that page. Direct `/releases/latest/downl
 | Platform | Asset name pattern | Example (v1.1.0) |
 | --- | --- | --- |
 | Windows installer | `WorshipDesk-Setup-<version>.exe` | `WorshipDesk-Setup-1.1.0.exe` |
-| Windows portable | `WorshipDesk-<version>.zip` | `WorshipDesk-1.1.0.zip` |
 | macOS (Apple Silicon) | `WorshipDesk-<version>-arm64.dmg` | `WorshipDesk-1.1.0-arm64.dmg` |
 | macOS (Intel) | `WorshipDesk-<version>-x64.dmg` | `WorshipDesk-1.1.0-x64.dmg` |
 | Linux | `WorshipDesk-<version>-x86_64.AppImage` / `.deb` / `.rpm` | `WorshipDesk-1.1.0-x86_64.AppImage` |
@@ -133,7 +132,7 @@ npm run package
 > `npmRebuild: false` to `electron-builder.yml` — CI builds the native module properly.
 
 ### GitHub Actions Automated Release (.exe, .dmg, .deb, .rpm, .AppImage)
-Every time a release tag (e.g. `v1.1.0`) is pushed, the `.github/workflows/build-release.yml` pipeline builds the artifacts and publishes them to the **public** `worshipdesk-releases` repo, which is also the auto-update feed. Windows publishes the NSIS installer plus a portable zip; macOS publishes separate `-arm64` and `-x64` DMGs so both architectures can coexist.
+Every time a release tag (e.g. `v1.1.0`) is pushed, the `.github/workflows/build-release.yml` pipeline builds the artifacts and publishes them to the **public** `worshipdesk-releases` repo, which is also the auto-update feed. Windows publishes the NSIS installer; macOS publishes separate `-arm64` and `-x64` DMGs so both architectures can coexist, plus a zip per architecture because the macOS updater can only install from a zip.
 
 ### AI Agent Tooling (`opencode.json`)
 This repo ships an [opencode](https://opencode.ai) config with three dev tools:
@@ -177,4 +176,6 @@ node "$USERPROFILE/.config/opencode/mcp/reponova/node_modules/reponova/dist/cli/
 
 ## 📄 License
 
-Distributed under the MIT License.
+Distributed under the **GNU Affero General Public License v3.0** (`AGPL-3.0-only`). Full text in [`LICENSE`](LICENSE).
+
+You may copy, modify and redistribute this software, including commercially. If you distribute a modified version, or run a modified version over a network, you must publish your source under the same license.

@@ -45,7 +45,6 @@ win:
   icon: src/assets/app-icon-dark.ico
   target:
     - nsis
-    - zip
 
 nsis:
   # Re-running the setup file on a machine that already has WorshipDesk offers
