@@ -14,6 +14,13 @@ asar: true
 asarUnpack:
   - "**/node_modules/better-sqlite3/**"
 
+# better-sqlite3 13 is a pure node-addon-api (N-API) module and ships its own
+# win32-x64 prebuild in prebuilds/. N-API is ABI-stable, so recompiling it per
+# Electron version produces the same thing - except that node-gyp then demands a
+# full Visual Studio C++ toolchain just to package the app. Turning the rebuild
+# off lets `npm run make` work on a clean checkout.
+npmRebuild: false
+
 # Auto-update feed. The source repo is private, so updates are served from the
 # public worshipdesk-releases repo, which the release workflow publishes to.
 # electron-updater bakes this into app-update.yml inside the packaged app, and
@@ -41,6 +48,11 @@ win:
     - zip
 
 nsis:
+  # Re-running the setup file on a machine that already has WorshipDesk offers
+  # repair/update or uninstall instead of silently reinstalling over the top.
+  # electron-builder finds build/installer.nsh on its own; naming it here makes
+  # the dependency explicit.
+  include: build/installer.nsh
   oneClick: false
   perMachine: false
   allowElevation: true

@@ -1,5 +1,6 @@
 import React from "react";
 import { FaTv, FaFilm } from "react-icons/fa6";
+import FontScaleSlider from "../../FontScaleSlider";
 import {
   resolveBackground,
   resolveVideo,
@@ -613,29 +614,17 @@ export default function PresentationSettings({
           </select>
         </div>
 
-        <div className="flex items-center justify-between p-3.5 rounded border border-border bg-surface">
-          <div>
-            <div className="font-semibold text-xs text-text-primary">
-              Projector Text Scale
-            </div>
-            <div className="text-[11px] text-text-secondary">
-              Font size for scripture &amp; hymn content on the live output
-            </div>
-          </div>
-          <select
-            value={outputFontSize || "normal"}
-            onChange={(e) =>
-              setOutputFontSize && setOutputFontSize(e.target.value)
-            }
-            className="text-xs rounded px-2.5 py-1 outline-none border border-border bg-raised text-text-primary"
-          >
-            <option value="small">Small </option>
-            <option value="normal">Standard </option>
-            <option value="large">Large </option>
-            <option value="xlarge">Extra Large </option>
-            <option value="xxlarge">XX-Large</option>
-          </select>
-        </div>
+        <FontScaleSlider
+          id="projector-text-scale"
+          className="p-3.5 rounded border border-border bg-surface"
+          label="Projector Text Scale"
+          labelClassName="text-text-primary"
+          hint="Font size for scripture on the live output. Hymn lyrics use their own scale under Songs & Hymns."
+          hintClassName="text-text-secondary"
+          valueClassName="text-xs text-accent"
+          value={outputFontSize}
+          onChange={setOutputFontSize}
+        />
       </div>
     </div>
   );

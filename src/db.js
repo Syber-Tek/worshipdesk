@@ -3,6 +3,7 @@ import path from 'node:path'
 import fs from 'node:fs'
 import { app } from 'electron'
 import { CANONICAL_BIBLE, normalizeBookName } from './bibleBooks.js'
+import { fingerprintFiles } from './lib/fingerprint.js'
 
 let db = null
 
@@ -43,6 +44,16 @@ export function initDatabase() {
   // Enforce WAL mode for fast concurrent disk reads/writes
   db.pragma('journal_mode = WAL')
 
+  // WAL lets readers run while a write is in flight, but it does not queue two
+  // writers. Without a busy timeout SQLite reports SQLITE_BUSY the instant
+  // another process holds the write lock instead of waiting for it, and
+  // better-sqlite3 throws that straight at the caller. Anything that can hold the
+  // lock briefly - the updater's installer touching the folder, a leftover second
+  // instance that has not finished exiting, an antivirus scan on a slow laptop -
+  // would otherwise surface as "database is locked" and land in the dbError
+  // screen. Five seconds is far longer than any real write here takes.
+  db.pragma('busy_timeout = 5000')
+
   // Enable foreign key cascades (delete bible -> removes books & verses)
   db.pragma('foreign_keys = ON')
 
@@ -59,6 +70,16 @@ export function initDatabase() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       message TEXT NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `)
+
+  // Fingerprint of the library files as of the last successful import, so a
+  // relaunch can skip the (very slow) re-import when nothing has changed.
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS import_state (
+      key TEXT PRIMARY KEY,
+      signature TEXT NOT NULL,
+      imported_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `)
 
@@ -149,11 +170,85 @@ export function initDatabase() {
   seedInitialBibleData()
   seedInitialHymnData()
 
-  // Auto-scan project 'bibles/' and 'hymns/' directories for any dropped files
-  autoScanBiblesFolder()
-  autoScanHymnsFolder()
+  // NOTE: the library folders are NOT scanned here. autoScanHymnsFolder alone
+  // re-parses ~2,400 .sng files and autoScanBiblesFolder re-executes ~48 MB of
+  // SQL plus ten XML Bibles, all synchronously, on every launch. That used to
+  // run before the first window was created, so on a slow hard disk the app
+  // looked like it simply never started. Callers now open the window first and
+  // then call refreshLibraries(), which tracks the Bibles and the hymns
+  // separately and skips whichever of them has not changed on disk.
 
   return dbPath
+}
+
+// The two libraries are fingerprinted separately so that adding a Bible does not
+// also trigger a re-parse of ~2,400 hymn files, and so that re-scanning Bibles
+// cannot mark changed hymns as already imported.
+//
+// Bundled and user roots are fingerprinted separately because the bundled copy
+// lives in the asar and must ignore its mtime - see src/lib/fingerprint.js.
+const BIBLE_EXT = ['.sql', '.xml']
+
+const bibleFingerprint = () =>
+  [
+    fingerprintFiles([bundledDataDir('bibles')], BIBLE_EXT, false),
+    fingerprintFiles([userDataDir('bibles')], BIBLE_EXT, true),
+  ].join('||')
+
+const hymnFingerprint = () =>
+  [
+    fingerprintFiles([bundledDataDir('hymns')], ['.sng'], false),
+    fingerprintFiles([userDataDir('hymns')], ['.sng'], true),
+  ].join('||')
+
+// True when this library's files differ from what was last imported. Returns true
+// if there is no stored signature yet, or it cannot be read, so a lost or corrupt
+// row degrades to re-importing rather than to silently never importing.
+function libraryChanged(key, fingerprint) {
+  try {
+    const row = db.prepare('SELECT signature FROM import_state WHERE key = ?').get(key)
+    return !row || row.signature !== fingerprint
+  } catch {
+    return true
+  }
+}
+
+function recordSignature(key, fingerprint) {
+  db.prepare(
+    'INSERT INTO import_state (key, signature) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET signature = excluded.signature'
+  ).run(key, fingerprint)
+}
+
+/**
+ * Re-imports the Bible and hymn libraries when their files have changed.
+ *
+ * Deliberately separate from initDatabase() and deliberately idempotent: this is
+ * minutes of work on a slow disk, and it used to run before any window existed.
+ * Each library is checked on its own, so the two costs are independent.
+ * Returns what it did so the caller can log or surface it.
+ */
+export function refreshLibraries() {
+  if (!db) return { changed: false, skipped: 'no database' }
+
+  // Fingerprinted once, before the scan, and that value is what gets recorded. A
+  // file touched *during* the import therefore looks changed on the next launch
+  // and is read again, which is the safe direction to be wrong in - and it saves
+  // a second walk of ~2,400 hymn files.
+  const biblesNow = bibleFingerprint()
+  const hymnsNow = hymnFingerprint()
+  const bibles = libraryChanged('bibles', biblesNow)
+  const hymns = libraryChanged('hymns', hymnsNow)
+  if (!bibles && !hymns) return { changed: false, skipped: 'up to date' }
+
+  if (bibles) {
+    autoScanBiblesFolder()
+    recordSignature('bibles', biblesNow)
+  }
+  if (hymns) {
+    autoScanHymnsFolder()
+    recordSignature('hymns', hymnsNow)
+  }
+  return { changed: true, bibles, hymns }
 }
 
 export function importSqlFile(filePath) {
@@ -769,7 +864,12 @@ export function removeBible(bibleId) {
 
 export function rescanBiblesFolder() {
   try {
+    // The user pressed Rescan, so always re-read the Bible files rather than
+    // trusting the fingerprint that made startup skip them. Only the Bible
+    // signature is refreshed: stamping the hymn one too would hide hymn changes
+    // that this function never actually re-read.
     autoScanBiblesFolder()
+    recordSignature('bibles', bibleFingerprint())
     return { success: true }
   } catch (err) {
     return { success: false, error: err.message }

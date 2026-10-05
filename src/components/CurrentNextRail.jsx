@@ -9,8 +9,9 @@ import {
   Activity,
   Video
 } from 'react-iconly'
-import { FaDisplay, FaEraser, FaEyeSlash, FaLock, FaLockOpen } from 'react-icons/fa6'
+import { FaDisplay, FaEraser, FaEyeSlash, FaLock, FaLockOpen, FaTextHeight } from 'react-icons/fa6'
 import { MediaThumb } from './MediaSlide'
+import FontScaleSlider from './FontScaleSlider'
 
 export default function CurrentNextRail({
   currentSlide,
@@ -36,6 +37,8 @@ export default function CurrentNextRail({
   setProjectionDisplays,
   outputTheme = 'dark',
   setOutputTheme,
+  outputFontSize = 'normal',
+  setOutputFontSize,
   mediaPage = 0,
   onMediaPageCount,
   isPagingPdf = false,
@@ -251,6 +254,25 @@ export default function CurrentNextRail({
             </div>
           </div>
         )}
+
+        {/* Projector text size. Kept here and not only in Settings because the
+            operator needs it mid-service: a verse that reads fine at the desk can
+            be unreadable from the third pew. Ctrl+[ / Ctrl+] do the same from
+            the keyboard. */}
+        <div className="space-y-1">
+          <div
+            className={`text-[10px] uppercase font-bold tracking-wider flex items-center gap-1 ${isLight ? 'text-[#6B7280]' : 'text-[#9B9CA3]'}`}
+          >
+            <FaTextHeight size={14} /> Projector Text Size
+          </div>
+          <FontScaleSlider
+            id="rail-projector-text-size"
+            value={outputFontSize}
+            onChange={setOutputFontSize}
+            showTicks={false}
+            className={`rounded border px-2 py-1.5 ${isLight ? 'bg-[#F9FAFB] border-[#E5E7EB]' : 'bg-[#1C1D21] border-[#2A2C31]'}`}
+          />
+        </div>
 
         {/* Multi-Display Projection Targets */}
         <div className="space-y-1">

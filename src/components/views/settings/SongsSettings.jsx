@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { FaMusic } from "react-icons/fa6";
+import FontScaleSlider from "../../FontScaleSlider";
+import {
+  loadHymnCategories,
+  resolveHymnCategory,
+} from "../../../lib/hymnCategories";
 
 export default function SongsSettings({
   defaultHymnCategory = "All",
@@ -16,6 +21,10 @@ export default function SongsSettings({
   borderDivider,
 }) {
   const [hymnsCount, setHymnsCount] = useState(0);
+  // Built from the same database the importer writes to. A hardcoded list here
+  // shipped strings that matched no hymn at all, so every choice stored a
+  // category that filtered the Songs tab down to zero rows.
+  const [categories, setCategories] = useState(["All"]);
 
   const refreshCount = () => {
     if (window.api && window.api.getHymnsCount) {
@@ -27,7 +36,11 @@ export default function SongsSettings({
 
   useEffect(() => {
     refreshCount();
+    loadHymnCategories().then(setCategories);
   }, []);
+
+  // A value stored by an older build names a category that no longer exists.
+  const selectedCategory = resolveHymnCategory(defaultHymnCategory, categories);
 
   return (
     <div className="space-y-5">
@@ -55,7 +68,7 @@ export default function SongsSettings({
             </div>
           </div>
           <select
-            value={defaultHymnCategory || "All"}
+            value={selectedCategory}
             onChange={(e) => {
               const val = e.target.value;
               if (setDefaultHymnCategory) setDefaultHymnCategory(val);
@@ -63,15 +76,7 @@ export default function SongsSettings({
             }}
             className={`text-xs rounded px-2.5 py-1 outline-none border ${selectClass}`}
           >
-            {[
-              "All",
-              "Presby Hymns (Twi)",
-              "Presby Hymns (Eng)",
-              "Methodist Hymns (Twi)",
-              "Methodist Hymns (Eng)",
-              "Presby Liturgy",
-              "Methodist Liturgy",
-            ].map((cat) => (
+            {categories.map((cat) => (
               <option key={cat} value={cat}>
                 {cat}
               </option>
@@ -108,33 +113,18 @@ export default function SongsSettings({
         </div>
 
         {/* Hymn Lyric Text Scale */}
-        <div
-          className={`flex items-center justify-between p-3.5 rounded border ${cardClass}`}
-        >
-          <div>
-            <div className={`font-semibold text-xs ${textTitle}`}>
-              Projector Hymn Text Scale
-            </div>
-            <div className={`text-[11px] ${textSub}`}>
-              Font size for hymn lyrics & stanzas on the live output
-            </div>
-          </div>
-          <select
-            value={hymnTextScale || "normal"}
-            onChange={(e) => {
-              const val = e.target.value;
-              if (setHymnTextScale) setHymnTextScale(val);
-              toast.success(`Hymn text scale set to ${val}`);
-            }}
-            className={`text-xs rounded px-2.5 py-1 outline-none border ${selectClass}`}
-          >
-            <option value="small">Small</option>
-            <option value="normal">Standard</option>
-            <option value="large">Large</option>
-            <option value="xlarge">Extra Large</option>
-            <option value="xxlarge">XX-Large</option>
-          </select>
-        </div>
+        <FontScaleSlider
+          id="hymn-text-scale"
+          className={`p-3.5 rounded border ${cardClass}`}
+          label="Projector Hymn Text Scale"
+          labelClassName={textTitle}
+          hint="Font size for hymn lyrics & stanzas on the live output. Scripture uses the Projector Text Scale instead."
+          hintClassName={textSub}
+          value={hymnTextScale}
+          onChange={(val) => {
+            if (setHymnTextScale) setHymnTextScale(val);
+          }}
+        />
 
         {/* Hymn Library / Import */}
         <div className={`p-4 rounded border space-y-3 ${cardClass}`}>

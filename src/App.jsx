@@ -11,6 +11,7 @@ import PlanView from "./components/views/PlanView";
 import SettingsView from "./components/views/SettingsView";
 import AddItemModal from "./components/modals/AddItemModal";
 import SplashScreen from "./components/SplashScreen";
+import { stepScale, FONT_SCALE_LABELS } from "./lib/fontScale.js";
 import { Toaster, toast } from "sonner";
 
 import { resolveBookInList, normalizeBookName } from "./bibleBooks.js";
@@ -766,6 +767,7 @@ export default function App() {
     slideMargin,
     attributionPosition,
     outputFontSize,
+    hymnTextScale,
   });
 
   // ---------------------------------------------------------------------
@@ -789,6 +791,20 @@ export default function App() {
   // Global shortcuts for the control window. Ignores typing targets so the arrow
   // keys and space still behave normally inside a text field.
   const handleKeyDown = (e) => {
+    // Projector text size is handled before the typing-target guard on purpose:
+    // resizing the projected text is exactly what you want to do while the
+    // cursor is still in the verse search box.
+    if (e.ctrlKey || e.metaKey) {
+      const delta = e.key === "[" || e.key === "{" ? -1 : e.key === "]" || e.key === "}" ? 1 : 0;
+      if (delta !== 0) {
+        e.preventDefault();
+        const next = stepScale(outputFontSize, delta);
+        setOutputFontSize(next);
+        toast.info(`Projector text size: ${FONT_SCALE_LABELS[next]}`);
+        return;
+      }
+    }
+
     const tag =
       e.target && e.target.tagName ? e.target.tagName.toUpperCase() : "";
     if (
@@ -1300,6 +1316,8 @@ export default function App() {
         setProjectionDisplays={setProjectionDisplays}
         outputTheme={outputTheme}
         setOutputTheme={setOutputTheme}
+        outputFontSize={outputFontSize}
+        setOutputFontSize={setOutputFontSize}
         mediaPage={mediaPage}
         mediaPageCount={mediaPageCount}
         isPagingPdf={isPagingPdf}

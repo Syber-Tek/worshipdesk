@@ -1,5 +1,6 @@
 import React from "react";
 import { FaPalette } from "react-icons/fa6";
+import FontScaleSlider from "../../FontScaleSlider";
 
 export default function AppearanceSettings({
   themeMode,
@@ -132,27 +133,19 @@ export default function AppearanceSettings({
           </div>
         </div>
 
-        <div
-          className={`flex items-center justify-between p-3.5 rounded border ${cardClass}`}
-        >
-          <div>
-            <div className={`font-semibold text-xs ${textTitle}`}>
-              Control UI Scale
-            </div>
-            <div className={`text-[11px] ${textSub}`}>
-              Adjust font sizing density
-            </div>
-          </div>
-          <select
-            value={uiScale || "normal"}
-            onChange={(e) => setUiScale && setUiScale(e.target.value)}
-            className={`text-xs rounded px-2.5 py-1 outline-none border ${selectClass}`}
-          >
-            <option value="compact">Compact </option>
-            <option value="normal">Standard </option>
-            <option value="large">Large </option>
-          </select>
-        </div>
+        <FontScaleSlider
+          id="control-ui-scale"
+          className={`p-3.5 rounded border ${cardClass}`}
+          label="Control UI Scale"
+          labelClassName={textTitle}
+          hint="Adjust font sizing density across the control window"
+          hintClassName={textSub}
+          options={["compact", "normal", "large"]}
+          labels={{ compact: "Compact", normal: "Standard", large: "Large" }}
+          ticks={["Compact", "Standard", "Large"]}
+          value={uiScale}
+          onChange={(val) => setUiScale && setUiScale(val)}
+        />
       </div>
     </div>
   );
