@@ -20,7 +20,7 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('WorshipDesk ErrorBoundary caught an error:', error, errorInfo)
+    console.error('WordDesk ErrorBoundary caught an error:', error, errorInfo)
     this.setState({ errorInfo })
   }
 
@@ -33,7 +33,7 @@ class ErrorBoundary extends React.Component {
               <Danger set="bold" primaryColor="#E5484D" size="medium" />
             </div>
             <h2 className="text-lg font-bold text-text-primary">
-              WorshipDesk Application Error
+              WordDesk Application Error
             </h2>
             <p className="text-xs text-dim leading-relaxed">
               An unexpected issue occurred while rendering the interface:

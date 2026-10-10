@@ -61,7 +61,7 @@ export default function SplashScreen({ onFinished, themeMode = "dark" }) {
         <div className="w-20 h-20  overflow-hidden flex items-center justify-center p-0.5">
           <img
             src={isLight ? appIconDark : appIconLight}
-            alt="WorshipDesk Logo"
+            alt="WordDesk Logo"
             className="w-full h-full object-contain"
           />
         </div>
@@ -73,7 +73,7 @@ export default function SplashScreen({ onFinished, themeMode = "dark" }) {
               isLight ? "text-[#111827]" : "text-[#EDEDEE]"
             }`}
           >
-            WorshipDesk
+            WordDesk
           </h1>
           <p
             className={`text-xs font-medium ${

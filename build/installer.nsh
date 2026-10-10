@@ -2,10 +2,10 @@
 ; `!include`s it into the generated installer.nsi, before .onInit. It is only
 ; compiled into the installer, never into the uninstaller (installer.nsi guards
 ; the customInit hook with `!ifdef BUILD_UNINSTALLER`), so nothing here can fire
-; while WorshipDesk is removing itself.
+; while WordDesk is removing itself.
 ;
 ; What it does: running the setup file again on a machine that already has
-; WorshipDesk used to silently uninstall the old copy and drop the new one in
+; WordDesk used to silently uninstall the old copy and drop the new one in
 ; its place. That is a fine update, but it hides what it is doing, so someone who
 ; meant to "repair" or "remove" gets a surprising reinstall instead of being
 ; asked. This adds the missing question.
@@ -58,9 +58,9 @@
   ; after it is decided by the answer in $0, so no outcome depends on falling
   ; through.
   MessageBox MB_YESNOCANCEL|MB_ICONQUESTION|MB_DEFBUTTON1 \
-    "WorshipDesk is already installed on this computer.$\n$\n\
+    "WordDesk is already installed on this computer.$\n$\n\
 Yes - Repair or update: reinstall over the existing copy$\n\
-No - Uninstall: remove WorshipDesk and stop$\n\
+No - Uninstall: remove WordDesk and stop$\n\
 Cancel - Do nothing and close this installer$\n$\n\
 Your Bible, hymns, service plans and preferences are kept either way." \
     /SD IDYES IDYES wd_choice_repair
@@ -75,7 +75,7 @@ Your Bible, hymns, service plans and preferences are kept either way." \
     Delete "$PLUGINSDIR\wd-old-uninstaller.exe"
     ${If} $R3 != 0
       MessageBox MB_OK|MB_ICONEXCLAMATION \
-        "WorshipDesk could not be uninstalled (error $R3). Nothing has been changed."
+        "WordDesk could not be uninstalled (error $R3). Nothing has been changed."
     ${EndIf}
     SetErrorLevel 0
     Quit

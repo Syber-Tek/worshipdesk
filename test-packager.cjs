@@ -18,8 +18,8 @@ async function test() {
   try {
     const appPaths = await packager({
       dir: __dirname,
-      name: 'WorshipDesk',
-      executableName: 'WorshipDesk',
+      name: 'WordDesk',
+      executableName: 'WordDesk',
       platform: 'win32',
       arch: 'x64',
       out: path.join(__dirname, 'out'),

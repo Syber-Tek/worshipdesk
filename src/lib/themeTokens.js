@@ -1,5 +1,5 @@
 /**
- * WorshipDesk Centralized Theme Color Token System
+ * WordDesk Centralized Theme Color Token System
  * Guarantees 100% unified light/dark mode styling across all views & sub-components.
  */
 

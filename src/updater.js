@@ -97,7 +97,7 @@ export function initUpdater(win) {
 
   ipcMain.handle('check-for-updates', () => {
     if (!app.isPackaged) {
-      return { ok: false, message: 'Updates are only available in an installed copy of WorshipDesk.' }
+      return { ok: false, message: 'Updates are only available in an installed copy of WordDesk.' }
     }
     try {
       // Report the outcome through the 'updater-status' channel.

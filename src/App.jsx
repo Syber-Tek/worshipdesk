@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import PresentationOutputWindow from "./components/PresentationOutputWindow";
 import StageDisplayWindow from "./components/StageDisplayWindow";
 import IconRail from "./components/IconRail";
@@ -11,7 +11,7 @@ import PlanView from "./components/views/PlanView";
 import SettingsView from "./components/views/SettingsView";
 import AddItemModal from "./components/modals/AddItemModal";
 import SplashScreen from "./components/SplashScreen";
-import { stepScale, FONT_SCALE_LABELS } from "./lib/fontScale.js";
+import { stepScale, getFontScaleLabel } from "./lib/fontScale.js";
 import { Toaster, toast } from "sonner";
 
 import { resolveBookInList, normalizeBookName } from "./bibleBooks.js";
@@ -240,7 +240,7 @@ export default function App() {
 
   const [customHeaderTitle, setCustomHeaderTitle] = useState(() => {
     return (
-      localStorage.getItem("church_presenter_header_title") || "WorshipDesk"
+      localStorage.getItem("church_presenter_header_title") || "WordDesk"
     );
   });
 
@@ -374,7 +374,9 @@ export default function App() {
   const [playlist, setPlaylist] = useState([]);
   const [recentPlans, setRecentPlans] = useState(() => {
     try {
-      const saved = localStorage.getItem("worshipdesk_recent_plans");
+      const saved =
+        localStorage.getItem("worddesk_recent_plans") ||
+        localStorage.getItem("worshipdesk_recent_plans");
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -385,7 +387,7 @@ export default function App() {
     setRecentPlans((prev) => {
       const filtered = prev.filter((p) => p.filePath !== entry.filePath);
       const updated = [entry, ...filtered].slice(0, 10);
-      localStorage.setItem("worshipdesk_recent_plans", JSON.stringify(updated));
+      localStorage.setItem("worddesk_recent_plans", JSON.stringify(updated));
       return updated;
     });
   };
@@ -800,7 +802,7 @@ export default function App() {
         e.preventDefault();
         const next = stepScale(outputFontSize, delta);
         setOutputFontSize(next);
-        toast.info(`Projector text size: ${FONT_SCALE_LABELS[next]}`);
+        toast.info(`Projector text size: ${getFontScaleLabel(next)}`);
         return;
       }
     }

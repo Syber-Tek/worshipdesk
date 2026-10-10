@@ -52,7 +52,7 @@ export default function SettingsView({
   setShowVerseQuotes,
   appNamePosition = "top-left",
   setAppNamePosition,
-  customHeaderTitle = "WorshipDesk",
+  customHeaderTitle = "WordDesk",
   uiScale = "normal",
   setUiScale,
   slideMargin = "4rem",
@@ -234,6 +234,8 @@ export default function SettingsView({
             setDefaultHymnCategory={setDefaultHymnCategory}
             showHymnNumbers={showHymnNumbers}
             setShowHymnNumbers={setShowHymnNumbers}
+            outputFontSize={outputFontSize}
+            setOutputFontSize={setOutputFontSize}
             hymnTextScale={hymnTextScale}
             setHymnTextScale={setHymnTextScale}
             {...commonProps}

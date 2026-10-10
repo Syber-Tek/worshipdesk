@@ -70,4 +70,37 @@ assert.equal(stepScale('compact', -1, UI_SCALES), 'compact');
 assert.equal(stepScale('large', 1, UI_SCALES), 'large');
 assert.equal(stepScale('normal', 1, UI_SCALES), 'large');
 
+// Continuous scaling allows smooth sliding between Small (0) and XX-Large (4).
+import {
+  scaleToContinuous,
+  continuousToMultiplier,
+  getFontScaleMultiplier,
+  getFontScaleLabel,
+} from '../src/lib/fontScale.js';
+
+assert.equal(scaleToContinuous('small'), 0);
+assert.equal(scaleToContinuous('normal'), 1);
+assert.equal(scaleToContinuous('xxlarge'), 4);
+assert.equal(scaleToContinuous(2.5), 2.5);
+assert.equal(scaleToContinuous(-5), 0);
+assert.equal(scaleToContinuous(10), 4);
+
+assert.equal(continuousToMultiplier(0), 0.75);
+assert.equal(continuousToMultiplier(1), 1.00);
+assert.equal(continuousToMultiplier(2), 1.25);
+assert.equal(continuousToMultiplier(3), 1.50);
+assert.equal(continuousToMultiplier(4), 2.00);
+
+assert.equal(getFontScaleMultiplier('normal'), 1.0);
+assert.equal(getFontScaleMultiplier(1), 1.0);
+
+assert.match(getFontScaleLabel('normal'), /Standard/);
+assert.match(getFontScaleLabel(0), /Small/);
+assert.match(getFontScaleLabel(4), /XX-Large/);
+assert.equal(getFontScaleLabel(1.5), '113%');
+
+assert.equal(stepScale(1.0, 1), 1.2);
+assert.equal(stepScale(4.0, 1), 4.0);
+assert.equal(stepScale(0.0, -1), 0.0);
+
 console.log('fontScale: all assertions passed');

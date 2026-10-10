@@ -72,7 +72,7 @@ export default function GeneralSettings({
             <div className={`font-semibold text-xs ${textTitle}`}>
               Application Name
             </div>
-            <div className={`text-[11px] ${textSub}`}>WorshipDesk</div>
+            <div className={`text-[11px] ${textSub}`}>WordDesk</div>
           </div>
           <span
             className={`text-xs font-mono ${

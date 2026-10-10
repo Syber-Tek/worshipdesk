@@ -1,8 +1,8 @@
-WorshipDesk — Hymns & Songs Folder Structure & Auto-Importer
+WordDesk — Hymns & Songs Folder Structure & Auto-Importer
 ============================================================
 
 How Song Categories Work:
-- Every subfolder inside `hymns/` automatically becomes a category in WorshipDesk.
+- Every subfolder inside `hymns/` automatically becomes a category in WordDesk.
 - The EXACT subfolder name is used as the Category name on the Hymn page.
 
 Current Default Folder Structure:
@@ -19,7 +19,7 @@ Adding New Song Categories:
 1. Create a new subfolder inside `hymns/` with your desired Category name.
    Example: `hymns/Youth Choir Songs/` or `hymns/Praise & Worship/`
 2. Drop your .sng or .txt song files inside that subfolder.
-3. WorshipDesk will automatically scan the folder and register the new category on startup!
+3. WordDesk will automatically scan the folder and register the new category on startup!
 
 Supported File Formats:
 - SongShow Plus / Worship Live files (.sng)

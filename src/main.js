@@ -34,7 +34,7 @@ let mainWindow = null;
 let stageWindow = null;
 const presentationWindows = new Map(); // displayId -> BrowserWindow
 
-// WorshipDesk never talks to a proxy — it is offline-first, and the only
+// WordDesk never talks to a proxy — it is offline-first, and the only
 // outbound call it can make is the opt-in update check. Letting Chromium consult
 // the system proxy would make its network service run WPAD auto-discovery every
 // time the machine joins a network, which is what kills that service
@@ -225,7 +225,7 @@ function getDisplayDetails() {
 
 ipcMain.handle('get-app-info', () => {
   return {
-    appName: 'WorshipDesk',
+    appName: 'WordDesk',
     version: app.getVersion(),
     platform: process.platform,
     arch: process.arch,
@@ -360,7 +360,7 @@ ipcMain.handle('rescan-bibles', () => rescanBiblesFolder());
 ipcMain.handle('backup-database', async () => {
   try {
     const { canceled, filePath } = await dialog.showSaveDialog({
-      title: 'Backup WorshipDesk Database',
+      title: 'Backup WordDesk Database',
       defaultPath: `church-presenter-backup-${new Date().toISOString().slice(0, 10)}.db`,
       filters: [{ name: 'SQLite Database', extensions: ['db'] }],
     });
@@ -377,10 +377,10 @@ ipcMain.handle('save-plan-file', async (_e, planData) => {
   try {
     const defaultName = `WorshipPlan-${new Date().toISOString().slice(0, 10)}.worship`;
     const { canceled, filePath } = await dialog.showSaveDialog({
-      title: 'Save WorshipDesk Service Plan',
+      title: 'Save WordDesk Service Plan',
       defaultPath: defaultName,
       filters: [
-        { name: 'WorshipDesk Plan (*.worship)', extensions: ['worship'] },
+        { name: 'WordDesk Plan (*.worship, *.word)', extensions: ['worship', 'word'] },
         { name: 'JSON Plan (*.json)', extensions: ['json'] },
       ],
     });
@@ -396,10 +396,10 @@ ipcMain.handle('save-plan-file', async (_e, planData) => {
 ipcMain.handle('open-plan-file', async () => {
   try {
     const { canceled, filePaths } = await dialog.showOpenDialog({
-      title: 'Open WorshipDesk Service Plan File',
+      title: 'Open WordDesk Service Plan File',
       properties: ['openFile'],
       filters: [
-        { name: 'WorshipDesk Plan (*.worship, *.json)', extensions: ['worship', 'json'] },
+        { name: 'WordDesk Plan (*.worship, *.word, *.json)', extensions: ['worship', 'word', 'json'] },
       ],
     });
     if (canceled || filePaths.length === 0) return { success: false, message: 'Cancelled' };
@@ -572,7 +572,7 @@ ipcMain.handle('get-media-usage', async () => {
 // Native OS notification (Windows toast / tray balloon) fired from the renderer.
 ipcMain.on('native-notification', (_event, { title, body } = {}) => {
   if (!Notification.isSupported()) return;
-  const notification = new Notification({ title: title || 'WorshipDesk', body: body || '' });
+  const notification = new Notification({ title: title || 'WordDesk', body: body || '' });
   notification.show();
 });
 
@@ -706,7 +706,7 @@ const createStageWindow = () => {
     y: bounds.y,
     width: bounds.width,
     height: bounds.height,
-    title: 'WorshipDesk - Stage Display / Confidence Monitor',
+    title: 'WordDesk - Stage Display / Confidence Monitor',
     icon: appIcon,
     autoHideMenuBar: true,
     backgroundColor: '#0C0D0E',
@@ -834,7 +834,7 @@ const createPresentationWindow = (display) => {
     width: bounds.width,
     height: bounds.height,
     fullscreen: !isPrimary,
-    title: 'WorshipDesk - Live Projector Output',
+    title: 'WordDesk - Live Projector Output',
     icon: appIcon,
     autoHideMenuBar: true,
     backgroundColor: '#000000',
@@ -880,7 +880,7 @@ const createWindow = () => {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
-    title: 'WorshipDesk - Control Window',
+    title: 'WordDesk - Control Window',
     icon: appIcon,
     ...nativeChromeOptions(),
     webPreferences: {

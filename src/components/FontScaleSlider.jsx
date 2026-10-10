@@ -4,6 +4,8 @@ import {
   FONT_SCALE_LABELS,
   scaleToIndex,
   indexToScale,
+  scaleToContinuous,
+  getFontScaleLabel,
 } from "../lib/fontScale.js";
 
 // Short ticks under the track, sized so they still fit the 230px control rail.
@@ -23,13 +25,19 @@ export default function FontScaleSlider({
   labels = FONT_SCALE_LABELS,
   ticks = TICKS,
   showTicks = true,
+  continuous = true,
   className = "",
   labelClassName = "",
   hintClassName = "",
   valueClassName = "text-xs",
 }) {
-  const index = scaleToIndex(value, options);
-  const currentLabel = labels[value] ?? labels[options[index]];
+  const isContinuous = continuous && options === FONT_SCALES;
+
+  const continuousPos = isContinuous ? scaleToContinuous(value) : null;
+  const index = isContinuous ? Math.round(continuousPos) : scaleToIndex(value, options);
+  const currentLabel = isContinuous
+    ? getFontScaleLabel(value)
+    : (labels[value] ?? labels[options[index]]);
 
   return (
     <div className={`space-y-1.5 ${className}`}>
@@ -50,24 +58,32 @@ export default function FontScaleSlider({
         type="range"
         min={0}
         max={options.length - 1}
-        step={1}
-        value={index}
+        step={isContinuous ? 0.02 : 1}
+        value={isContinuous ? continuousPos : index}
         aria-label={label ? undefined : "Text size"}
         aria-valuetext={currentLabel}
-        onChange={(e) =>
-          onChange && onChange(indexToScale(Number(e.target.value), options))
-        }
+        onChange={(e) => {
+          if (!onChange) return;
+          const val = Number(e.target.value);
+          if (isContinuous) {
+            onChange(Number(val.toFixed(2)));
+          } else {
+            onChange(indexToScale(val, options));
+          }
+        }}
         className="w-full accent-accent cursor-pointer"
       />
       {showTicks && (
         <div
           aria-hidden="true"
-          className="flex justify-between text-[9px] font-bold uppercase tracking-wide opacity-50"
+          className="flex justify-between text-[9px] font-bold uppercase tracking-wide opacity-50 px-0.5"
         >
           {ticks.map((tick, i) => (
             <span
               key={tick}
-              className={i === index ? "opacity-100 text-accent" : undefined}
+              className={
+                i === index ? "opacity-100 text-accent font-extrabold" : undefined
+              }
             >
               {tick}
             </span>

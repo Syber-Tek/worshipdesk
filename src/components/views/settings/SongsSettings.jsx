@@ -12,6 +12,8 @@ export default function SongsSettings({
   setDefaultHymnCategory,
   showHymnNumbers = true,
   setShowHymnNumbers,
+  outputFontSize,
+  setOutputFontSize,
   hymnTextScale = "normal",
   setHymnTextScale,
   cardClass,
@@ -112,16 +114,17 @@ export default function SongsSettings({
           />
         </div>
 
-        {/* Hymn Lyric Text Scale */}
+        {/* Projector Text Scale */}
         <FontScaleSlider
           id="hymn-text-scale"
           className={`p-3.5 rounded border ${cardClass}`}
-          label="Projector Hymn Text Scale"
+          label="Projector Text Scale"
           labelClassName={textTitle}
-          hint="Font size for hymn lyrics & stanzas on the live output. Scripture uses the Projector Text Scale instead."
+          hint="Font size for hymn lyrics & stanzas and scripture on the live output. Controls projector text size across the app."
           hintClassName={textSub}
-          value={hymnTextScale}
+          value={outputFontSize ?? hymnTextScale}
           onChange={(val) => {
+            if (setOutputFontSize) setOutputFontSize(val);
             if (setHymnTextScale) setHymnTextScale(val);
           }}
         />

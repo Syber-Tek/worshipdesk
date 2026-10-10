@@ -6,7 +6,7 @@
 output: ./reponova-out
 
 repos:
-  - name: worshipdesk
+  - name: worddesk
     path: .
 
 exclude_common: true

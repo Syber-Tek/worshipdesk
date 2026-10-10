@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { resolveBackground, resolveVideo } from "./outputBackgrounds";
 import MediaSlide from "./MediaSlide";
+import { getFontScaleMultiplier } from "../lib/fontScale.js";
 
 // Which window am I, and am I allowed to make noise? Set by the main process when
 // the window is created: the stage display is always silent, and exactly one
@@ -72,7 +73,7 @@ export default function PresentationOutputWindow() {
       <div className="h-screen w-screen bg-bg text-text-primary flex flex-col items-center justify-center select-none font-sans p-8 border-4 border-border">
         <div className="flex flex-col items-center gap-3 opacity-70">
           <h2 className="text-xl font-bold tracking-widest text-text-primary uppercase">
-            WorshipDesk
+            WordDesk
           </h2>
           <div className="px-3 py-1 rounded bg-raised border border-border text-[11px] font-semibold text-accent flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
@@ -102,7 +103,7 @@ export default function PresentationOutputWindow() {
             {slideData.title || slideData.mediaName}
           </p>
           <p className="text-xs text-white/50 text-center max-w-lg leading-relaxed">
-            The file is no longer where WorshipDesk stored it. Close the planner
+            The file is no longer where WordDesk stored it. Close the planner
             item's menu and choose Relink to point it at the file again.
           </p>
         </div>
@@ -138,60 +139,41 @@ export default function PresentationOutputWindow() {
   const content = slideData.content ?? "";
   const displayContent = showQuotes ? `"${content}"` : content;
 
-  // Hymn lyrics have their own scale in Settings > Songs, so a slide follows the
-  // scale that actually belongs to its kind instead of one global size.
-  const fontScale = isHymn
-    ? slideData.hymnTextScale || slideData.outputFontSize || "normal"
-    : slideData.outputFontSize || "normal";
-  const verseSizes = {
-    small: "text-2xl md:text-4xl",
-    normal: "text-3xl md:text-5xl",
-    large: "text-4xl md:text-6xl",
-    xlarge: "text-5xl md:text-7xl",
-    xxlarge: "text-6xl md:text-8xl",
+  // Live output font scale: applies to both scripture verses and hymns!
+  const fontMultiplier = getFontScaleMultiplier(
+    slideData.outputFontSize || slideData.hymnTextScale || "normal"
+  );
+
+  const primaryStyle = {
+    fontSize: isHymn
+      ? `calc(clamp(1.5rem, 3.2vw, 2.25rem) * ${fontMultiplier})`
+      : `calc(clamp(1.875rem, 4vw, 3rem) * ${fontMultiplier})`,
   };
-  const hymnSizes = {
-    small: "text-xl md:text-3xl",
-    normal: "text-2xl md:text-4xl",
-    large: "text-3xl md:text-5xl",
-    xlarge: "text-4xl md:text-6xl",
-    xxlarge: "text-5xl md:text-7xl",
+  const dualPrimaryStyle = {
+    fontSize: isHymn
+      ? `calc(clamp(1.25rem, 2.5vw, 1.875rem) * ${fontMultiplier})`
+      : `calc(clamp(1.5rem, 3.2vw, 2.25rem) * ${fontMultiplier})`,
   };
-  const dualVerseSizes = {
-    small: "text-xl md:text-3xl",
-    normal: "text-2xl md:text-4xl",
-    large: "text-3xl md:text-5xl",
-    xlarge: "text-4xl md:text-6xl",
-    xxlarge: "text-5xl md:text-7xl",
+  const dualSecondaryStyle = {
+    fontSize: isHymn
+      ? `calc(clamp(1.25rem, 2.5vw, 1.875rem) * ${fontMultiplier})`
+      : `calc(clamp(1.5rem, 3.2vw, 2.25rem) * ${fontMultiplier})`,
   };
-  const dualHymnSizes = {
-    small: "text-lg md:text-2xl",
-    normal: "text-xl md:text-3xl",
-    large: "text-2xl md:text-4xl",
-    xlarge: "text-3xl md:text-5xl",
-    xxlarge: "text-4xl md:text-6xl",
+  const attributionPos = slideData.attributionPosition || "bottom";
+  const attributionStyle = {
+    fontSize:
+      attributionPos === "top"
+        ? `calc(clamp(0.875rem, 1.5vw, 1.125rem) * ${fontMultiplier})`
+        : `calc(clamp(1.125rem, 2vw, 1.5rem) * ${fontMultiplier})`,
   };
-  const attributionSizes = {
-    small: "text-base md:text-lg",
-    normal: "text-xl md:text-2xl",
-    large: "text-2xl md:text-3xl",
-    xlarge: "text-3xl md:text-4xl",
-    xxlarge: "text-4xl md:text-5xl",
-  };
-  const attributionTopSizes = {
-    small: "text-xs",
-    normal: "text-sm",
-    large: "text-base",
-    xlarge: "text-xl",
-    xxlarge: "text-2xl",
-  };
+
   const bodyClasses = isHymn
-    ? `whitespace-pre-line ${hymnSizes[fontScale] || hymnSizes.normal} font-normal leading-normal tracking-normal`
-    : `whitespace-pre-line ${verseSizes[fontScale] || verseSizes.normal} font-bold leading-relaxed tracking-wide`;
+    ? "whitespace-pre-line font-normal leading-normal tracking-normal"
+    : "whitespace-pre-line font-bold leading-relaxed tracking-wide";
 
   const dualBodyClasses = isHymn
-    ? `whitespace-pre-line ${dualHymnSizes[fontScale] || dualHymnSizes.normal} font-normal leading-relaxed`
-    : `whitespace-pre-line ${dualVerseSizes[fontScale] || dualVerseSizes.normal} font-bold leading-relaxed`;
+    ? "whitespace-pre-line font-normal leading-relaxed"
+    : "whitespace-pre-line font-bold leading-relaxed";
 
   const marginClass =
     slideData.slideMargin === "2rem"
@@ -200,13 +182,13 @@ export default function PresentationOutputWindow() {
         ? "p-24"
         : "p-16";
 
-  const attributionPos = slideData.attributionPosition || "bottom";
   const attributionNode =
     !slideData.isBlank && slideData.title ? (
       <h2
         className={`font-bold tracking-wider uppercase text-center w-full ${
           isImage ? "drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]" : ""
-        } ${attributionPos === "top" ? attributionTopSizes[fontScale] || attributionTopSizes.normal : attributionSizes[fontScale] || attributionSizes.normal}`}
+        }`}
+        style={attributionStyle}
       >
         — {slideData.title} —
       </h2>
@@ -218,7 +200,7 @@ export default function PresentationOutputWindow() {
         {slideData.deckPosition} / {slideData.deckTotal}
       </span>
     ) : null;
-  const brandText = slideData.customHeaderTitle || "WorshipDesk";
+  const brandText = slideData.customHeaderTitle || "WordDesk";
   const appNamePos = slideData.appNamePosition || "top-left";
 
   const slideTypeNode = slideData.isBlank ? null : (
@@ -291,21 +273,30 @@ export default function PresentationOutputWindow() {
                 <div className="grid grid-cols-2 divide-x divide-white/20 items-stretch">
                   {/* Primary Translation */}
                   <div className="flex flex-col justify-center text-center space-y-3 pr-8 md:pr-12">
-                    <p className={`${dualBodyClasses} text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]`}>
+                    <p
+                      className={`${dualBodyClasses} text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]`}
+                      style={dualPrimaryStyle}
+                    >
                       {displayContent}
                     </p>
                   </div>
 
                   {/* Secondary Parallel Translation */}
                   <div className="flex flex-col justify-center text-center space-y-3 pl-8 md:pl-12">
-                    <p className={`${dualBodyClasses} text-accent/95 italic font-medium drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]`}>
+                    <p
+                      className={`${dualBodyClasses} text-accent/95 italic font-medium drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]`}
+                      style={dualSecondaryStyle}
+                    >
                       {showQuotes ? `"${slideData.secondaryText}"` : slideData.secondaryText}
                     </p>
                   </div>
                 </div>
               ) : (
                 <div className="text-center">
-                  <p className={`${bodyClasses} text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]`}>
+                  <p
+                    className={`${bodyClasses} text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]`}
+                    style={primaryStyle}
+                  >
                     {displayContent}
                   </p>
                 </div>
@@ -355,21 +346,26 @@ export default function PresentationOutputWindow() {
               <div className="grid grid-cols-2 divide-x divide-[#E5E7EB] items-stretch">
                 {/* Primary Translation */}
                 <div className="flex flex-col justify-center text-center space-y-3 pr-8 md:pr-12">
-                  <p className={`${dualBodyClasses} text-[#111827]`}>
+                  <p className={`${dualBodyClasses} text-[#111827]`} style={dualPrimaryStyle}>
                     {displayContent}
                   </p>
                 </div>
 
                 {/* Secondary Parallel Translation */}
                 <div className="flex flex-col justify-center text-center space-y-3 pl-8 md:pl-12">
-                  <p className={`${dualBodyClasses} text-[#B4821E] italic font-medium`}>
+                  <p
+                    className={`${dualBodyClasses} text-[#B4821E] italic font-medium`}
+                    style={dualSecondaryStyle}
+                  >
                     {showQuotes ? `"${slideData.secondaryText}"` : slideData.secondaryText}
                   </p>
                 </div>
               </div>
             ) : (
               <div className="text-center">
-                <p className={`${bodyClasses} text-[#111827]`}>{displayContent}</p>
+                <p className={`${bodyClasses} text-[#111827]`} style={primaryStyle}>
+                  {displayContent}
+                </p>
               </div>
             )}
           </div>
@@ -416,21 +412,26 @@ export default function PresentationOutputWindow() {
             <div className="grid grid-cols-2 divide-x divide-[#2A2C31]/40 items-stretch">
               {/* Primary Translation */}
               <div className="flex flex-col justify-center text-center space-y-3 pr-8 md:pr-12">
-                <p className={`${dualBodyClasses} text-text-primary`}>
+                <p className={`${dualBodyClasses} text-text-primary`} style={dualPrimaryStyle}>
                   {displayContent}
                 </p>
               </div>
 
               {/* Secondary Parallel Translation */}
               <div className="flex flex-col justify-center text-center space-y-3 pl-8 md:pl-12">
-                <p className={`${dualBodyClasses} text-accent italic font-medium`}>
+                <p
+                  className={`${dualBodyClasses} text-accent italic font-medium`}
+                  style={dualSecondaryStyle}
+                >
                   {showQuotes ? `"${slideData.secondaryText}"` : slideData.secondaryText}
                 </p>
               </div>
             </div>
           ) : (
             <div className="text-center">
-              <p className={`${bodyClasses} text-text-primary`}>{displayContent}</p>
+              <p className={`${bodyClasses} text-text-primary`} style={primaryStyle}>
+                {displayContent}
+              </p>
             </div>
           )}
         </div>

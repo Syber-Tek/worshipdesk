@@ -32,7 +32,7 @@ export default function IconRail({ activeTab, setActiveTab, themeMode }) {
         <div className="w-11 h-11 rounded-xl overflow-hidden flex items-center justify-center p-0.5 transition-transform duration-200 hover:scale-105">
           <img
             src={isLight ? appIconDark : appIconLight}
-            alt="WorshipDesk Logo"
+            alt="WordDesk Logo"
             className="w-full h-full object-contain"
           />
         </div>

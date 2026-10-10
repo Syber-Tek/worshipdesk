@@ -68,7 +68,7 @@ export default function HomeView({
         <div className="space-y-1 w-full xl:w-auto">
           <div className="flex items-center gap-2"></div>
           <h1 className={`text-xl font-bold tracking-tight ${headingClass}`}>
-            WorshipDesk Dashboard
+            WordDesk Dashboard
           </h1>
           <p className={`text-xs ${labelClass}`}>
             Offline worship presentation engine with multi-translation Twi, Ewe

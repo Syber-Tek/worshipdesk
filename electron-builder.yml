@@ -1,5 +1,5 @@
-appId: com.sybertek.worshipdesk
-productName: WorshipDesk
+appId: com.sybertek.worddesk
+productName: WordDesk
 directories:
   buildResources: build
   output: release
@@ -41,13 +41,13 @@ electronFuses:
   onlyLoadAppFromAsar: true
 
 win:
-  executableName: worshipdesk
+  executableName: worddesk
   icon: src/assets/app-icon-dark.ico
   target:
     - nsis
 
 nsis:
-  # Re-running the setup file on a machine that already has WorshipDesk offers
+  # Re-running the setup file on a machine that already has WordDesk offers
   # repair/update or uninstall instead of silently reinstalling over the top.
   # electron-builder finds build/installer.nsh on its own; naming it here makes
   # the dependency explicit.
@@ -58,8 +58,8 @@ nsis:
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
   createStartMenuShortcut: true
-  shortcutName: WorshipDesk
-  uninstallDisplayName: WorshipDesk
+  shortcutName: WordDesk
+  uninstallDisplayName: WordDesk
   installerIcon: src/assets/app-icon-dark.ico
   uninstallerIcon: src/assets/app-icon-dark.ico
   installerHeaderIcon: src/assets/app-icon-dark.ico
@@ -83,7 +83,7 @@ mac:
     - zip
 
 linux:
-  executableName: worshipdesk
+  executableName: worddesk
   category: Utility
   maintainer: dellpc788@gmail.com
   icon: src/assets/app-icon-dark.png

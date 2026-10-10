@@ -70,7 +70,7 @@ export default function AboutSettings({
           <FaCircleInfo /> About &amp; Updates
         </h3>
         <p className={`text-xs mt-1 ${textSub}`}>
-          WorshipDesk — offline-first church presentation. Check for updates and
+          WordDesk — offline-first church presentation. Check for updates and
           install a new version without leaving the app.
         </p>
       </div>
@@ -80,11 +80,11 @@ export default function AboutSettings({
           <div className="flex items-center gap-3">
             <img
               src={appIconLight}
-              alt="WorshipDesk Logo"
+              alt="WordDesk Logo"
               className="w-7 h-7 object-contain rounded-md drop-shadow-sm"
             />
             <span className="bg-[#0D3822] text-[#34D399] border border-[#10B981]/30 rounded-lg px-3 py-1 font-semibold text-xs">
-              {version ? `WorshipDesk v${version}` : "WorshipDesk"}
+              {version ? `WordDesk v${version}` : "WordDesk"}
             </span>
             <span className={`text-xs ${textSub}`}>
               100% offline &middot; no account needed
@@ -144,11 +144,11 @@ export default function AboutSettings({
             <p className={`text-xs ${textSub} min-h-4`}>
               {status === "idle" &&
                 (autoCheck
-                  ? "WorshipDesk checks for a new version shortly after startup and every 6 hours. Nothing is ever downloaded without your say-so."
+                  ? "WordDesk checks for a new version shortly after startup and every 6 hours. Nothing is ever downloaded without your say-so."
                   : "Automatic checking is off. Use the button above whenever you want to look for a new version.")}
               {status === "checking" && "Checking for updates…"}
               {status === "up-to-date" &&
-                `WorshipDesk ${update.version ?? version ?? ""} is up to date.`}
+                `WordDesk ${update.version ?? version ?? ""} is up to date.`}
               {status === "available" &&
                 (update.manualOnly
                   ? `Version ${update.version} is available. macOS builds are not code-signed, so download it from the releases page.`
@@ -211,47 +211,47 @@ export default function AboutSettings({
             >
               <li>
                 <span className={`font-semibold ${textTitle}`}>
-                  The window now matches your theme
+                  Rebranded to WordDesk
                 </span>
-                . The title bar and taskbar icon follow the app theme in both
-                light and dark mode, and the title bar spans the full width so
-                the window buttons no longer cover the live output controls.
+                . Refreshed application identity with complete continuity for all
+                installed Bibles, hymnals, saved service playlists, and settings.
               </li>
               <li>
                 <span className={`font-semibold ${textTitle}`}>
-                  Update from inside the app
+                  Continuous Font Size Scaling
                 </span>
-                . Use the check button above to see whether a newer version is
-                available, download it, and install it on the next restart.
+                . Fixed breakpoints are replaced with a smooth, free-sliding scale
+                between Small (75%) and XX-Large (200%), showing live percentage
+                feedback as you drag.
               </li>
               <li>
                 <span className={`font-semibold ${textTitle}`}>
-                  Both Mac chips are supported
+                  Unified Scripture &amp; Hymn Text Size
                 </span>
-                . Separate Intel and Apple Silicon builds, and the bundled
-                Bibles and hymnals now load correctly from an installed app.
+                . The projector text scale in the control rail and settings now
+                seamlessly controls both scripture verses and hymn lyrics.
               </li>
               <li>
                 <span className={`font-semibold ${textTitle}`}>
-                  Faster lookups across the full library
+                  Live Preview &amp; Stepping Shortcuts
                 </span>
-                . 10 Bibles, 660 books, 309,149 verses and 2,374 hymns indexed in
-                a local SQLite database, with slim theme-matched scrollbars
-                throughout.
+                . Real-time preview in Presentation Settings reflects your text
+                scaling instantly, and Ctrl+[ / Ctrl+] step sizes smoothly with
+                on-screen notifications.
               </li>
               <li>
                 <span className={`font-semibold ${textTitle}`}>
                   100% Offline Resilience
                 </span>
-                . All scriptures, hymnals, fonts, and logic run locally without
-                requiring an active internet connection.
+                . All multi-translation Bibles, hymnals, fonts, and display
+                pipelines remain completely offline and local.
               </li>
             </ul>
           </div>
 
           <div className="pt-4 text-center border-t border-current/10">
             <p className={`text-xs ${textSub}`}>
-              © 2026 WorshipDesk. All rights reserved.
+              © 2026 WordDesk. All rights reserved.
             </p>
           </div>
         </div>

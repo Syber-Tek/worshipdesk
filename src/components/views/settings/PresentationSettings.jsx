@@ -1,6 +1,7 @@
 import React from "react";
 import { FaTv, FaFilm } from "react-icons/fa6";
 import FontScaleSlider from "../../FontScaleSlider";
+import { getFontScaleMultiplier } from "../../../lib/fontScale.js";
 import {
   resolveBackground,
   resolveVideo,
@@ -17,7 +18,7 @@ export default function PresentationSettings({
   setOutputBgVideo,
   appNamePosition = "top-left",
   setAppNamePosition,
-  customHeaderTitle = "WorshipDesk",
+  customHeaderTitle = "WordDesk",
   setCustomHeaderTitle,
   slideMargin = "4rem",
   setSlideMargin,
@@ -428,8 +429,8 @@ export default function PresentationSettings({
               </label>
               <input
                 type="text"
-                placeholder="WorshipDesk"
-                value={customHeaderTitle ?? "WorshipDesk"}
+                placeholder="WordDesk"
+                value={customHeaderTitle ?? "WordDesk"}
                 onChange={(e) =>
                   setCustomHeaderTitle && setCustomHeaderTitle(e.target.value)
                 }
@@ -512,17 +513,10 @@ export default function PresentationSettings({
                     outputTheme === "image" || outputTheme === "video"
                       ? "text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
                       : ""
-                  } ${
-                    outputFontSize === "small"
-                      ? "text-[10px]"
-                      : outputFontSize === "large"
-                        ? "text-base"
-                        : outputFontSize === "xlarge"
-                          ? "text-lg"
-                          : outputFontSize === "xxlarge"
-                            ? "text-xl"
-                            : "text-xs"
                   }`}
+                  style={{
+                    fontSize: `calc(0.75rem * ${getFontScaleMultiplier(outputFontSize)})`,
+                  }}
                 >
                   {showVerseQuotes
                     ? '"For God so loved the world, that he gave his only begotten Son..."'
@@ -619,7 +613,7 @@ export default function PresentationSettings({
           className="p-3.5 rounded border border-border bg-surface"
           label="Projector Text Scale"
           labelClassName="text-text-primary"
-          hint="Font size for scripture on the live output. Hymn lyrics use their own scale under Songs & Hymns."
+          hint="Font size for scripture and hymns on the live output. Controls projector text size across the app."
           hintClassName="text-text-secondary"
           valueClassName="text-xs text-accent"
           value={outputFontSize}
