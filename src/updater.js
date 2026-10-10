@@ -6,7 +6,7 @@ import path from 'path'
 // Where users get new builds by hand. The macOS builds are not code-signed, so
 // an in-app install cannot replace the app bundle there and the user has to
 // download it instead.
-const RELEASES_URL = 'https://github.com/Syber-Tek/worshipdesk-releases/releases/latest'
+const RELEASES_URL = 'https://github.com/Syber-Tek/worddesk-releases/releases/latest'
 
 // Automatic checking is opt-in. A background GitHub check 45s after launch was
 // the only network traffic the app ever made on its own, and on a flaky or

@@ -22,14 +22,14 @@ asarUnpack:
 npmRebuild: false
 
 # Auto-update feed. The source repo is private, so updates are served from the
-# public worshipdesk-releases repo, which the release workflow publishes to.
+# public worddesk-releases repo, which the release workflow publishes to.
 # electron-updater bakes this into app-update.yml inside the packaged app, and
 # electron-builder writes the matching latest.yml / latest-mac.yml metadata next
 # to the installers.
 publish:
   provider: github
   owner: Syber-Tek
-  repo: worshipdesk-releases
+  repo: worddesk-releases
   releaseType: release
 
 electronFuses:
